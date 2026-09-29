@@ -1,806 +1,328 @@
-<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>元素管道 Contract Branch v0.4.1</title>
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>元素管道：Contract Branch v0.15 T1 Playtest</title>
 <style>
-:root{--bg:#11151b;--panel:#1b222c;--line:#35404e;--text:#edf2f7;--muted:#9ca9b7;--accent:#78c7ff;--good:#86efac;--bad:#fca5a5}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,"Noto Sans TC",sans-serif}button,select,input{background:#27313d;color:var(--text);border:1px solid #465466;border-radius:7px;padding:6px 9px}button{cursor:pointer}button:disabled{opacity:.38;cursor:not-allowed}.top{position:sticky;top:0;z-index:5;background:#0d1117;border-bottom:1px solid var(--line);padding:8px 12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}.top-workspace{padding:10px 10px 0}.decision-top{position:relative}.wrap{display:grid;grid-template-columns:1.35fr 1fr;gap:10px;padding:10px}.phase-tracker{display:flex;gap:7px;align-items:stretch;flex-wrap:wrap;margin-top:8px}.phase-step{min-width:128px;flex:1 1 150px;background:#141a22;border:1px solid #465466;border-radius:9px;padding:7px 9px}.phase-step .phase-name{font-weight:700}.phase-step .phase-state{font-size:11px;color:var(--muted);margin-top:2px}.phase-step.done{border-color:#3e6a4c;background:#142019}.phase-step.done .phase-state{color:var(--good)}.phase-step.current{border-color:#5ca9dc;background:#132331;outline:2px solid rgba(120,199,255,.35)}.phase-step.current .phase-state{color:var(--accent)}.phase-step.future{border-color:#586373}.phase-step.future .phase-state{color:#cbd5e1}.phase-pending{padding:7px 9px;background:#141a22;border:1px dashed #526171;border-radius:8px;color:var(--muted)}.card,.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:9px}.row{display:flex;gap:7px;align-items:center;flex-wrap:wrap}.grid{display:grid;gap:7px}.market{grid-template-columns:repeat(4,minmax(0,1fr))}.contracts{grid-template-columns:repeat(4,1fr)}.small{font-size:12px;color:var(--muted)}h2,h3{margin:4px 0 8px}.player{border-left:4px solid #64748b}.human{border-left-color:var(--accent)}.active{outline:2px solid var(--good)}.res span{display:inline-block;margin-right:7px}.income{color:var(--good);font-size:11px;margin-left:2px}.prod-note{font-size:11px;color:var(--muted);margin-top:3px}.transition-group{background:#121922;border:1px solid #35404e;border-radius:8px;padding:7px;margin:7px 0}.transition-group .row{margin-top:5px}.transition-tech{border-color:#4a6c84;background:#13202b}.transition-source{font-size:11px;color:var(--accent);margin-left:4px}.station-mark{font-size:10px}.effect-box{background:#151d28;border:1px solid #4b6074;border-radius:8px;padding:8px;margin:7px 0}.effect-choice{white-space:normal;text-align:left;min-width:150px}.audit-ok{color:var(--good)}.audit-warn{color:#fbbf24}.tag{padding:2px 6px;border:1px solid #526171;border-radius:999px;font-size:11px}.ot{min-height:120px}.ot b{font-size:15px}.good{color:var(--good)}.bad{color:var(--bad)}#log{height:330px;overflow:auto;background:#0d1117;padding:7px;border-radius:7px;font:12px/1.4 ui-monospace,monospace}.hexboard{position:relative;height:500px;overflow:auto;background:#10151c;border-radius:9px}.hex{position:absolute;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);display:flex;align-items:center;justify-content:center;text-align:center;font-size:11px;border:0;color:#fff;padding:0;line-height:1}.empty{background:#303b48}.hex::after{content:'';position:absolute;inset:2px;clip-path:inherit;border:1px solid rgba(255,255,255,.08);pointer-events:none}.dealer-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:6px}.dealer-card{background:#141a22;border:1px solid #465466;border-radius:8px;padding:7px;min-height:82px}.dealer-card.current{outline:2px solid var(--accent)}.dealer-card.done{opacity:.5}.dealer-card .reqline{font-size:16px;letter-spacing:1px}.dealer-ability{background:#132117;border:1px solid #355f3f;border-radius:8px;padding:8px;margin-bottom:7px}.dealer-completion{background:#211c13;border:1px solid #6d5c30;border-radius:8px;padding:8px;margin-top:7px}.icon-run{font-size:17px;letter-spacing:2px}.ai-dealer{margin-top:7px;padding-top:7px;border-top:1px solid var(--line)}.dealer-market-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:7px}.dealer-market-card .small{margin-top:4px}.dealer-market-card{background:#131b24;border:1px solid #465466;border-radius:8px;padding:7px}.dealer-market-card.selectable{outline:3px solid var(--good);cursor:pointer}.dealer-market-card.selectable:hover{filter:brightness(1.14)}.combo-ready{border-color:#8fbf78;background:#16231a}.combo-mark{color:var(--good);font-weight:700}.dealer-wait{color:#fbbf24}.W{background:#2563a9}.F{background:#a83d2c}.E{background:#56723a}.N{background:#6b5aa7}.P{background:#72502f}.selected{filter:brightness(1.5);outline:2px solid white}.section{margin-bottom:10px}.hidden{display:none}.decision{position:relative}.warn{background:#4a3515;border:1px solid #8b6b2b;padding:7px;border-radius:7px}.techgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}.tech{padding:5px;background:#141a22;border-radius:6px}.tech-human{display:grid;gap:10px}.tech-section-title{display:flex;justify-content:space-between;gap:8px;align-items:baseline;margin:2px 0 6px}.btech-grid,.atech-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.btrack,.atrack{background:#121922;border:1px solid #3b4858;border-radius:9px;padding:8px}.track-head{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px}.track-level{font-weight:800}.level-strip{display:flex;gap:2px;margin:5px 0 8px}.level-dot{flex:1;height:6px;border-radius:999px;background:#2d3744}.level-dot.on{background:#78c7ff}.tech-milestone{border-top:1px solid #313d4b;padding-top:7px;margin-top:7px}.milestone-head{display:flex;justify-content:space-between;gap:6px;align-items:center}.milestone-state{font-size:11px;padding:1px 5px;border-radius:999px;border:1px solid #4c5a6a;color:var(--muted)}.milestone-state.unlocked{color:var(--good);border-color:#477054}.milestone-state.pending{color:#fbbf24;border-color:#7d652c}.tech-options{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:5px}.tech-option{border:1px solid #3f4b59;background:#161e27;border-radius:7px;padding:6px}.tech-option strong{display:block;margin-bottom:3px}.tech-option.selected{outline:2px solid var(--good);filter:none;background:#15231a}.tech-option.rejected{opacity:.42}.tech-option.future{opacity:.72}.atech-milestone{border-top:1px solid #313d4b;padding:7px 0 0;margin-top:7px}.atech-milestone.unlocked{background:rgba(134,239,172,.04)}.tech-choice-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:8px 0}.tech-choice-card{white-space:normal;text-align:left;padding:9px;min-height:110px}.tech-choice-card b{font-size:15px}.tech-choice-card .effect{display:block;margin-top:5px;font-size:12px;color:#d8e2ec}.tech-choice-card .future-note{display:block;margin-top:5px;font-size:11px;color:var(--muted)}.tech-choice-card:disabled{opacity:.35}.ai-tech-summary{border-top:1px solid var(--line);margin-top:9px;padding-top:7px}.ai-tech-row{padding:4px 0}.tech-note{background:#101720;border:1px dashed #465466;border-radius:7px;padding:6px;color:var(--muted);font-size:12px}.lt.used{opacity:.45}.contract-selectable{outline:3px solid var(--good)!important;box-shadow:0 0 0 3px rgba(134,239,172,.12);cursor:pointer;position:relative;transition:transform .08s ease,filter .08s ease}.contract-selectable:hover{filter:brightness(1.16);transform:translateY(-1px)}.contract-selectable::after{content:'可完成・點擊選擇';display:block;margin-top:6px;font-size:11px;font-weight:700;color:var(--good)}.contract-inactive{opacity:.58}.contract-paying{outline:3px solid var(--accent)!important;box-shadow:0 0 0 3px rgba(120,199,255,.14)}.pay-options{display:flex;gap:7px;flex-wrap:wrap;margin:8px 0}.pay-option{min-width:170px;text-align:left}.pay-option .pay-icons{font-size:18px;letter-spacing:2px}.pay-option .pay-after{font-size:11px;color:var(--muted);margin-top:2px}.dealer-card.current.contract-selectable{outline:3px solid var(--good)!important}.dealer-ability.contract-selectable{outline:3px solid var(--good)!important}.marketCard button{margin-top:5px;width:100%}.marketCard.chosen{outline:2px solid var(--accent);background:#1b2b38}.build-status{background:#13202b;border:1px solid #31506a;border-radius:8px;padding:8px;margin:7px 0}.build-status b{color:var(--accent)}.hand-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:7px 0}.hand-card{background:#151d26;border:1px solid #465466;border-radius:8px;padding:7px}.hand-card.chosen{outline:2px solid var(--accent)}.layer-pre{color:#fbbf24}.layer-normal{color:#93c5fd}.layer-post{color:#c4b5fd}.market-note{font-size:11px;color:var(--muted);margin-top:4px}@media(max-width:1100px){.wrap{grid-template-columns:1fr}.contracts{grid-template-columns:repeat(2,1fr)}}</style></head><body>
-<div class="top"><b>元素管道：Contract Branch 測試 v0.4.1</b><span id="status"></span><button onclick="newGame()">New Game</button><button onclick="restartSeed()">Restart Same Seed</button><label>Seed <input id="seed" size="8" value="20260924"></label><button onclick="exportState()">Export JSON</button><label><input id="importFile" type="file" accept="application/json" onchange="importState(event)">Import</label><button onclick="downloadLog()">Export Log</button></div>
-<div class="top-workspace">
-  <div class="panel decision decision-top"><h3>決策面板</h3><div id="decision"></div><hr><details><summary>Debug</summary><div class="grid"><button onclick="debugGive()">Human +10G / +3 all B</button><button onclick="debugFee()">Fee +5</button><button onclick="debugProduction()">立即 Human Production</button><button onclick="showTechAudit()">Tech 實作檢查</button><button onclick="endTurn()">Force End Turn</button></div></details><hr><div class="warn small">整合原則：Canonical v0.10 Part I 提供未被 Branch 改寫的 Setup / Board / Build / Production 基礎；Contract Branch Compact v0.9 + T1 Dealer Patch v0.2 覆蓋 Contract / Dealer / Tech / Transition；Canonical v0.10 Part I 提供未被 Branch 改寫的 Setup / Board / Build / Production 基礎。正式未完成內容不自行發明。</div></div>
-  <div class="panel section"><div class="row"><h3 style="margin-right:8px">本回合階段</h3><span class="small">顯示已執行／正在執行／接下來將執行的階段</span></div><div id="phaseTracker" class="phase-tracker"></div></div>
+:root{--bg:#0e1117;--panel:#171b24;--panel2:#202634;--line:#323b50;--text:#edf2f7;--muted:#9aa7bd;--good:#7dd3a7;--warn:#f6c76f;--bad:#ff8d8d;--w:#5cb8ff;--f:#ff7b62;--e:#8cc56d;--n:#c49cff;--a:#f0d77a}
+*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Noto Sans TC",sans-serif;font-size:14px}
+button,select,input{font:inherit}.top{position:sticky;top:0;z-index:20;background:#111722;border-bottom:1px solid var(--line);padding:8px 12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}.title{font-weight:800;font-size:18px}.pill{background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:4px 9px}.clock{font-weight:700;color:var(--warn)}
+.app{display:grid;grid-template-columns:minmax(680px,1.45fr) minmax(380px,.85fr) 380px;gap:10px;padding:10px;align-items:start}.col{display:flex;flex-direction:column;gap:10px}.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px}.card h2,.card h3{margin:0 0 8px}.sub{color:var(--muted);font-size:12px}.players{display:grid;grid-template-columns:1fr 1fr;gap:8px}.player{background:#131822;border:1px solid var(--line);border-radius:10px;padding:8px}.player.active{outline:2px solid var(--warn)}.res{display:flex;gap:6px;flex-wrap:wrap}.r{padding:2px 6px;border:1px solid #3b465e;border-radius:6px;background:#1b2230}.w{color:var(--w)}.f{color:var(--f)}.e{color:var(--e)}.n{color:var(--n)}.a{color:var(--a)}
+.wheel{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}.sector{border:1px solid #3a4255;border-radius:8px;padding:6px;background:#191f2b;min-height:145px}.sector.prod{outline:2px solid var(--good)}.sector.unselected{outline:2px dashed var(--a)}.sector h4{margin:0 0 4px;display:flex;justify-content:space-between}.slots{display:grid;grid-template-columns:repeat(4,1fr);gap:3px}.slot{border:1px solid #46516a;border-radius:6px;min-height:34px;padding:3px;font-size:11px;text-align:center;background:#10151f}.slot.mid{grid-column:span 2;background:#1c2330}.slot.inner{grid-column:1/-1;background:#23202e}.charge{display:inline-block;margin-left:2px;background:#ffd166;color:#111;border-radius:50%;width:16px;height:16px;line-height:16px;font-weight:800}.pointer{font-weight:800;color:#9fe0ff}
+.market{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.mcard{border:1px solid #414b63;border-radius:8px;padding:7px;background:#191f2a}.mcard.legal{border-color:var(--good);cursor:pointer}.mcard.used{opacity:.45}.mcard strong{display:block}.req{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}.reward{color:#f4d88a}.dealer-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.dealer{border:1px solid #414b63;border-radius:8px;padding:7px;background:#1a1f29;min-height:110px}.dealer.legal{border-color:var(--good);cursor:pointer}
+#decision{position:sticky;top:62px;max-height:calc(100vh - 74px);overflow:auto}.actions{display:flex;gap:6px;flex-wrap:wrap}.btn{border:1px solid #46516a;border-radius:7px;background:#252e40;color:var(--text);padding:6px 9px;cursor:pointer}.btn:hover{background:#303a50}.btn.primary{border-color:#72b7ff}.btn.good{border-color:var(--good)}.btn.warn{border-color:var(--warn)}.btn.bad{border-color:var(--bad)}.btn:disabled{opacity:.4;cursor:not-allowed}.choice{border:1px solid #3a455d;border-radius:8px;padding:7px;margin:6px 0;background:#111722}.choice:hover{border-color:#6f87ae}.choice.legal{cursor:pointer}.tiny{font-size:11px;color:var(--muted)}
+.log{height:310px;overflow:auto;background:#0c1017;border:1px solid #293143;border-radius:7px;padding:6px;font-family:ui-monospace,monospace;font-size:11px}.logline{padding:2px 0;border-bottom:1px solid #171d28}.debug{display:flex;gap:5px;flex-wrap:wrap}.overlay{position:fixed;inset:0;background:#000a;z-index:99;display:none;align-items:center;justify-content:center}.overlay.show{display:flex}.modal{width:min(900px,94vw);max-height:90vh;overflow:auto;background:#171b24;border:1px solid #56627f;border-radius:12px;padding:14px}.summary{font-size:18px}.techgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}.tech{border:1px solid #3a455d;border-radius:6px;padding:5px;text-align:center}.tech .lv{font-size:18px;font-weight:800}.gameover{color:#ffd166;font-weight:900}.testdefault{color:#ffca7a}.hidden{display:none!important}@media(max-width:1300px){.app{grid-template-columns:1fr 420px}.right{grid-column:1/-1}#decision{position:static;max-height:none}}@media(max-width:850px){.app{grid-template-columns:1fr}.players{grid-template-columns:1fr}.market{grid-template-columns:1fr}.dealer-grid{grid-template-columns:1fr}}
+</style>
+</head><body>
+<div class="top"><div class="title">元素管道｜Contract Branch v0.15 T1 Playtest</div><span id="phasePill" class="pill">Setup</span><span id="clockPill" class="pill clock">T1 One-Time remaining: —</span><span id="pointerPill" class="pill pointer">Pointer —</span><span id="seedPill" class="pill">Seed —</span><span id="gapPill" class="pill testdefault">TEST DEFAULTS: start 4G / One-Time market 4</span></div>
+<div class="app">
+  <div class="col">
+    <div class="card"><h2>四人工房</h2><div id="players" class="players"></div></div>
+    <div class="card"><h2>公共 Contract 區</h2><div class="sub">T1 One-Time 是唯一正式 game clock；最後一張完成且 action 連鎖結算完畢後立即終局。</div><h3 style="margin-top:10px">One-Time</h3><div id="oneTime" class="market"></div><h3 style="margin-top:10px">Long-Term</h3><div id="longTerm" class="market"></div></div>
+  </div>
+  <div class="col">
+    <div class="card"><h2>Dealer Market</h2><div id="dealerMarket" class="dealer-grid"></div></div>
+    <div class="card"><h2>Structured Log</h2><div class="actions"><button class="btn" onclick="downloadLog()">Export Log</button><button class="btn" onclick="copyLatestState()">Copy State Summary</button></div><div id="log" class="log"></div></div>
+    <div class="card"><h2>Debug / Observability</h2><div class="debug">
+      <button class="btn" onclick="downloadState()">Export JSON</button><button class="btn" onclick="document.getElementById('importFile').click()">Import JSON</button><input id="importFile" type="file" accept="application/json" class="hidden" onchange="importStateFile(event)">
+      <button class="btn" onclick="restartSameSeed()">Restart Same Seed</button><button class="btn" onclick="debugResources()">Set Human Resources</button><button class="btn" onclick="debugTech()">Set Human Tech</button><button class="btn" onclick="debugFee()">Set Fee</button><button class="btn" onclick="debugPointer()">Set Pointer</button><button class="btn" onclick="debugCharge()">Inject Charge</button><button class="btn bad" onclick="debugEndGame()">TEST ONLY End Game</button>
+    </div><div id="assertions" class="tiny" style="margin-top:7px"></div></div>
+  </div>
+  <div class="col right"><div id="decision" class="card"><h2>決策面板</h2><div id="decisionBody">載入中…</div></div></div>
 </div>
-<div class="wrap"><main>
-<div class="panel section"><h3>玩家</h3><div id="players" class="grid"></div></div>
-<div class="panel section"><h3>公共市場</h3><div class="small">T1 Element / T2 Production 沿用 Canonical；Contract Branch 覆蓋 Spell/Tech progression。</div><h3>T1 Element Market</h3><div id="t1market" class="grid market"></div><h3>T2 Production Market</h3><div id="t2market" class="grid market"></div></div>
-<div class="panel section"><h3>Contract</h3><div class="row"><span>Tier <b id="tier"></b></span><span>One-Time deck <b id="deckcount"></b></span></div><h3>One-Time Market</h3><div id="otmarket" class="grid contracts"></div><h3>Long-Term</h3><div id="ltmarket" class="grid contracts"></div></div>
-<div class="panel section"><h3>Human Board</h3><div id="board" class="hexboard"></div></div>
-</main><aside>
-<div class="panel section"><h3>Tech Tracks</h3><div id="techs"></div></div><div class="panel section"><h3>Dealer</h3><div id="dealer"></div></div><div class="panel section"><h3>Log</h3><div id="log"></div></div>
-</aside></div>
+<div id="overlay" class="overlay"><div class="modal"><div id="overlayBody"></div></div></div>
 <script>
-const B=['W','F','E','N'], BN={W:'Water',F:'Fire',E:'Earth',N:'Wind'}, ICON={W:'💧',F:'🔥',E:'🌱',N:'🌪️',Steam:'💨',Magma:'🌋',Sandstorm:'⏳',Frost:'❄️',DeepExtraction:'⛲'}; const AParents={Steam:['W','F'],Magma:['F','E'],Sandstorm:['E','N'],Frost:['N','W']};
-const A=Object.keys(AParents), B_ICONS=B.map(x=>ICON[x]).join(''), A_ICONS=A.map(x=>ICON[x]).join('');
-const BTECH={
-  W:{1:{A:{name:'向外導流',text:'新增 Transition Rule：1💧 → 1🔥 或 1🌪️；仍正常支付並調升 Transition Fee。'},B:{name:'向內導流',text:'新增 Transition Rule：1🔥 或 1🌪️ → 1💧；仍正常支付並調升 Transition Fee。'}},3:{A:{name:'加壓供水',text:'每次 Production 時可支付最多 2G；每支付 1G，額外獲得 1💧。'},B:{name:'新渠回流',text:'每當建造 Water Tile 時，額外獲得 1💧。'}},6:{A:{name:'流轉回饋',text:'每當完成 printed requirement 含 💧 的 Contract 時，獲得 1💧。'},B:{name:'高階代替支付',text:'支付 printed requirement 含 💨 或 ❄️ 的 Contract 時，可以用 💧💧 + 2G 代替 1💨 或 1❄️。此效果是 payment substitution，不是 Transition。'}},10:{A:{name:'萬用媒介',text:'支付 Contract 時，💧 可代替任意 B；不算 Transition、不增加 Fee。'},B:{name:'水脈回流',text:'每當完成 printed requirement 含 💧 的 Contract 時，該 Contract 的認定／printed requirement 每有 1 個 💧，完成後獲得任意 1B。'}}},
-  F:{1:{A:{name:'助燃轉化',text:'新增 Transition Rule：1🔥 → 1💧 或 1🌱；仍正常支付並調升 Transition Fee。'},B:{name:'聚火轉化',text:'新增 Transition Rule：1💧 或 1🌱 → 1🔥；仍正常支付並調升 Transition Fee。'}},3:{A:{name:'爐壓累積',text:'每次 Production 時 Transition Fee +2；加完後若 Fee ≥5，獲得 2🔥，否則獲得 1🔥。'},B:{name:'燃料回收',text:'每次 Production 結束時，若本次至少產出 3🔥，獲得 2G。'}},6:{A:{name:'高壓交付',text:'每當完成 One-Time Contract 時，若目前 Transition Fee ≥5，額外獲得 2VP。'},B:{name:'燃盡庫存',text:'完成 printed requirement 含 🔥 的 Contract 後，可額外支付 1🔥，獲得 1VP + 1G。'}},10:{A:{name:'極限燃燒',text:'支付每張 Contract 時，最多一次可用 1G 代替 1B requirement；若如此做，Transition Fee +2。'},B:{name:'熱能變現',text:'完成 printed requirement 含 🔥 的 Contract 後，可額外支付 🔥🔥；獲得等同目前 Transition Fee 數值的 Gold，然後將 Transition Fee 重置為 0。'}}},
-  E:{1:{A:{name:'向外搬運',text:'新增 Transition Rule：1🌱 → 1🔥 或 1🌪️；仍正常支付並調升 Transition Fee。'},B:{name:'集中土料',text:'新增 Transition Rule：1🔥 或 1🌪️ → 1🌱；仍正常支付並調升 Transition Fee。'}},3:{A:{name:'就地取材',text:'Earth Tile 建造費用 -1G。'},B:{name:'工程備料',text:'每當建造 Earth Tile 後，獲得 1🌱。'}},6:{A:{name:'現地設站',text:'每當完成 printed requirement 含 Earth 的 Dealer Contract 時，可支付 4G，在一個 Element Tile 上放置 1 個生產站。每個 Element Tile 最多 1 個生產站；Production Phase 時，生產站額外產出該格對應元素。'},B:{name:'地脈開發',text:'解鎖時立刻免費建設 2 個生產站。每個 Element Tile 最多 1 個生產站；Production Phase 時，生產站額外產出該格對應元素。此選項之後沒有額外持續觸發。'}},10:{A:{name:'深層基座',text:'解鎖時獲得並免費放置 1 個特殊 Production Tile，只能放在 Ring 3。其生產方式與起始中央 Extraction Well 相同：生產所有相鄰 Base Element Tile 對應的元素。此 Tile 不來自 market。'},B:{name:'自持工房',text:'每次 Production 全部結算後，若本次至少生產過 1🌱，選擇一個本次有產出的 Production Tile 再執行一次；此額外執行不再次觸發本 Tech。'}}},
-  N:{1:{A:{name:'順風外送',text:'新增 Transition Rule：1🌪️ → 1💧 或 1🌱；仍正常支付並調升 Transition Fee。'},B:{name:'逆風匯集',text:'新增 Transition Rule：1💧 或 1🌱 → 1🌪️；仍正常支付並調升 Transition Fee。'}},3:{A:{name:'知識周轉',text:'每當你因完成 Contract 獲得 1 Tech Point 時，獲得 1G。'},B:{name:'連續履約',text:'Contract Phase 中，只計 One-Time + Dealer Contract；從本 Phase 第 3 個開始，每完成 1 個，獲得 1G。'}},6:{A:{name:'順風補給',text:'Contract Phase 中，只計 One-Time + Dealer Contract；從本 Phase 第 4 個開始，每完成 1 個，獲得 1 個該 Contract printed requirement 中出現的 B element。'},B:{name:'風行減阻',text:'每當完成 1 張 One-Time Contract 或 Dealer Contract 時，Transition Fee -1（最低 0）。Long-Term Contract 與 Dealer Ability 不觸發。'}},10:{A:{name:'連環履約',text:'Contract Phase 結束時計算本 Phase 完成的 One-Time + Dealer Contract；達 2 / 4 / 6 張時，本 Phase 額外總共獲得 1 / 3 / 5VP。Long-Term 與 Dealer Ability 不計。'},B:{name:'知識順流',text:'每當你獲得 1 個 Tech Token / Tech Point 時，獲得 1VP。'}}}
-};
-const ATECH={
-  Steam:{parents:['F','W'],2:{name:'蒸汽凝聚',text:'Production 若本次有產出 🔥 與 💧，可支付至多 4G；每 2G 得 1💨（最多 2 個）。'},5:{name:'蒸汽加壓',text:'完成 One-Time Contract 時，可額外支付 1💨，獲得 +2VP +1💧。'},9:{name:'超臨界循環',text:'完成 printed requirement 含 💨 的 Contract 時，+2VP +1💧；若 Transition Fee ≥5，再 +2VP；若本次支付至少 2💨，再 +1💧。'}},
-  Magma:{parents:['E','F'],2:{name:'熔岩聚成',text:'Production 若本次有產出 🌱 與 🔥，可支付至多 4G；每 2G 得 1🌋（最多 2 個）。'},5:{name:'熔岩動力',text:'Production Phase 開始時可支付 1🌋；本次 Production 中，中央 Production Tile 的正常產出額外執行一次。'},9:{name:'熔爐網路',text:'完成 printed requirement 含 🌋 的 Contract 時，可依生產站數額外支付 Magma，最多 2 個；每支付 1🌋 得 2VP；若 Transition Fee ≥5，每次再得 1G。'}},
-  Frost:{parents:['W','N'],2:{name:'霜晶凝結',text:'Production 若本次有產出 💧 與 🌪️，可支付至多 4G；每 2G 得 1❄️（最多 2 個）。'},5:{name:'冰晶回流',text:'支付 printed requirement 含 ❄️ 的 Contract 時，每支付 1❄️，獲得 1G +1💧。'},9:{name:'高頻交付',text:'Contract Phase 結束時計算本 Phase 完成、printed requirement 含 ❄️ 的 One-Time + Dealer Contract。2 個→2G；4 個→總共 2VP+2G；6 個→總共 5VP+4G。'}},
-  Sandstorm:{parents:['N','E'],2:{name:'沙流聚成',text:'Production 若本次有產出 🌪️ 與 🌱，可支付至多 4G；每 2G 得 1⏳（最多 2 個）。'},5:{name:'流動工班',text:'完成 Dealer Contract 時可額外支付 1⏳，二選一：①再付 2G 建 1 生產站；② Transition Fee -3。'},9:{name:'沙暴供應網',text:'Contract Phase 結束時計算本 Phase 完成的 One-Time + Dealer Contract。≥2：每個生產站 +1G（最多 3G）；≥4：再得 1⏳；≥6：再得 4VP。'}}
-};
-const B_BREAKPOINTS=[1,3,6,10], A_MILESTONES=[2,5,9];
-
-const INITIAL_DEALER=[
-  {req:['ANYB','ANYB'],label:`任意 2B ${B_ICONS}`,reward:{vp:1,g:2}},
-  {req:['DIFFB','DIFFB'],label:`2 種不同 B ${B_ICONS}`,reward:{vp:1,g:2}},
-  {req:['ANYA'],label:`任意 1A ${A_ICONS}`,reward:{vp:1,g:2}},
-  {req:['ANYA','ANYB','ANYB'],label:`任意 1A ${A_ICONS} + 任意 2B ${B_ICONS}`,reward:{vp:4,g:2}}
+'use strict';
+// Contract Branch v0.15 T1 vertical slice. This file is a fresh implementation.
+const B=['W','F','E','N']; const A=['Steam','Magma','Sandstorm','Frost'];
+const RES=[...B,...A]; const SNAME=['Water','Fire','Earth','Wind']; const BNAME={W:'Water',F:'Fire',E:'Earth',N:'Wind'};
+const ICON={W:'💧',F:'🔥',E:'🌱',N:'🌪️',Steam:'💨',Magma:'🌋',Sandstorm:'⏳',Frost:'❄️'};
+const CLS={W:'w',F:'f',E:'e',N:'n',Steam:'a',Magma:'a',Sandstorm:'a',Frost:'a'};
+const PARENTS={Steam:['W','F'],Magma:['F','E'],Sandstorm:['E','N'],Frost:['N','W']};
+const NEIGHBOR_A={'W,F':'Steam','F,W':'Steam','F,E':'Magma','E,F':'Magma','E,N':'Sandstorm','N,E':'Sandstorm','N,W':'Frost','W,N':'Frost'};
+const SOURCE_GAPS={startingGold:'TEST DEFAULT 4G: v0.15/test guide do not restate starting Gold.',oneTimeMarketSize:'TEST DEFAULT 4: v0.15 names market but does not state its T1 display size.'};
+const CFG={players:4,startingGold:4,oneTimeMarketSize:4,engineFeeCap:10,chargeCap:1,outerCost:2,middleCost:4,innerCost:6,prolifCosts:[4,7]};
+let G=null, humanWait=null, effectQueue=[], processing=false;
+function deep(x){return JSON.parse(JSON.stringify(x))}
+function hashSeed(s){let h=2166136261>>>0;for(const c of String(s)){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}return h>>>0}
+function rng(){G.rngState=(Math.imul(1664525,G.rngState)+1013904223)>>>0;return G.rngState/4294967296}
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){let j=Math.floor(rng()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function uid(p='x'){G.uid=(G.uid||0)+1;return p+'-'+G.uid}
+function emptyRes(){return Object.fromEntries(RES.map(x=>[x,0]))}
+function resTxt(r){return RES.filter(x=>r[x]).map(x=>`${ICON[x]}${r[x]}`).join(' ')||'—'}
+function addRes(p,r,m=1){for(const k of RES)p.resources[k]=(p.resources[k]||0)+(r[k]||0)*m}
+function spendRes(p,r){for(const k of RES){if((p.resources[k]||0)<(r[k]||0))return false}for(const k of RES)p.resources[k]-=(r[k]||0);return true}
+function log(type,msg,data={}){if(!G)return;G.log.push({id:G.log.length+1,turn:G.turnNumber,phase:G.phase,actor:G.activePlayerId,type,msg,data,ts:Date.now()});if(G.log.length>2000)G.log.shift();renderLog()}
+function player(id){return G.players.find(p=>p.id===id)}
+function human(){return G.players[0]}
+function feeCap(p){return techHas(p,'F',10,'B')?5:CFG.engineFeeCap}
+function feeTrigger(p,reason){const cost=p.engineFee;if(p.gold<cost)return false;p.gold-=cost;p.engineFee=Math.min(feeCap(p),p.engineFee+1);log('engine_fee',`${p.name} Engine Fee trigger (${reason})：-${cost}G，Fee→${p.engineFee}`,{reason,cost});return true}
+function feeIncreaseNoPay(p,n,reason){p.engineFee=Math.min(feeCap(p),p.engineFee+n);log('engine_fee_direct',`${p.name} Engine Fee +${n} (${reason}) → ${p.engineFee}`,{n,reason})}
+function reduceFee(p,n,reason){let before=p.engineFee, lowered=Math.min(n,p.engineFee),overflow=n-lowered;p.engineFee-=lowered;if(overflow)p.gold+=overflow;log('fee_reduce',`${p.name} Fee -${n} (${reason})：${before}→${p.engineFee}${overflow?`，overflow +${overflow}G`:''}`,{before,after:p.engineFee,n,overflow,reason});if(lowered>0&&techHas(p,'N',3,'A')){p.resources.N++;log('tech_trigger',`${p.name} Wind Lv3-A：Fee 實際降低 → +1 Wind`)}return {lowered,overflow}}
+function techHas(p,t,lv,ch=null){const key={W:'water',F:'fire',E:'earth',N:'wind'}[t];if((p.tech[key]||0)<lv)return false;if(ch&&p.techChoices[`${t}${lv}`]!==ch)return false;return true}
+function trackLv(p,t){return p.tech[{W:'water',F:'fire',E:'earth',N:'wind'}[t]]||0}
+function aTechOn(p,a,lv){const [x,y]=PARENTS[a];return trackLv(p,x)>=lv&&trackLv(p,y)>=lv}
+function gainTP(p,t,n=1,source=''){for(let i=0;i<n;i++){if(t==='choiceWF')queueTPChoice(p,['W','F'],source);else if(t==='choiceFE')queueTPChoice(p,['F','E'],source);else if(t==='choiceEN')queueTPChoice(p,['E','N'],source);else if(t==='choiceWN')queueTPChoice(p,['W','N'],source);else if(t==='wild')queueTPChoice(p,B,source);else applyTP(p,t,source)}}
+function queueTPChoice(p,opts,source){if(p.type==='ai'){const t=opts.slice().sort((a,b)=>trackLv(p,a)-trackLv(p,b))[0];applyTP(p,t,source);return}effectQueue.push({kind:'tpChoice',pid:p.id,opts,source})}
+function applyTP(p,t,source){const key={W:'water',F:'fire',E:'earth',N:'wind'}[t];if(p.tech[key]>=10){p.vp++;log('tp_overflow',`${p.name} ${BNAME[t]} TP overflow → +1VP`,{source});return}p.tech[key]++;log('tech_point',`${p.name} ${BNAME[t]} Tech → Lv${p.tech[key]}`,{source});const lv=p.tech[key];if([1,3,6,10].includes(lv)&&!p.techChoices[`${t}${lv}`]){if(p.type==='ai'){p.techChoices[`${t}${lv}`]=chooseAItech(p,t,lv);log('tech_choice',`${p.name} ${BNAME[t]} Lv${lv} 選 ${p.techChoices[`${t}${lv}`]}`)}else effectQueue.push({kind:'techChoice',pid:p.id,t,lv})}}
+function chooseAItech(p,t,lv){if(t==='F'&&lv===10)return p.engineFee>=4?'B':'A';if(t==='E'&&lv===3)return 'B';if(t==='N'&&lv===6)return 'B';return rng()<.5?'A':'B'}
+function makeSector(i){return {name:SNAME[i],outers:[{id:uid('anchor'),type:'outer',element:B[i],anchor:true,charge:0},null,null,null],middles:[null,null],inner:null}}
+function makePlayer(i){return {id:i===0?'human':'ai'+i,name:i===0?'Human':`AI ${i}`,type:i===0?'human':'ai',gold:CFG.startingGold,vp:0,resources:emptyRes(),tech:{water:0,fire:0,earth:0,wind:0},techChoices:{},sectors:[0,1,2,3].map(makeSector),engineFee:0,pointer:{boundary:3,direction:'CW'},currentDealer:{id:'initial'},dealerProgressIndex:0,qualifyingContractsThisPhase:0,comboState:{completedDealerIds:[],comboCount:0},passedOutContractPhase:false,flags:{dealerAbilityUsedTurn:false,waterRedrawUsed:false,earthExtraBuildUsed:false,prolifTaken:0},buildDraw:[],production:{}}}
+const ONE_TIME=[
+ {id:'OT01',req:['W','W','W'],reward:{vp:4},tp:'W'}, {id:'OT02',req:['F','F','F'],reward:{vp:3,gold:1},tp:'F'}, {id:'OT03',req:['E','E','E'],reward:{vp:4},tp:'E'}, {id:'OT04',req:['N','N','N'],reward:{vp:3,gold:1},tp:'N'},
+ {id:'OT05',req:['W','W','F'],reward:{vp:5}}, {id:'OT06',req:['F','F','E'],reward:{vp:3,gold:1},special:'fee5plus'}, {id:'OT07',req:['E','E','N'],reward:{vp:4,gold:1}}, {id:'OT08',req:['N','N','W'],reward:{vp:4},special:'feeMinus1'},
+ {id:'OT09',req:['W','W','F','F'],reward:{vp:6}}, {id:'OT10',req:['F','F','E','E'],reward:{vp:5},special:'fee5vp'}, {id:'OT11',req:['Steam','W','F'],reward:{vp:5},tp:'choiceWF'}, {id:'OT12',req:['Magma','F','E'],reward:{vp:3,gold:4},tp:'choiceFE'},
+ {id:'OT13',req:['Sandstorm','E','N'],reward:{vp:5},tp:'choiceEN'}, {id:'OT14',req:['Frost','W','N'],reward:{vp:3,gold:4},tp:'choiceWN'}, {id:'OT15',req:['Steam','W','W'],reward:{vp:4,gold:4}}, {id:'OT16',req:['Magma','E','N'],reward:{vp:6}},
+ {id:'OT17',req:['Steam','W','W','F'],reward:{vp:8}}, {id:'OT18',req:['Magma','F','F','E'],reward:{vp:6,gold:3}}, {id:'OT19',req:['Frost','W','E','N'],reward:{vp:6},special:'fee0ThenMinus'}, {id:'OT20',req:['Sandstorm','E','W','F'],reward:{vp:6,gold:3}}
 ];
-
+const LT_TEMPLATES=[
+ {id:'LT-diff2',name:'兩種不同 B',pattern:'diff2B',reward:{gold:4}}, {id:'LT-same2',name:'兩個相同 B',pattern:'same2B',reward:{gold:4}}, {id:'LT-diff3',name:'三種不同 B',pattern:'diff3B',reward:{gold:7}}, {id:'LT-same3',name:'三個相同 B',pattern:'same3B',reward:{gold:7}}, {id:'LT-anyA',name:'任意 A',pattern:'anyA',reward:{gold:4}}, {id:'LT-AplusB',name:'任意 A + 任意 B',pattern:'AplusB',reward:{gold:6}}
+];
 const DEALERS={
-  water_t1_routes:{
-    id:'water_t1_routes',name:'水路承包商',tier:1,archetype:'B-Focused / Water',
-    ability:{id:'water_t1_ability',label:'Water + Fire',requirement:{exactElements:['W','F']},reward:{vp:1,g:2}},
-    contracts:[
-      {id:'water_t1_c1',order:1,label:'C1',requirement:{exactElements:['W','W']},reward:{vp:1},tp:'W'},
-      {id:'water_t1_c2',order:2,label:'C2',requirement:{exactElements:['W','W','N']},reward:{vp:2,g:1},tp:'W'},
-      {id:'water_t1_c3',order:3,label:'C3',requirement:{exactElements:['W','W','W','F']},reward:{vp:3,g:2},tp:'W'}
-    ],completionReward:{g:4,tp:['W']}
-  },
-  fire_t1_forge:{
-    id:'fire_t1_forge',name:'熔爐商會',tier:1,archetype:'B-Focused / Fire',
-    ability:{id:'fire_t1_ability',label:'Fire + Fire',requirement:{exactElements:['F','F']},reward:{vp:2}},
-    contracts:[
-      {id:'fire_t1_c1',order:1,label:'C1',requirement:{exactElements:['F','F']},reward:{vp:1},tp:'F'},
-      {id:'fire_t1_c2',order:2,label:'C2',requirement:{exactElements:['F','F','F']},reward:{vp:2,g:1},tp:'F'},
-      {id:'fire_t1_c3',order:3,label:'C3',requirement:{exactElements:['F','F','F','E']},reward:{vp:4},tp:'F',special:{kind:'fireHighFeePay',minFee:5,payElement:'F',reward:{vp:2}}}
-    ],completionReward:{g:2,tp:['F'],highFeeBonus:{minFee:5,reward:{vp:2}}}
-  },
-  earth_t1_works:{
-    id:'earth_t1_works',name:'地脈工程局',tier:1,archetype:'B-Focused / Earth',
-    ability:{id:'earth_t1_ability',label:'Earth + Earth',requirement:{exactElements:['E','E']},reward:{vp:1,g:2}},
-    contracts:[
-      {id:'earth_t1_c1',order:1,label:'C1',requirement:{exactElements:['E','E']},reward:{vp:1},tp:'E'},
-      {id:'earth_t1_c2',order:2,label:'C2',requirement:{exactElements:['E','E','E']},reward:{vp:2,g:1},tp:'E'},
-      {id:'earth_t1_c3',order:3,label:'C3',requirement:{exactElements:['E','E','E','N']},reward:{vp:2},tp:'E',station:1}
-    ],completionReward:{g:2,station:1}
-  },
-  wind_t1_logistics:{
-    id:'wind_t1_logistics',name:'疾風物流會',tier:1,archetype:'B-Focused / Wind',
-    ability:{id:'wind_t1_ability',label:'Wind + Water',requirement:{exactElements:['N','W']},reward:{vp:1,g:2}},
-    contracts:[
-      {id:'wind_t1_c1',order:1,label:'C1',requirement:{exactElements:['N','N']},reward:{vp:1},tp:'N'},
-      {id:'wind_t1_c2',order:2,label:'C2',requirement:{exactElements:['N','W']},reward:{vp:2},combo:{prerequisiteDealerContractId:'wind_t1_c1',sameContractPhase:true,feeReduction:1,feeCompensationPerMissedPoint:1}},
-      {id:'wind_t1_c3',order:3,label:'C3',requirement:{exactElements:['N','E']},reward:{vp:2},combo:{prerequisiteDealerContractId:'wind_t1_c2',sameContractPhase:true,preFeeZeroBonus:{vp:1},feeReduction:1,feeCompensationPerMissedPoint:1}},
-      {id:'wind_t1_c4',order:4,label:'C4',requirement:{exactElements:['N','F','W']},reward:{vp:2},tp:'N',combo:{prerequisiteDealerContractId:'wind_t1_c3',sameContractPhase:true,preFeeZeroBonus:{vp:1},feeReduction:2,feeCompensationPerMissedPoint:1}}
-    ],completionReward:{g:4,feeReduction:2,feeCompensationPerMissedPoint:1}
-  },
-  steam_t1_union:{
-    id:'steam_t1_union',name:'蒸汽工坊聯盟',tier:1,archetype:'A-Family / Steam',
-    ability:{id:'steam_t1_ability',label:'Steam',requirement:{exactElements:['Steam']},reward:{vp:1,g:2}},
-    contracts:[
-      {id:'steam_t1_c1',order:1,label:'C1',requirement:{exactElements:['W','F']},reward:{vp:1},tp:'W/F'},
-      {id:'steam_t1_c2',order:2,label:'C2',requirement:{exactElements:['Steam','W']},reward:{vp:2,g:1},tp:'W/F'},
-      {id:'steam_t1_c3',order:3,label:'C3',requirement:{exactElements:['Steam','W','F']},reward:{vp:4},tp:'W/F'}
-    ],completionReward:{g:2,tp:['W','F']}
-  },
-  wild_t1_consortium:{
-    id:'wild_t1_consortium',name:'聯合商會',tier:1,archetype:'Wildcard / Structural',
-    ability:{id:'wild_t1_ability',label:'2 different B',requirement:{structuralPattern:'diff2B'},reward:{vp:1,g:2}},
-    contracts:[
-      {id:'wild_t1_c1',order:1,label:'C1',requirement:{structuralPattern:'same2B'},reward:{vp:1},tpFromDeclaredB:true},
-      {id:'wild_t1_c2',order:2,label:'C2',requirement:{structuralPattern:'diff3B'},reward:{vp:4}},
-      {id:'wild_t1_c3',order:3,label:'C3',requirement:{structuralPattern:'A+diff2B'},reward:{vp:4,g:2}}
-    ],completionReward:{g:4,tp:['wild']}
-  }
+ water:{id:'water',name:'水路承包商',ability:{req:['W','F'],reward:{vp:1,gold:2}},contracts:[{id:'water-C1',req:['W','W'],reward:{vp:1},tp:'W'},{id:'water-C2',req:['W','W','N'],reward:{vp:2,gold:1},tp:'W'},{id:'water-C3',req:['W','W','W','F'],reward:{vp:3,gold:2},tp:'W'}],completion:{reward:{gold:4},tp:'W'}},
+ fire:{id:'fire',name:'熔爐商會',ability:{req:['F','F'],reward:{vp:2}},contracts:[{id:'fire-C1',req:['F','F'],reward:{vp:1},tp:'F'},{id:'fire-C2',req:['F','F','F'],reward:{vp:2,gold:1},tp:'F'},{id:'fire-C3',req:['F','F','F','E'],reward:{vp:4},tp:'F',special:'fireDealerC3'}],completion:{reward:{gold:2},tp:'F',special:'fireDealerCompletion'}},
+ earth:{id:'earth',name:'地脈工程局',ability:{req:['E','E'],reward:{vp:1,gold:2}},contracts:[{id:'earth-C1',req:['E','E'],reward:{vp:1},tp:'E'},{id:'earth-C2',req:['E','E','E'],reward:{vp:2,gold:1},tp:'E'},{id:'earth-C3',req:['E','E','E','N'],reward:{vp:2,gold:2},tp:'E',charge:1}],completion:{reward:{gold:2},charge:1}},
+ wind:{id:'wind',name:'疾風物流會',ability:{req:['N','W'],reward:{vp:1,gold:2}},contracts:[{id:'wind-C1',req:['N','N'],reward:{vp:1},tp:'N'},{id:'wind-C2',req:['N','W'],reward:{vp:2},comboPrev:'wind-C1',feeReduce:1},{id:'wind-C3',req:['N','E'],reward:{vp:2},comboPrev:'wind-C2',feeZeroVp:1,feeReduce:1},{id:'wind-C4',req:['N','F','W'],reward:{vp:2},tp:'N',comboPrev:'wind-C3',feeZeroVp:1,feeReduce:2}],completion:{reward:{gold:4},feeReduce:2}},
+ steam:{id:'steam',name:'蒸汽工坊聯盟',ability:{req:['Steam'],reward:{vp:1,gold:2}},contracts:[{id:'steam-C1',req:['W','F'],reward:{vp:1},tp:'choiceWF'},{id:'steam-C2',req:['Steam','W'],reward:{vp:2,gold:1},tp:'choiceWF'},{id:'steam-C3',req:['Steam','W','F'],reward:{vp:4},tp:'choiceWF'}],completion:{reward:{gold:2},multiTp:['W','F']}},
+ wildcard:{id:'wildcard',name:'聯合商會',ability:{pattern:'diff2B',reward:{vp:1,gold:2}},contracts:[{id:'wild-C1',pattern:'same2B',reward:{vp:1},tpDeclared:true},{id:'wild-C2',pattern:'diff3B',reward:{vp:4}},{id:'wild-C3',pattern:'AplusDiff2B',reward:{vp:4,gold:2}}],completion:{reward:{gold:4},tp:'wild'}}
 };
-const DEALER_TEST_CONFIG={discardReshuffle:false};
-function dealerExactReq(x){return x?.requirement?.exactElements?[...x.requirement.exactElements]:[]}
-function structuralDeclarations(pattern){
-  let out=[];
-  if(pattern==='same2B')for(let b of B)out.push([b,b]);
-  else if(pattern==='diff2B')for(let i=0;i<B.length;i++)for(let j=i+1;j<B.length;j++)out.push([B[i],B[j]]);
-  else if(pattern==='diff3B')for(let i=0;i<B.length;i++)for(let j=i+1;j<B.length;j++)for(let k=j+1;k<B.length;k++)out.push([B[i],B[j],B[k]]);
-  else if(pattern==='A+diff2B')for(let a of A)for(let i=0;i<B.length;i++)for(let j=i+1;j<B.length;j++)out.push([a,B[i],B[j]]);
-  return out
+const INITIAL={id:'initial',name:'Initial Dealer',ability:{pattern:'any2B',reward:{vp:1,gold:2}},contracts:[{id:'init-C1',pattern:'any2B',reward:{vp:1,gold:2}},{id:'init-C2',pattern:'diff2B',reward:{vp:1,gold:2}},{id:'init-C3',pattern:'anyA',reward:{vp:1,gold:2}},{id:'init-C4',pattern:'Aplus2B',reward:{vp:4,gold:2}}],completion:{tp:'wild'}};
+const INNER={
+ standard:{id:'standard',name:'工房標準化核心',type:'universal',text:'本 sector 每個 tile Build Cost -1G；每次 Outer draw +1。'},
+ reflux:{id:'reflux',name:'產線回流核心',type:'universal',text:'此 sector 生產後：本次產過的元素 +1，或 +4G。'},
+ water:{id:'water',name:'流體路由核心',type:'B',b:'W',text:'Sector Production 可改變 B output composition；每個有效改變 +1G。'},
+ fire:{id:'fire',name:'高壓熔爐核心',type:'B',b:'F',text:'qualifying Contract 且 Fee≥5：+F；Mastery 再 +1G。'},
+ earth:{id:'earth',name:'蓄能基座',type:'B',b:'E',text:'本 sector 生產後 +1 Charge；Mastery 另 +1 任意 sector Charge。'},
+ wind:{id:'wind',name:'連鎖物流核心',type:'B',b:'N',text:'Combo +Wind；Mastery 再 +1G。'},
+ Steam:{id:'Steam',name:'雙流混合核心',type:'A',a:'Steam',text:'Sector Production 時 W+F↔Steam，有效淨轉換 +Gold。'},
+ Magma:{id:'Magma',name:'熔壓核心',type:'A',a:'Magma',text:'依 Engine Fee/Charge 狀態重複 tile 或放 Charge。'},
+ Frost:{id:'Frost',name:'冷鏈協調核心',type:'A',a:'Frost',text:'Frost Contract / Combo 產 Water/Wind；Mastery 有 Fee/VP。'},
+ Sandstorm:{id:'Sandstorm',name:'風積蓄能核心',type:'A',a:'Sandstorm',text:'Combo 放 Charge；無合法位置 +2G。'},
+ wildcard:{id:'wildcard',name:'四象協調核心',type:'wild',text:'本 sector Production → +1 Wildcard TP。'}
+};
+function newGame(seed=String(Date.now()).slice(-7)){
+  G={version:'v0.15-web-1.1',seed:String(seed),rngState:hashSeed(seed),uid:0,turnNumber:1,phase:'Setup',subphase:null,activePlayerId:null,initiativeOrder:['human','ai1','ai2','ai3'],gameOver:false,gameOverReason:null,tileBag:[],oneTimeMarket:[],t1OneTimeDeck:[],longTermContracts:[],longTermUsedThisTurn:{},dealerMarket:[],t1DealerDeck:[],players:[],log:[],config:deep(CFG),phaseChoices:{},buildContext:null,productionContext:null,contractContext:null,sourceGaps:deep(SOURCE_GAPS)};
+  for(const b of B)for(let i=0;i<16;i++)G.tileBag.push({id:`${b}-${i+1}`,element:b});
+  G.tileBag=shuffle(G.tileBag);G.players=[0,1,2,3].map(makePlayer);
+  G.t1OneTimeDeck=shuffle(ONE_TIME.map(deep));for(let i=0;i<CFG.oneTimeMarketSize;i++)G.oneTimeMarket.push(G.t1OneTimeDeck.shift());
+  G.longTermContracts=shuffle(LT_TEMPLATES.map(x=>({...deep(x),instanceId:uid('LT')}))).slice(0,4);
+  const ds=shuffle(Object.keys(DEALERS));G.dealerMarket=ds.slice(0,3);G.t1DealerDeck=ds.slice(3);
+  log('setup','新遊戲 Setup 完成',{seed,sourceGaps:SOURCE_GAPS});startPrivilegeSelection();render();
 }
-function dealerRequirementDeclarations(entry){let r=entry?.requirement||{};if(r.exactElements)return [[...r.exactElements]];if(r.structuralPattern)return structuralDeclarations(r.structuralPattern);return []}
-function dealerPaymentOptions(p,entry){let all=[];for(let dec of dealerRequirementDeclarations(entry))all.push(...paymentOptionsConcrete(p,dec));return uniquePayments(p,all)}
-function dealerRequirementText(entry){let r=entry?.requirement||{};if(r.exactElements)return reqIcons(r.exactElements);let p=r.structuralPattern;if(p==='same2B')return `2 個相同 B ${B_ICONS}`;if(p==='diff2B')return `2 種不同 B ${B_ICONS}`;if(p==='diff3B')return `3 種不同 B ${B_ICONS}`;if(p==='A+diff2B')return `1A ${A_ICONS} + 2 種不同 B ${B_ICONS}`;return '—'}
-function dealerDef(p){return p?.dealer?.id&&p.dealer.id!=='initial'?DEALERS[p.dealer.id]||null:null}
-function dealerAbility(p){if(p?.dealer?.id==='initial')return{id:'initial_ability',label:'任意 2B',req:['ANYB','ANYB'],reward:{vp:1,g:2}};let d=dealerDef(p);return d?{...d.ability,req:dealerExactReq(d.ability),structuralPattern:d.ability.requirement?.structuralPattern,dealerName:d.name}:null}
-function dealerContract(p){if(p?.dealer?.id==='initial'){let c=INITIAL_DEALER[p.dealer.step];return c?{id:`initial_c${p.dealer.step+1}`,order:p.dealer.step+1,label:`Initial C${p.dealer.step+1}`,...c}:null}let d=dealerDef(p),c=d?.contracts?.[p.dealer.step];return c?{...c,req:dealerExactReq(c),structuralPattern:c.requirement?.structuralPattern,dealerName:d.name}:null}
-function dealerInstance(dealerId){if(!G.nextDealerUid)G.nextDealerUid=1;let d=DEALERS[dealerId];return{instanceId:`dealer-${G.nextDealerUid++}`,dealerId,tier:d.tier}}
-function initDealerSupply(){G.dealerDecks={1:[],2:[],3:[]};G.dealerDiscard={1:[],2:[],3:[]};G.dealerContentLoaded={1:true,2:false,3:false};G.dealerMarket=[];for(let id of Object.keys(DEALERS))G.dealerDecks[1].push(dealerInstance(id));G.dealerDecks[1]=shuf(G.dealerDecks[1]);while(G.dealerMarket.length<3&&G.dealerDecks[1].length)G.dealerMarket.push(G.dealerDecks[1].pop())}
-function dealerMarketName(x){return DEALERS[x?.dealerId]?.name||x?.dealerId||'Unknown Dealer'}
-function comboActive(p,dc){let c=dc?.combo;if(!c)return false;return !!(c.sameContractPhase&&(p.dealer.completedDealerContractIdsThisPhase||[]).includes(c.prerequisiteDealerContractId))}
-function comboValue(p,dc){if(!comboActive(p,dc))return 0;let c=dc.combo,pre=p.fee,v=0;if(c.preFeeZeroBonus&&pre===0)v+=(c.preFeeZeroBonus.vp||0)+(c.preFeeZeroBonus.g||0)/2;let actual=Math.min(pre,c.feeReduction||0),miss=(c.feeReduction||0)-actual;v+=actual*.5+miss*(c.feeCompensationPerMissedPoint||0)/2;return v}
-function reduceFeeWithCompensation(p,amount,compPerMissed=1){let pre=p.fee,actual=Math.min(pre,amount),missed=amount-actual;p.fee-=actual;let compensation=missed*compPerMissed;p.g+=compensation;return{preFee:pre,requestedFeeReduction:amount,actualFeeReduced:actual,feeCompensationGold:compensation}}
-function dealerStationNeed(p,dc){if(!dc||p?.dealer?.id==='initial')return 0;let n=dc.station||0,d=dealerDef(p);if(d&&p.dealer.step===d.contracts.length-1)n+=d.completionReward?.station||0;return n}
-function dealerEntryRewardSummary(x){let r=x?.reward||{},parts=[];if(r.vp)parts.push(`${r.vp}VP`);if(r.g)parts.push(`${r.g}G`);if(x?.tp)parts.push(`${tpIcons(x.tp)} TP`);if(x?.tpFromDeclaredB)parts.push('1 TP（宣告 B）');if(x?.station)parts.push(`放 ${x.station} 生產站`);return parts.join(' + ')||'—'}
-function completionRewardText(d){let r=d?.completionReward||{},parts=[];if(r.vp)parts.push(`${r.vp}VP`);if(r.g)parts.push(`${r.g}G`);if(r.tp?.length)parts.push(r.tp.map(x=>`${tpIcons(x)} TP`).join(' + '));if(r.station)parts.push(`放 ${r.station} 生產站`);if(r.feeReduction)parts.push(`Fee -${r.feeReduction}（降不了每點 +${r.feeCompensationPerMissedPoint||1}G）`);if(r.highFeeBonus)parts.push(`Fee≥${r.highFeeBonus.minFee} 再 +${r.highFeeBonus.reward.vp||0}VP`);return parts.join(' + ')||'—'}
-function parseReqSpec(spec){return spec.split(',').flatMap(part=>ICON[part]?[part]:(/^[WFEN]+$/.test(part)?[...part]:[part]))}
-function reqIcons(req){return req.map(x=>ICON[x]||x).join(' ')}
-function tpIcons(tp){if(!tp)return ''; if(tp==='wild')return `${B_ICONS} (Wildcard)`; return tp.split('/').map(x=>ICON[x]||x).join(' / ')}
-function rewardText(r){return `${r.vp||0}VP${r.g?` + ${r.g}G`:''}`}
-function specialRewardText(c){
-  if(c.special==='fire5')return `若 Fee ≥ 5：再 +1VP +2G`;
-  if(c.special==='fire5vp')return `若 Fee ≥ 5：再 +2VP`;
-  if(c.special==='windStable')return `若 Fee > 0：Fee -1；若 Fee = 0：改為 +1G`;
-  if(c.special==='windConditional')return `若 Fee > 0：Fee -1；若 Fee = 0：改為 +2VP +1G`;
-  return '';
+function startPrivilegeSelection(){if(G.gameOver)return;G.phase='Privilege';G.subphase='select';G.activePlayerId='human';G.phaseChoices={};for(const p of G.players){p.flags.dealerAbilityUsedTurn=false;p.flags.waterRedrawUsed=false;p.flags.earthExtraBuildUsed=false;p.flags.prolifTaken=0;p.passedOutContractPhase=false;p.qualifyingContractsThisPhase=0;p.comboState={completedDealerIds:[],comboCount:0};}G.longTermUsedThisTurn={};for(const p of G.players.slice(1))G.phaseChoices[p.id]=aiChoosePrivilege(p);showPrivilegeDecision();render()}
+function aiChoosePrivilege(p){const opts=['fund-fee','fund-gold','fund-init','build','production'];const score={};score['fund-gold']=5+(p.gold<5?5:0);score['fund-fee']=Math.min(4,p.engineFee)*1.2+(p.engineFee>=5?1:0);score['fund-init']=1.5;score.build=(p.gold>=2?5:1)+emptyOuterCount(p)*.2;score.production=estimateProductionValue(p)*1.2+(p.gold>=4?1:0);return opts.sort((a,b)=>score[b]-score[a]+(rng()-.5)*.4)[0]}
+function showPrivilegeDecision(){const body=document.getElementById('decisionBody');body.innerHTML=`<div class="sub">Turn ${G.turnNumber}：選 1 Privilege。AI 已秘密選完；你的選擇送出後同時揭露。</div><div class="choice legal" onclick="choosePrivilege('fund-fee')"><b>Funding｜Engine Fee -4</b><div class="tiny">overflow 每點 +1G</div></div><div class="choice legal" onclick="choosePrivilege('fund-gold')"><b>Funding｜+6G</b></div><div class="choice legal" onclick="choosePrivilege('fund-init')"><b>Funding｜Initiative Claim</b></div><div class="choice legal" onclick="choosePrivilege('build')"><b>Build｜Outer draw +1</b></div><div class="choice legal" onclick="choosePrivilege('production')"><b>Production｜First Proliferation 固定費用 -4G</b><div class="tiny">第一次增殖的固定 4G 費用減免為 0G；Engine Fee trigger 仍照常支付／提升。Second Proliferation 仍為 7G。</div></div>`}
+function choosePrivilege(x){if(G.phase!=='Privilege'||G.gameOver)return;G.phaseChoices.human=x;log('privilege_reveal','揭露 Privilege',{choices:deep(G.phaseChoices)});const claimers=G.initiativeOrder.filter(id=>G.phaseChoices[id]==='fund-init');const rest=G.initiativeOrder.filter(id=>G.phaseChoices[id]!=='fund-init');if(claimers.length)G.initiativeOrder=[...claimers,...rest];runTurnPhases()}
+async function runTurnPhases(){processing=true;const choices=Object.values(G.phaseChoices);if(choices.some(x=>x.startsWith('fund-')))await fundingPhase();if(G.gameOver){processing=false;return}if(choices.includes('build'))await buildPhase();if(G.gameOver){processing=false;return}if(choices.includes('production'))await productionPhase();if(G.gameOver){processing=false;return}await contractPhase();if(G.gameOver){processing=false;return}G.turnNumber++;processing=false;startPrivilegeSelection()}
+async function fundingPhase(){G.phase='Funding';G.subphase=null;for(const id of G.initiativeOrder){const p=player(id),c=G.phaseChoices[id];if(c==='fund-fee')reduceFee(p,4,'Funding Privilege');else if(c==='fund-gold'){p.gold+=6;log('funding',`${p.name} Funding +6G`)}else if(c==='fund-init')log('funding',`${p.name} Initiative Claim`)}render();await sleep(150)}
+function buildDrawCount(p){let n=2+(G.phaseChoices[p.id]==='build'?1:0);if(hasInner(p,'standard'))n++;return Math.min(4,n)}
+function drawFromBag(n){const out=[];for(let i=0;i<n&&G.tileBag.length;i++){const j=Math.floor(rng()*G.tileBag.length);out.push(G.tileBag.splice(j,1)[0])}return out}
+function returnBag(xs){G.tileBag.push(...xs);G.tileBag=shuffle(G.tileBag)}
+async function buildPhase(){G.phase='Build';G.subphase='draw';G.buildContext={held:{}};for(const id of G.initiativeOrder){const p=player(id),n=buildDrawCount(p);G.buildContext.held[id]=drawFromBag(n);p.buildDraw=G.buildContext.held[id].map(deep);log('build_draw',`${p.name} 抽 ${n} Outer`,{draw:p.buildDraw.map(x=>x.element)})}
+  for(const id of G.initiativeOrder){G.activePlayerId=id;const p=player(id);if(p.type==='human')await humanBuildTurn(p);else aiBuildTurn(p);returnBag(G.buildContext.held[id]);G.buildContext.held[id]=[];p.buildDraw=[];render();await sleep(60)}G.buildContext=null}
+function emptyOuterCount(p){return p.sectors.reduce((n,s)=>n+s.outers.filter(x=>!x).length,0)}
+function buildDiscount(p,sectorIndex){let d=techHas(p,'E',3,'B')?1:0;if(p.sectors[sectorIndex].inner?.id==='standard')d++;return d}
+function buildCost(p,kind,sectorIndex){const raw={outer:2,middle:4,inner:6}[kind];return Math.max(0,raw-buildDiscount(p,sectorIndex))}
+function legalOuterPositions(p){const a=[];p.sectors.forEach((s,si)=>s.outers.forEach((x,oi)=>{if(!x)a.push({si,oi})}));return a}
+function pairEls(s,mi){const ix=mi===0?[0,1]:[2,3];if(!ix.every(i=>s.outers[i]))return null;return ix.map(i=>s.outers[i].element)}
+function pairRelation(es){if(!es)return null;if(es[0]===es[1])return {type:'same',special:'enhance',a:null};const a=NEIGHBOR_A[`${es[0]},${es[1]}`];if(a)return {type:'neighbor',special:'a',a};return {type:'opposite',special:'breadth',a:null}}
+function legalMiddleBuilds(p){const a=[];p.sectors.forEach((s,si)=>s.middles.forEach((m,mi)=>{if(m)return;const es=pairEls(s,mi);if(!es)return;const rel=pairRelation(es);a.push({si,mi,mode:'standard',label:`${SNAME[si]} M${mi+1} Standard (${es.map(x=>BNAME[x]).join('+')})`});a.push({si,mi,mode:rel.special,label:`${SNAME[si]} M${mi+1} ${rel.special==='enhance'?'B Enhance':rel.special==='a'?`${rel.a} Production`:'Breadth Enhance'}`})}));return a}
+function sectorComposition(p,si){return p.sectors[si].outers.filter(Boolean).map(x=>x.element)}
+function hasInner(p,id){return p.sectors.some(s=>s.inner?.id===id)}
+function innerOwned(p,id){return hasInner(p,id)}
+function legalInnerBuilds(p){const out=[];p.sectors.forEach((s,si)=>{if(s.inner)return;const comp=sectorComposition(p,si);for(const it of Object.values(INNER)){if(innerOwned(p,it.id))continue;if(it.type==='universal'){out.push({si,id:it.id})}else if(it.type==='B'){if(comp.filter(x=>x===it.b).length>=3&&trackLv(p,it.b)>=4)out.push({si,id:it.id})}else if(it.type==='A'){const par=PARENTS[it.a];if(comp.length===4&&comp.every(x=>par.includes(x))&&par.every(x=>comp.includes(x))&&par.every(x=>trackLv(p,x)>=4))out.push({si,id:it.id})}else if(it.type==='wild'){if(comp.length===4&&B.every(x=>comp.filter(y=>y===x).length===1))out.push({si,id:it.id})}}});return out}
+function canAfford(p,c){return p.gold>=c}
+function humanBuildTurn(p){return new Promise(resolve=>{humanWait={kind:'build',resolve,pid:p.id};showHumanBuild(p)})}
+function showHumanBuild(p){const held=G.buildContext.held[p.id];const outerPos=legalOuterPositions(p);const mids=legalMiddleBuilds(p);const inn=legalInnerBuilds(p);let h=`<div><b>${p.name} Build</b>｜Gold ${p.gold}</div><div class="sub">Draw: ${held.map((x,i)=>`<span class="r ${CLS[x.element]}">${i}:${ICON[x.element]} ${BNAME[x.element]}</span>`).join(' ')||'bag empty'}</div>`;
+ if(techHas(p,'W',3,'B')&&!p.flags.waterRedrawUsed&&!held.some(x=>x.element==='W'))h+=`<button class="btn warn" onclick="humanWaterRedraw()">Water Lv3-B：整批重抽</button>`;
+ h+='<h3>Outer</h3>';for(let hi=0;hi<held.length;hi++)for(const q of outerPos){const c=buildCost(p,'outer',q.si);h+=`<button class="btn" ${p.gold<c?'disabled':''} onclick="humanBuildOuter(${hi},${q.si},${q.oi})">${ICON[held[hi].element]} → ${SNAME[q.si]} O${q.oi+1}｜${c}G</button>`}
+ h+='<h3>Middle</h3>';for(let i=0;i<mids.length;i++){const q=mids[i],c=buildCost(p,'middle',q.si);h+=`<button class="btn" ${p.gold<c?'disabled':''} onclick="humanBuildMiddle(${i})">${q.label}｜${c}G</button>`}
+ h+='<h3>Inner</h3>';for(let i=0;i<inn.length;i++){const q=inn[i],c=buildCost(p,'inner',q.si);h+=`<button class="btn" ${p.gold<c?'disabled':''} onclick="humanBuildInner(${i})">${SNAME[q.si]}｜${INNER[q.id].name}｜${c}G</button>`}
+ h+=`<div style="margin-top:8px"><button class="btn bad" onclick="finishHumanBuild()">Pass</button></div><div class="tiny">Earth Lv3-A 額外 Build 會使用本次剩餘 draw，不重抽。</div>`;document.getElementById('decisionBody').innerHTML=h;render()}
+function humanWaterRedraw(){const p=human(),old=G.buildContext.held[p.id];returnBag(old);const n=buildDrawCount(p);const nw=drawFromBag(n);G.buildContext.held[p.id]=nw;p.buildDraw=nw.map(deep);p.flags.waterRedrawUsed=true;log('tech_action','Water Lv3-B 整批重抽',{draw:nw.map(x=>x.element)});showHumanBuild(p)}
+function placeOuter(p,t,si,oi,cost){p.gold-=cost;p.sectors[si].outers[oi]={id:uid('O'),type:'outer',element:t.element,charge:0};log('build',`${p.name} 建造 ${BNAME[t.element]} Outer @ ${SNAME[si]} O${oi+1}`,{cost,element:t.element,si,oi});if(techHas(p,'E',3,'A')&&t.element==='E'&&!p.flags.earthExtraBuildUsed){p.flags.earthExtraBuildUsed=true;return true}return false}
+function humanBuildOuter(hi,si,oi){const p=human(),held=G.buildContext.held[p.id],t=held[hi],c=buildCost(p,'outer',si);if(!t||!canAfford(p,c))return;const extra=placeOuter(p,t,si,oi,c);held.splice(hi,1);if(extra){showEarthExtraBuild(p);return}finishHumanBuild()}
+function showEarthExtraBuild(p){const held=G.buildContext.held[p.id];let h=`<b>Earth Lv3-A 額外 Build</b><div class="sub">只能使用剩餘本次 draw；可 Outer / 合法 Middle / Inner / Pass。</div>`;for(let hi=0;hi<held.length;hi++)for(const q of legalOuterPositions(p)){const c=buildCost(p,'outer',q.si);h+=`<button class="btn" ${p.gold<c?'disabled':''} onclick="earthExtraOuter(${hi},${q.si},${q.oi})">${ICON[held[hi].element]}→${SNAME[q.si]} O${q.oi+1} ${c}G</button>`}const mids=legalMiddleBuilds(p);mids.forEach((q,i)=>{const c=buildCost(p,'middle',q.si);h+=`<button class="btn" ${p.gold<c?'disabled':''} onclick="earthExtraMiddle(${i})">${q.label} ${c}G</button>`});const inns=legalInnerBuilds(p);inns.forEach((q,i)=>{const c=buildCost(p,'inner',q.si);h+=`<button class="btn" ${p.gold<c?'disabled':''} onclick="earthExtraInner(${i})">${SNAME[q.si]} ${INNER[q.id].name} ${c}G</button>`});h+=`<button class="btn bad" onclick="finishHumanBuild()">Pass extra</button>`;document.getElementById('decisionBody').innerHTML=h}
+function earthExtraOuter(hi,si,oi){const p=human(),held=G.buildContext.held[p.id],t=held[hi],c=buildCost(p,'outer',si);if(t&&canAfford(p,c)){placeOuter(p,t,si,oi,c);held.splice(hi,1)}finishHumanBuild()}
+function buildMiddle(p,q,c){p.gold-=c;const es=pairEls(p.sectors[q.si],q.mi);p.sectors[q.si].middles[q.mi]={id:uid('M'),type:'middle',mode:q.mode,pair:es.slice(),charge:0};log('build',`${p.name} 建造 Middle @ ${SNAME[q.si]} M${q.mi+1} ${q.mode}`,{cost:c,pair:es,mode:q.mode})}
+function humanBuildMiddle(i){const p=human(),q=legalMiddleBuilds(p)[i];if(!q)return;const c=buildCost(p,'middle',q.si);if(!canAfford(p,c))return;buildMiddle(p,q,c);finishHumanBuild()}
+function buildInner(p,q,c){p.gold-=c;p.sectors[q.si].inner=deep(INNER[q.id]);log('build',`${p.name} 建造 Inner ${INNER[q.id].name} @ ${SNAME[q.si]}`,{cost:c})}
+function humanBuildInner(i){const p=human(),q=legalInnerBuilds(p)[i];if(!q)return;const c=buildCost(p,'inner',q.si);if(!canAfford(p,c))return;buildInner(p,q,c);finishHumanBuild()}
+function earthExtraMiddle(i){humanBuildMiddle(i)}function earthExtraInner(i){humanBuildInner(i)}
+function finishHumanBuild(){if(!humanWait)return;const r=humanWait.resolve;humanWait=null;document.getElementById('decisionBody').innerHTML='等待其他玩家…';r()}
+function aiBuildTurn(p){const held=G.buildContext.held[p.id];if(techHas(p,'W',3,'B')&&!p.flags.waterRedrawUsed&&!held.some(x=>x.element==='W')){const old=held.splice(0);returnBag(old);held.push(...drawFromBag(buildDrawCount(p)));p.flags.waterRedrawUsed=true;log('ai_eval',`${p.name} Water Lv3-B redraw`,{draw:held.map(x=>x.element)})}
+ let cand=[{kind:'pass',score:0}];for(let hi=0;hi<held.length;hi++)for(const q of legalOuterPositions(p)){const c=buildCost(p,'outer',q.si);if(p.gold<c)continue;let score=2.3-c*.25+sectorDemandScore(p,q.si,held[hi].element)+middleUnlockDelta(p,q.si,q.oi,held[hi].element);cand.push({kind:'outer',hi,...q,c,score})}for(const q of legalMiddleBuilds(p)){const c=buildCost(p,'middle',q.si);if(p.gold<c)continue;let score=middleModeValue(q.mode)+1.2-c*.15;cand.push({kind:'middle',q,c,score})}for(const q of legalInnerBuilds(p)){const c=buildCost(p,'inner',q.si);if(p.gold<c)continue;cand.push({kind:'inner',q,c,score:3.8+trackLv(p,innerTrack(q.id))*.2-c*.1})}cand.sort((a,b)=>b.score-a.score);const x=cand[0];log('ai_eval',`${p.name} Build choose ${x.kind}`,{top:cand.slice(0,6)});if(x.kind==='outer'){const t=held[x.hi];const extra=placeOuter(p,t,x.si,x.oi,x.c);held.splice(x.hi,1);if(extra)aiEarthExtraBuild(p,held)}else if(x.kind==='middle')buildMiddle(p,x.q,x.c);else if(x.kind==='inner')buildInner(p,x.q,x.c)}
+function aiEarthExtraBuild(p,held){let opts=[];for(let hi=0;hi<held.length;hi++)for(const q of legalOuterPositions(p)){const c=buildCost(p,'outer',q.si);if(p.gold>=c)opts.push({hi,...q,c,score:2+sectorDemandScore(p,q.si,held[hi].element)})}opts.sort((a,b)=>b.score-a.score);if(opts[0]){const x=opts[0],t=held[x.hi];placeOuter(p,t,x.si,x.oi,x.c);held.splice(x.hi,1)}}
+function innerTrack(id){return {water:'W',fire:'F',earth:'E',wind:'N'}[id]||'W'}
+function middleModeValue(m){return {standard:2,enhance:3.5,a:4,breadth:3.4}[m]||2}
+function sectorDemandScore(p,si,e){let s=p.sectors[si],comp=sectorComposition(p,si),v=comp.filter(x=>x===e).length*.45;if(trackLv(p,e)>=3)v+=.5;return v}
+function middleUnlockDelta(p,si,oi,e){const s=p.sectors[si],copy=s.outers.slice();copy[oi]={element:e};let v=0;for(const ix of [[0,1],[2,3]])if(ix.every(i=>copy[i])&&!s.middles[ix[0]===0?0:1])v+=1.1;return v}
+function estimateProductionValue(p){let v=0;for(let si=0;si<4;si++)v+=sectorBaseValue(p,si);const stock=B.reduce((n,k)=>n+p.resources[k],0)+A.reduce((n,k)=>n+p.resources[k]*2,0);return v + (stock<4?2:0)}
+function sectorBaseValue(p,si){const s=p.sectors[si];let v=s.outers.filter(Boolean).length;for(let mi=0;mi<2;mi++){const m=s.middles[mi];if(!m)continue;v+=m.mode==='a'?2:m.mode==='enhance'?2:m.mode==='breadth'?2:2}return v}
+async function productionPhase(){G.phase='Production';G.productionContext={layer:'free',eligibleSecond:{}};for(const p of G.players)p.flags.prolifTaken=0;
+ for(const id of G.initiativeOrder){G.activePlayerId=id;await runSectorProductionDecision(player(id),0)}if(G.gameOver)return;
+ for(const id of G.initiativeOrder){G.activePlayerId=id;const p=player(id);if(await decideProliferation(p,1)){p.flags.prolifTaken=1;G.productionContext.eligibleSecond[id]=true;await runSectorProductionDecision(p,1)}}
+ for(const id of G.initiativeOrder){G.activePlayerId=id;const p=player(id);if(G.productionContext.eligibleSecond[id]&&await decideProliferation(p,2)){p.flags.prolifTaken=2;await runSectorProductionDecision(p,2)}}G.productionContext=null;render()}
+function prolifTotalCost(p,idx){let fixed=CFG.prolifCosts[idx-1];let feeCost=techHas(p,'F',10,'A')&&idx===1?0:p.engineFee;return fixed+feeCost}
+function decideProliferation(p,idx){const selectorDiscount=(idx===1&&G.phaseChoices[p.id]==='production')?4:0,fixed=Math.max(0,CFG.prolifCosts[idx-1]-selectorDiscount),skipFee=techHas(p,'F',10,'A')&&idx===1,feeCost=skipFee?0:p.engineFee,total=fixed+feeCost;if(p.type==='ai'){const val=sectorBaseValue(p,nextSector(p,false))*2;const yes=p.gold>=total&&val*1.25>total*.7;log('ai_eval',`${p.name} proliferation ${idx} ${yes?'TAKE':'PASS'}`,{fixed,feeCost,total,val});if(yes){p.gold-=fixed;if(!skipFee)feeTrigger(p,`Proliferation ${idx}`);else log('tech_trigger',`${p.name} Fire Lv10-A：First Proliferation 不觸發增殖 Engine Fee`);return Promise.resolve(true)}return Promise.resolve(false)}return new Promise(resolve=>{humanWait={kind:'prolif',resolve,pid:p.id,idx};const afford=p.gold>=total;document.getElementById('decisionBody').innerHTML=`<b>${idx===1?'First':'Second'} Proliferation</b><div>${idx===1&&G.phaseChoices[p.id]==='production'?'Production Privilege：固定 4G → 0G｜':'固定 '+fixed+'G + '}${idx===1&&G.phaseChoices[p.id]==='production'?'Engine Fee ':''}${skipFee?'Fire Lv10-A：0':'目前 Engine Fee '+feeCost+'G'} = <b>${total}G</b></div><div class="actions"><button class="btn good" ${!afford?'disabled':''} onclick="humanProlif(true)">執行</button><button class="btn bad" onclick="humanProlif(false)">Pass</button></div>`;render()})}
+function humanProlif(yes){const w=humanWait;if(!w||w.kind!=='prolif')return;const p=player(w.pid),idx=w.idx;if(yes){const selectorDiscount=(idx===1&&G.phaseChoices[p.id]==='production')?4:0,fixed=Math.max(0,CFG.prolifCosts[idx-1]-selectorDiscount),skip=techHas(p,'F',10,'A')&&idx===1,total=fixed+(skip?0:p.engineFee);if(p.gold<total)return;p.gold-=fixed;if(!skip)feeTrigger(p,`Proliferation ${idx}`);else log('tech_trigger','Fire Lv10-A：First Proliferation fee trigger skipped')}humanWait=null;w.resolve(yes)}
+function nextSector(p,reverse){let dir=p.pointer.direction;if(reverse)dir=dir==='CW'?'CCW':'CW';return dir==='CW'?(p.pointer.boundary+1)%4:p.pointer.boundary}
+function runSectorProductionDecision(p,prolifIndex){if(p.type==='ai'){const canRev=p.gold>=p.engineFee;let no=sectorBaseValue(p,nextSector(p,false)),rv=canRev?sectorBaseValue(p,nextSector(p,true)):-999;let reverse=rv>no+1.0;if(reverse)feeTrigger(p,'Reverse Pointer');return executeSectorProduction(p,reverse,prolifIndex)}return new Promise(resolve=>{humanWait={kind:'sectorDirection',resolve,pid:p.id,prolifIndex};const no=nextSector(p,false),rv=nextSector(p,true),can=p.gold>=p.engineFee;document.getElementById('decisionBody').innerHTML=`<b>${prolifIndex===0?'Free':`Proliferation ${prolifIndex}`} Sector Production</b><div>目前方向 <b>${p.pointer.direction}</b>｜Pointer ${boundaryText(p.pointer.boundary)}｜Fee ${p.engineFee}</div><div class="choice legal" onclick="humanSectorDir(false)">維持 ${p.pointer.direction} → 生產 <b>${SNAME[no]}</b></div><div class="choice ${can?'legal':''}" ${can?`onclick="humanSectorDir(true)"`:''}>Reverse（先支付 ${p.engineFee}G → Fee+1）→ 生產 <b>${SNAME[rv]}</b>${can?'':'｜Gold 不足'}</div>`;render()})}
+async function humanSectorDir(reverse){const w=humanWait;if(!w||w.kind!=='sectorDirection')return;const p=player(w.pid);if(reverse&&!feeTrigger(p,'Reverse Pointer'))return;humanWait=null;await executeSectorProduction(p,reverse,w.prolifIndex);w.resolve()}
+function boundaryText(b){return `${SNAME[b]} | ${SNAME[(b+1)%4]}`}
+async function executeSectorProduction(p,reverse,prolifIndex){if(reverse)p.pointer.direction=p.pointer.direction==='CW'?'CCW':'CW';const oldB=p.pointer.boundary,dir=p.pointer.direction,si=dir==='CW'?(oldB+1)%4:oldB,un=dir==='CW'?oldB:(oldB+1)%4;if(dir==='CW')p.pointer.boundary=si;else p.pointer.boundary=(oldB+3)%4;G.subphase=`SectorProduction:${p.id}:${si}`;const ctx={p,si,un,produced:emptyRes(),chargeConsumed:[],chargePlaced:[],baseEvents:[],prolifIndex};log('sector_production_start',`${p.name} 生產 ${SNAME[si]} sector`,{pointerBefore:{boundary:oldB,direction:dir},sector:si,unselected:un,prolifIndex});
+ if(techHas(p,'F',3,'A')){feeIncreaseNoPay(p,2,'Fire Lv3-A');const n=p.engineFee>=5?2:1;p.resources.F+=n;ctx.produced.F+=n;log('tech_trigger',`${p.name} Fire Lv3-A → +${n}F`)}
+ const s=p.sectors[si];let outputs=[];for(let oi=0;oi<4;oi++)if(s.outers[oi])outputs.push({tile:s.outers[oi],kind:'outer',idx:oi,out:{resources:{[s.outers[oi].element]:1}}});for(let mi=0;mi<2;mi++)if(s.middles[mi])outputs.push({tile:s.middles[mi],kind:'middle',idx:mi,out:middleOutput(p,s.middles[mi])});
+ // Water routing Inner converts base B outputs before supply.
+ if(s.inner?.id==='water')outputs=await waterRouting(p,outputs,trackLv(p,'W')>=8?4:2);
+ for(const ev of outputs){await applyBasicOutput(p,ctx,ev,1);if(ev.tile.charge>0){const reps=chargeRepeatCount(p,si,ev);for(let c=0;c<ev.tile.charge;c++){ctx.chargeConsumed.push({si,kind:ev.kind,idx:ev.idx});for(let z=0;z<reps;z++)await applyBasicOutput(p,ctx,ev,1)}ev.tile.charge=0}}
+ if(s.inner?.id==='wildcard')gainTP(p,'wild',1,'Wildcard Inner Sector Production');
+ // W3A optional
+ if(techHas(p,'W',3,'A'))await optionalGoldForWater(p,ctx);
+ // A Lv2
+ for(const a of A){if(aTechOn(p,a,2)){const [x,y]=PARENTS[a];if(ctx.produced[x]>0&&ctx.produced[y]>0)await optionalAProduction(p,a)}}
+ // A-family Inner / after-ish effects
+ await resolveProductionInner(p,ctx);
+ if(aTechOn(p,'Magma',5)&&ctx.chargeConsumed.length&&p.engineFee>=5){p.resources.Magma++;ctx.produced.Magma++;log('atech','Magma Lv5：消耗 Charge 且 Fee≥5 → +1 Magma')}
+ if(techHas(p,'F',3,'B')&&ctx.produced.F>=4)await optionalFreeReverse(p);
+ // Reflux core
+ if(s.inner?.id==='reflux')await refluxChoice(p,ctx);
+ // Earth inner charges before Pointer Charge
+ if(s.inner?.id==='earth'){await placeChargeChoice(p,si,1,'Earth Inner');if(trackLv(p,'E')>=8)await placeChargeChoice(p,null,1,'Earth Inner Mastery')}
+ // Pointer Charge (Earth Lv6A doubles)
+ const pointerN=techHas(p,'E',6,'A')?2:1;await placeChargeChoice(p,un,pointerN,'Pointer Charge');
+ log('sector_production_end',`${p.name} ${SNAME[si]} 完整生產結束`,{sector:si,unselected:un,produced:ctx.produced,chargeConsumed:ctx.chargeConsumed,pointerAfter:deep(p.pointer),engineFee:p.engineFee});render();await drainEffects()}
+function middleOutput(p,m){const es=m.pair;if(m.mode==='standard'){const o={};for(const e of es)o[e]=(o[e]||0)+1;return {resources:o}}if(m.mode==='enhance')return {resources:{[es[0]]:1},tp:es[0]};if(m.mode==='a')return {resources:{[NEIGHBOR_A[`${es[0]},${es[1]}`]]:1}};if(m.mode==='breadth')return {gold:3,feeReduce:1};return {}}
+async function applyBasicOutput(p,ctx,ev,mult){const o=ev.out;if(o.resources){addRes(p,o.resources,mult);for(const [k,v] of Object.entries(o.resources))ctx.produced[k]=(ctx.produced[k]||0)+v*mult}if(o.gold){p.gold+=o.gold*mult}if(o.feeReduce){for(let i=0;i<mult;i++)reduceFee(p,o.feeReduce,'Breadth Enhance')}if(o.tp){for(let i=0;i<mult;i++)gainTP(p,o.tp,1,'B Enhance')}ctx.baseEvents.push({tile:ev.tile.id,out:o,mult})}
+function chargeRepeatCount(p,si,ev){if(techHas(p,'E',10,'B')&&p.sectors[si].inner?.id==='earth')return 2;return 1}
+function waterRouting(p,outs,limit){if(p.type==='ai')return Promise.resolve(outs);let flat=[];outs.forEach((ev,ei)=>{if(ev.out.resources)for(const [r,n] of Object.entries(ev.out.resources))if(B.includes(r))for(let j=0;j<n;j++)flat.push({ei,from:r})});if(!flat.length||limit<=0)return Promise.resolve(outs);return new Promise(resolve=>{effectQueue.push({kind:'waterRouting',pid:p.id,outs,flat,limit,resolve});drainEffects()})}
+function optionalGoldForWater(p,ctx){if(p.type==='ai'){let n=Math.min(2,p.gold>=6?1:0);p.gold-=n;p.resources.W+=n;ctx.produced.W+=n;return Promise.resolve()}return new Promise(resolve=>{effectQueue.push({kind:'w3a',pid:p.id,ctx,resolve});drainEffects()})}
+function optionalAProduction(p,a){if(p.type==='ai'){let pay=p.gold>=8?4:p.gold>=4?2:0;p.gold-=pay;p.resources[a]+=pay/2;return Promise.resolve()}return new Promise(resolve=>{effectQueue.push({kind:'a2',pid:p.id,a,resolve});drainEffects()})}
+function optionalFreeReverse(p){if(p.type==='ai'){if(rng()<.5){p.pointer.direction=p.pointer.direction==='CW'?'CCW':'CW';log('tech_action',`${p.name} Fire Lv3-B 免費 Reverse`) }return Promise.resolve()}return new Promise(resolve=>{effectQueue.push({kind:'freeReverse',pid:p.id,resolve});drainEffects()})}
+function refluxChoice(p,ctx){const actual=RES.filter(x=>ctx.produced[x]>0);if(p.type==='ai'||!actual.length){p.gold+=4;log('inner','產線回流核心 → +4G');return Promise.resolve()}return new Promise(resolve=>{effectQueue.push({kind:'reflux',pid:p.id,opts:actual,resolve});drainEffects()})}
+async function resolveProductionInner(p,ctx){const s=p.sectors[ctx.si],id=s.inner?.id;if(id==='Steam')await steamInner(p,ctx);if(id==='Magma')await magmaInner(p,ctx)}
+function steamInner(p,ctx){const times=trackLv(p,'W')>=8&&trackLv(p,'F')>=8?2:1;if(p.type==='ai'){for(let i=0;i<times;i++){if(p.resources.W&&p.resources.F){p.resources.W--;p.resources.F--;p.resources.Steam++;p.gold+=p.engineFee>=5?2:1}}return Promise.resolve()}return new Promise(resolve=>{effectQueue.push({kind:'steamInner',pid:p.id,times,resolve});drainEffects()})}
+function magmaInner(p,ctx){const times=trackLv(p,'F')>=8&&trackLv(p,'E')>=8?2:1;async function once(){if(p.engineFee>=5&&ctx.chargeConsumed.length){const loc=ctx.chargeConsumed[0],s=p.sectors[loc.si],tile=loc.kind==='outer'?s.outers[loc.idx]:s.middles[loc.idx],ev={tile,kind:loc.kind,idx:loc.idx,out:loc.kind==='outer'?{resources:{[tile.element]:1}}:middleOutput(p,tile)};await applyBasicOutput(p,ctx,ev,1);log('inner','Magma Inner：重複 1 個消耗 Charge 的 tile')}else{if(p.engineFee<=4)feeIncreaseNoPay(p,2,'Magma Inner');await placeChargeChoice(p,ctx.si,1,'Magma Inner')}}let chain=Promise.resolve();for(let i=0;i<times;i++)chain=chain.then(once);return chain}
+function legalChargeTargets(p,sectorIndex=null){const out=[];p.sectors.forEach((s,si)=>{if(sectorIndex!==null&&si!==sectorIndex)return;s.outers.forEach((t,i)=>{if(t&&t.charge<chargeCap(p,t,si))out.push({si,kind:'outer',idx:i})});s.middles.forEach((t,i)=>{if(t&&t.charge<chargeCap(p,t,si))out.push({si,kind:'middle',idx:i})})});return out}
+function chargeCap(p,t,si){return CFG.chargeCap+(techHas(p,'E',10,'A')?1:0)}
+function placeChargeAt(p,q,reason){const t=q.kind==='outer'?p.sectors[q.si].outers[q.idx]:p.sectors[q.si].middles[q.idx];if(!t||t.charge>=chargeCap(p,t,q.si))return false;t.charge++;log('charge',`${p.name} 放置 Charge @ ${SNAME[q.si]} ${q.kind}${q.idx+1} (${reason})`,q);if(q.kind==='outer'&&techHas(p,'E',6,'B')){p.gold+=2;log('tech_trigger',`${p.name} Earth Lv6-B：Charge 放 Outer → +2G`)}return true}
+function placeChargeChoice(p,sectorIndex,count,reason){let chain=Promise.resolve();for(let n=0;n<count;n++)chain=chain.then(()=>{const opts=legalChargeTargets(p,sectorIndex);if(!opts.length){log('charge_fail',`${p.name} 無合法位置放 Charge (${reason})`,{sectorIndex});return}if(p.type==='ai'){opts.sort((a,b)=>chargeTargetValue(p,b)-chargeTargetValue(p,a));placeChargeAt(p,opts[0],reason);return}return new Promise(resolve=>{effectQueue.push({kind:'chargePlace',pid:p.id,opts,reason,resolve});drainEffects()})});return chain}
+function chargeTargetValue(p,q){const s=p.sectors[q.si],t=q.kind==='outer'?s.outers[q.idx]:s.middles[q.idx];if(q.kind==='middle')return t.mode==='a'?4:t.mode==='enhance'?3.7:3.3;return 2}
+// ---------- Contracts ----------
+function patternIdentities(pattern){const out=[];const combos=(arr,k,start=0,p=[])=>(k===0?out.push(p.slice()):arr.slice(start).forEach((x,j)=>combos(arr,k-1,start+j+1,[...p,x])));if(pattern==='diff2B'){combos(B,2)}else if(pattern==='diff3B'){combos(B,3)}else if(pattern==='same2B'){for(const b of B)out.push([b,b])}else if(pattern==='same3B'){for(const b of B)out.push([b,b,b])}else if(pattern==='any2B'){for(const x of B)for(const y of B)if(B.indexOf(x)<=B.indexOf(y))out.push([x,y])}else if(pattern==='anyA'){for(const a of A)out.push([a])}else if(pattern==='AplusB'){for(const a of A)for(const b of B)out.push([a,b])}else if(pattern==='Aplus2B'){for(const a of A)for(const x of B)for(const y of B)if(B.indexOf(x)<=B.indexOf(y))out.push([a,x,y])}else if(pattern==='AplusDiff2B'){for(const a of A)for(let i=0;i<B.length;i++)for(let j=i+1;j<B.length;j++)out.push([a,B[i],B[j]])}return out}
+function paymentOptions(p,identity){let states=[{res:{},gold:0,subs:[]}];for(const slot of identity){let alts=[{res:{[slot]:1},gold:0,sub:null}];if(B.includes(slot)&&slot!=='W'&&techHas(p,'W',10,'A'))alts.push({res:{W:1},gold:0,sub:`W→${slot}`});if((slot==='Steam'||slot==='Frost')&&techHas(p,'W',6,'B'))alts.push({res:{W:2},gold:2,sub:`WW+2G→${slot}`});let ns=[];for(const s of states)for(const a of alts){const r={...s.res};for(const [k,v] of Object.entries(a.res))r[k]=(r[k]||0)+v;ns.push({res:r,gold:s.gold+a.gold,subs:[...s.subs,...(a.sub?[a.sub]:[])]})}states=ns}const uniq=new Map();for(const s of states){const key=RES.map(k=>`${k}:${s.res[k]||0}`).join('|')+`|g:${s.gold}`;if(!uniq.has(key)&&s.gold<=p.gold&&RES.every(k=>(s.res[k]||0)<=p.resources[k]))uniq.set(key,s)}return [...uniq.values()]}
+function contractCandidates(p){const c=[];for(let i=0;i<G.oneTimeMarket.length;i++){const card=G.oneTimeMarket[i];for(const id of [card.req]){for(const pay of paymentOptions(p,id))c.push({kind:'oneTime',idx:i,identity:id,pay,label:`One-Time ${card.id}`})}}
+ for(let i=0;i<G.longTermContracts.length;i++){const card=G.longTermContracts[i];if(G.longTermUsedThisTurn[card.instanceId])continue;for(const id of patternIdentities(card.pattern))for(const pay of paymentOptions(p,id))c.push({kind:'longTerm',idx:i,identity:id,pay,label:`Long-Term ${card.name}`})}
+ const d=getDealer(p);if(d){if(!p.flags.dealerAbilityUsedTurn){const a=d.ability;const ids=a.req?[a.req]:patternIdentities(a.pattern);for(const id of ids)for(const pay of paymentOptions(p,id))c.push({kind:'dealerAbility',identity:id,pay,label:`${d.name} Ability`})}const dc=d.contracts[p.dealerProgressIndex];if(dc){const ids=dc.req?[dc.req]:patternIdentities(dc.pattern);for(const id of ids)for(const pay of paymentOptions(p,id))c.push({kind:'dealerContract',identity:id,pay,label:`${d.name} ${dc.id}`,dealerContract:dc})}}
+ return c}
+function getDealer(p){if(!p.currentDealer)return null;return p.currentDealer.id==='initial'?INITIAL:DEALERS[p.currentDealer.id]}
+async function contractPhase(){G.phase='Contract';for(const p of G.players){p.passedOutContractPhase=false;p.qualifyingContractsThisPhase=0;p.comboState={completedDealerIds:[],comboCount:0}}G.contractContext={cursor:0,active:new Set(G.players.map(p=>p.id)),idleCycles:0};let safety=0;while(!G.gameOver&&G.contractContext.active.size&&safety++<300){const id=G.initiativeOrder[G.contractContext.cursor%4];G.contractContext.cursor++;if(!G.contractContext.active.has(id))continue;const p=player(id);G.activePlayerId=id;const legal=contractCandidates(p);if(!legal.length){log('contract_skip',`${p.name} 無 legal Contract action，auto-skip`);G.contractContext.idleCycles++;if(G.contractContext.idleCycles>=G.contractContext.active.size){break}continue}G.contractContext.idleCycles=0;if(p.type==='human'){const choice=await humanContractChoice(p,legal);if(choice==='pass'){p.passedOutContractPhase=true;G.contractContext.active.delete(p.id);continue}await resolveContractAction(p,choice)}else{const choice=aiContractChoice(p,legal);if(!choice||choice.score<-.5){G.contractContext.active.delete(p.id);log('contract_pass',`${p.name} Pass Out`,{best:choice});continue}await resolveContractAction(p,choice)}render();await drainEffects()}if(safety>=300)throw new Error('Contract safety limit');if(!G.gameOver)await contractPhaseEndTriggers();G.contractContext=null;render()}
+function humanContractChoice(p,legal){return new Promise(resolve=>{humanWait={kind:'contract',resolve,pid:p.id};let by=new Map();for(const x of legal){const key=x.kind+'|'+(x.idx??'')+'|'+(x.dealerContract?.id||'');if(!by.has(key))by.set(key,[]);by.get(key).push(x)}let h=`<b>${p.name} Contract action</b><div class="sub">每次只做 1 action；Pass Out 後本 Phase 不回來。Transition 可先從下方工具執行。</div>`;for(const [k,arr] of by){const x=arr[0];h+=`<div class="choice legal" onclick="showPaymentGroup('${encodeURIComponent(k)}')"><b>${x.label}</b><div class="tiny">${arr.length} 種合法 declared/payment 組合</div></div>`}h+=`<button class="btn bad" onclick="humanContractPass()">Pass Out</button>`;h+=transitionButtons(p);document.getElementById('decisionBody').innerHTML=h;window._contractGroups=Object.fromEntries([...by].map(([k,v])=>[k,v]));render()})}
+function showPaymentGroup(enc){const k=decodeURIComponent(enc),arr=window._contractGroups[k];let h='<b>選 Requirement Identity / actual payment</b>';arr.forEach((x,i)=>{h+=`<div class="choice legal" onclick="humanContractPick('${encodeURIComponent(k)}',${i})"><div>Identity: <span class="req">${reqTxt(x.identity)}</span></div><div>Payment: <span class="req">${paymentTxt(x.pay)}</span></div>${x.pay.subs.length?`<div class="tiny">Substitution: ${x.pay.subs.join(', ')}</div>`:''}</div>`});h+='<button class="btn" onclick="humanContractBack()">Back</button>';document.getElementById('decisionBody').innerHTML=h}
+function humanContractPick(enc,i){const k=decodeURIComponent(enc),x=window._contractGroups[k][i],w=humanWait;if(!w)return;humanWait=null;w.resolve(x)}function humanContractBack(){if(humanWait){const p=player(humanWait.pid);humanContractChoiceRepaint(p)}}function humanContractChoiceRepaint(p){const old=humanWait.resolve;humanWait=null;humanContractChoice(p,contractCandidates(p)).then(old)}function humanContractPass(){const w=humanWait;if(!w)return;humanWait=null;w.resolve('pass')}
+function aiContractChoice(p,legal){let scored=legal.map(x=>({...x,score:scoreContract(p,x)})).sort((a,b)=>b.score-a.score);log('ai_eval',`${p.name} Contract candidates`,{top:scored.slice(0,8).map(x=>({label:x.label,identity:x.identity,pay:x.pay,score:x.score}))});return scored[0]}
+function scoreContract(p,x){let r=contractRewardPreview(p,x),payV=Object.entries(x.pay.res).reduce((s,[k,v])=>s+v*(B.includes(k)?1:2),0)+x.pay.gold*.5;let v=(r.vp||0)+(r.gold||0)*.5+(r.tp||0)*1.1-payV;if(x.kind==='dealerContract')v+=2.1;if(x.kind==='oneTime')v+=6.0;if(x.kind==='longTerm')v-=0.6;if(x.kind==='dealerAbility')v-=1.0;if(x.kind!=='oneTime'){const demand={};for(const c of G.oneTimeMarket)for(const r of c.req)demand[r]=(demand[r]||0)+1;for(const [r,n] of Object.entries(x.pay.res))v-=n*(demand[r]||0)*.75;}return v}
+function contractRewardPreview(p,x){let reward={vp:0,gold:0,tp:0};let card=x.kind==='oneTime'?G.oneTimeMarket[x.idx]:x.kind==='longTerm'?G.longTermContracts[x.idx]:x.kind==='dealerContract'?x.dealerContract:getDealer(p)?.ability;if(card?.reward){reward.vp+=card.reward.vp||0;reward.gold+=card.reward.gold||0}if(card?.tp)reward.tp++;return reward}
+async function resolveContractAction(p,x){const feeBefore=p.engineFee,resourcesBefore=deep(p.resources),goldBefore=p.gold;if(!spendRes(p,x.pay.res)||p.gold<x.pay.gold)throw new Error('illegal payment');p.gold-=x.pay.gold;let card=null,type=x.kind,combo=false;if(type==='oneTime'){card=G.oneTimeMarket[x.idx]}else if(type==='longTerm'){card=G.longTermContracts[x.idx]}else if(type==='dealerAbility'){card=getDealer(p).ability;p.flags.dealerAbilityUsedTurn=true}else if(type==='dealerContract'){card=x.dealerContract;const d=getDealer(p);if(card.comboPrev&&p.comboState.completedDealerIds.includes(card.comboPrev)){combo=true;p.comboState.comboCount++}}
+ const actualPaid=deep(x.pay.res);applyReward(p,card.reward);if(card.tp){if(card.tpDeclared)gainTP(p,x.identity[0],1,'Dealer declared TP');else gainTP(p,card.tp,1,type)}
+ if(type==='oneTime')await oneTimeSpecial(p,card);if(type==='dealerContract')await dealerContractSpecial(p,card,combo);
+ const isContract=type!=='dealerAbility',qualifying=type==='oneTime'||type==='dealerContract';if(qualifying)p.qualifyingContractsThisPhase++;
+ if(isContract)await contractTechTriggers(p,x.identity,actualPaid,qualifying,combo,type);
+ if(combo)await comboTriggers(p,x.identity);
+ if(type==='longTerm')G.longTermUsedThisTurn[G.longTermContracts[x.idx].instanceId]=true;
+ if(type==='oneTime'){const removed=G.oneTimeMarket.splice(x.idx,1)[0];if(G.t1OneTimeDeck.length)G.oneTimeMarket.push(G.t1OneTimeDeck.shift());log('one_time_market',`${removed.id} 完成；market ${G.oneTimeMarket.length}，deck ${G.t1OneTimeDeck.length}`)}
+ if(type==='dealerContract'){p.comboState.completedDealerIds.push(card.id);p.dealerProgressIndex++;const d=getDealer(p);if(p.dealerProgressIndex>=d.contracts.length)await completeDealer(p,d)}
+ log('contract_action',`${p.name} ${x.label}`,{type,declaredRequirement:x.identity,requirementIdentity:x.identity,actualPayment:{resources:x.pay.res,gold:x.pay.gold},before:{gold:goldBefore,resources:resourcesBefore,engineFee:feeBefore},after:{gold:p.gold,resources:deep(p.resources),engineFee:p.engineFee},combo,oneTimeDeck:G.t1OneTimeDeck.length,oneTimeMarket:G.oneTimeMarket.length});await drainEffects();
+ if(type==='oneTime'&&G.t1OneTimeDeck.length===0&&G.oneTimeMarket.length===0){G.gameOver=true;G.gameOverReason='T1_ONE_TIME_DECK_EXHAUSTED';log('game_over','最後一張 T1 One-Time 完整結算：立即 game-over');showGameOver()}}
+function applyReward(p,r={}){p.vp+=r.vp||0;p.gold+=r.gold||0;if(r.resources)addRes(p,r.resources)}
+async function oneTimeSpecial(p,c){if(c.special==='fee5plus'&&p.engineFee>=5){p.vp++;p.gold+=2}if(c.special==='feeMinus1')reduceFee(p,1,'OT08');if(c.special==='fee5vp'&&p.engineFee>=5)p.vp+=2;if(c.special==='fee0ThenMinus'){const z=p.engineFee===0;if(z){p.vp+=2;p.gold++}reduceFee(p,1,'OT19')}}
+async function dealerContractSpecial(p,c,combo){if(c.special==='fireDealerC3'&&p.engineFee>=5&&p.resources.F>0)await optionalFireDealerBurn(p);if(combo){if(c.feeZeroVp&&p.engineFee===0)p.vp+=c.feeZeroVp;if(c.feeReduce)reduceFee(p,c.feeReduce,`${c.id} Combo`)}if(c.charge)await placeChargeChoice(p,null,c.charge,c.id)}
+function optionalFireDealerBurn(p){if(p.type==='ai'){p.resources.F--;p.vp+=2;return Promise.resolve()}return new Promise(resolve=>{effectQueue.push({kind:'fireDealerBurn',pid:p.id,resolve});drainEffects()})}
+async function completeDealer(p,d){const comp=d.completion||{};const snap=p.engineFee;applyReward(p,comp.reward);if(comp.tp)gainTP(p,comp.tp,1,'Dealer Completion');if(comp.multiTp)for(const t of comp.multiTp)gainTP(p,t,1,'Dealer Completion');if(comp.special==='fireDealerCompletion'&&snap>=5)p.vp+=2;if(comp.feeReduce)reduceFee(p,comp.feeReduce,'Dealer Completion');if(comp.charge)await placeChargeChoice(p,null,comp.charge,'Dealer Completion');log('dealer_complete',`${p.name} 完成 ${d.name}`,{dealer:d.id});p.currentDealer=null;p.dealerProgressIndex=0;await chooseNewDealer(p)}
+function chooseNewDealer(p){if(G.t1DealerDeck.length)G.dealerMarket.push(G.t1DealerDeck.shift());if(!G.dealerMarket.length){log('dealer_exhaustion',`${p.name} 無 Dealer 可選；保持無 currentDealer`);return Promise.resolve()}if(p.type==='ai'){let idx=Math.floor(rng()*G.dealerMarket.length),id=G.dealerMarket.splice(idx,1)[0];p.currentDealer={id};log('dealer_acquire',`${p.name} 取得 ${DEALERS[id].name}`);return Promise.resolve()}return new Promise(resolve=>{effectQueue.push({kind:'dealerChoose',pid:p.id,resolve});drainEffects()})}
+async function contractTechTriggers(p,identity,paid,qualifying,combo,type){const contains=x=>identity.includes(x);if(contains('W')&&techHas(p,'W',6,'A'))p.resources.W++;if(contains('W')&&techHas(p,'W',10,'B')){const n=identity.filter(x=>x==='W').length;for(let i=0;i<n;i++)await chooseBonusB(p,'Water Lv10-B')}if(qualifying&&techHas(p,'F',6,'A')&&p.engineFee>=5)p.vp+=2;if(contains('F')&&techHas(p,'F',6,'B')&&p.resources.F>0)await optionalFire6B(p);if(qualifying&&techHas(p,'N',6,'A')&&p.qualifyingContractsThisPhase>=4){const bs=identity.filter(x=>B.includes(x));if(bs.length){if(p.type==='ai')p.resources[bs[0]]++;else await chooseFromList(p,bs,'Wind Lv6-A：取得 identity 中任意 1B',x=>p.resources[x]++)}}if(qualifying&&techHas(p,'N',6,'B'))reduceFee(p,1,'Wind Lv6-B');
+ if(qualifying&&contains('Steam')&&aTechOn(p,'Steam',5)&&p.resources.Steam>0)await steamBurn(p,1,false);if(qualifying&&aTechOn(p,'Steam',9)&&p.resources.Steam>0)await steamBurn(p,Math.min(2,p.resources.Steam),true);
+ if(qualifying&&contains('Frost')&&aTechOn(p,'Frost',5)){const n=paid.Frost||0;p.resources.W+=n;p.gold+=n}if(qualifying&&contains('Frost')&&aTechOn(p,'Frost',9))p.resources.Frost++;
+ if(isAnyContract(type)&&aTechOn(p,'Magma',9)&&p.resources.Magma>0)await magmaBurn(p);
+ if(qualifying&&contains('Sandstorm')&&aTechOn(p,'Sandstorm',5))await sandstorm5(p)
 }
-let G=null, selectedBuild=null; function rng(){G.rng=(G.rng*1664525+1013904223)>>>0;return G.rng/4294967296} function shuf(a){a=[...a];for(let i=a.length-1;i;i--){let j=Math.floor(rng()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
-function log(type,msg,extra={}){G.log.push({turn:G.turn,phase:G.phase,type,msg,...extra});renderLog()}
-function coords(){let a=[];for(let q=-3;q<=3;q++)for(let r=-3;r<=3;r++){let s=-q-r;if(Math.max(Math.abs(q),Math.abs(r),Math.abs(s))<=3)a.push({q,r})}return a} function key(q,r){return q+','+r} const dirs=[[1,0],[1,-1],[0,-1],[-1,0],[-1,1],[0,1]];
-const t1cards=[
-['WWW',{vp:4},'W'],['FFF',{vp:3,g:1},'F'],['EEE',{vp:4},'E'],['NNN',{vp:3,g:1},'N'],['WWF',{vp:5}],['FFE',{vp:3,g:1},null,'fire5'],['EEN',{vp:4,g:1}],['NNW',{vp:4},null,'windStable'],['WWFF',{vp:6}],['FFEE',{vp:5},null,'fire5vp'],
-['Steam,W,F',{vp:5},'W/F'],['Magma,F,E',{vp:3,g:4},'F/E'],['Sandstorm,E,N',{vp:5},'E/N'],['Frost,W,N',{vp:3,g:4},'W/N'],['Steam,W,W',{vp:4,g:4}],['Magma,E,N',{vp:6}],['Steam,W,W,F',{vp:8}],['Magma,F,F,E',{vp:6,g:3}],['Frost,W,E,N',{vp:6},null,'windConditional'],['Sandstorm,E,W,F',{vp:6,g:3}]
-].map((x,i)=>({id:'T1-'+(i+1),tier:1,req:parseReqSpec(x[0]),reward:x[1],tp:x[2]||null,special:x[3]||null}));
-const LTTemplates=[{k:'diff2',req:'兩種不同 B',rw:[{g:4},{vp:1,g:2},{vp:2}]},{k:'same2',req:'2 個相同 B',rw:[{g:4},{vp:1,g:2},{vp:2}]},{k:'diff3',req:'三種不同 B',rw:[{g:7},{vp:2,g:3},{vp:3}]},{k:'same3',req:'3 個相同 B',rw:[{g:7},{vp:2,g:3},{vp:3}]},{k:'anyA',req:'任意 A',rw:[{g:4},{vp:1,g:2},{vp:2}]},{k:'AB',req:'任意 A + 任意 B',rw:[{g:6},{vp:2,g:2},{vp:3}]}];
-function mkPlayer(i){return{id:i,name:i?'AI '+i:'Human',type:i?'ai':'human',g:4,vp:0,res:{W:0,F:0,E:0,N:0,Steam:0,Magma:0,Sandstorm:0,Frost:0},fee:0,tech:{W:0,F:0,E:0,N:0},techChoice:{},board:{},hand:[],prolif:0,pass:false,completed:0,dealer:{id:'initial',step:0,completedDealerContractIdsThisPhase:[],awaitingReplacement:false},stations:[]}}
-function newGame(){
-  let seed=+document.getElementById('seed').value||1;
-  // Important: create G before any shuffle, because the seeded RNG stores its state in G.rng.
-  G={version:'CB-web-0.4.1',seed,rng:seed>>>0,turn:1,phase:'Privilege',initiative:[0,1,2,3],players:[0,1,2,3].map(mkPlayer),t1deck:[],t2deck:[],t1market:[],t2market:[],otDeck:{1:[],2:[],3:[]},otMarket:[],tier:1,longTerm:[],ltUsed:{},log:[],choices:{},phaseQueue:[],turnPhases:[],completedPhases:[],contractNoActionStreak:0,nextTileUid:1,buildQueue:[],buildCurrent:null,techDecision:null,effectQueue:[],effectResume:null,effectDecision:null,productionState:null,contractRecords:{},otContentLoaded:{1:true,2:false,3:false},dealerDecks:{1:[],2:[],3:[]},dealerDiscard:{1:[],2:[],3:[]},dealerMarket:[],dealerContentLoaded:{1:true,2:false,3:false},dealerChoicePending:null,nextDealerUid:1,pendingTPGrants:[]};
-  G.t1deck=shuf(B.flatMap(x=>Array(20).fill(x)));
-  G.t2deck=shuf(Object.keys(AParents).flatMap(x=>Array(6).fill(x)));
-  G.otDeck[1]=shuf(t1cards);
-  initDealerSupply();
-  for(let p of G.players)p.board['0,0']='Extraction';
-  refillTiles();
-  while(G.otMarket.length<4&&G.otDeck[1].length)G.otMarket.push(G.otDeck[1].pop());
-  addLongTerms(1);
-  log('setup','New game. 4 players, 4G, central Extraction Well, Initial Dealer; official T1 Dealer market loaded from the six-card T1 Dealer pool without replacement.');
-  render();
-  privilegeUI();
-}
-function restartSeed(){document.getElementById('seed').value=G.seed;newGame()} function tileMarketSize(){return G?.players?.length||4} function refillTiles(){let n=tileMarketSize();while(G.t1market.length<n&&G.t1deck.length)G.t1market.push(G.t1deck.pop());while(G.t2market.length<n&&G.t2deck.length)G.t2market.push(G.t2deck.pop())} function addLongTerms(t){let pool=shuf(LTTemplates).slice(0,4);pool.forEach((x,i)=>G.longTerm.push({...x,id:`LT${t}-${i}`,tier:t,reward:x.rw[t-1]}))}
-function privilegeUI(){G.phase='Privilege';G.turnPhases=[];G.completedPhases=[];let d=document.getElementById('decision');d.innerHTML=`<p>選擇本 Turn 的 Privilege（秘密提交；AI 選擇不會先顯示）。</p><select id="priv"><option value="fund-reset">Funding — Reset Fee</option><option value="fund-init">Funding — Claim Initiative</option><option value="fund-gold">Funding — +4G</option><option value="build-exp">Build — Expansion</option><option value="build-disc">Build — Discount</option><option value="prod">Production — first proliferation free</option></select> <button onclick="commitPriv()">Commit</button>`;renderStatus();renderPhaseTracker()}
-function commitPriv(){G.choices={0:document.getElementById('priv').value};for(let i=1;i<4;i++)G.choices[i]=aiPriv(G.players[i]);let init=G.initiative.filter(i=>G.choices[i]=='fund-init');G.initiative=[...init,...G.initiative.filter(i=>!init.includes(i))];log('privilege','Reveal: '+G.players.map(p=>p.name+'='+G.choices[p.id]).join(' | '));let phases=[];if(Object.values(G.choices).some(x=>x.startsWith('fund')))phases.push('Funding');if(Object.values(G.choices).some(x=>x.startsWith('build')))phases.push('Build');if(Object.values(G.choices).some(x=>x==='prod'))phases.push('Production');phases.push('Contract');G.turnPhases=[...phases];G.completedPhases=[];G.phaseQueue=[...phases];renderPhaseTracker();nextPhase()}
-const AI_CFG={contractThreshold:-0.05,transitionThreshold:0.15,noise:0.12,prolifFirstThreshold:0.20,prolifSecondThreshold:0.55};
-function aiNoise(){return (rng()-.5)*AI_CFG.noise}
-function aiProdValue(p){let o=calcProd(p);return B.reduce((s,b)=>s+(o[b]||0),0)+A.reduce((s,a)=>s+2*(o[a]||0),0)}
-function aiProliferationScore(p,cost,step){
-  let value=aiProdValue(p),reservePenalty=cost>0&&p.g-cost<2?.65:0,stock=B.reduce((n,b)=>n+(p.res[b]||0),0)+A.reduce((n,a)=>n+2*(p.res[a]||0),0),stockPenalty=Math.max(0,stock-28)*.025;
-  if(techHas(p,'F',3,'A'))value+=.7;
-  if(techHas(p,'F',3,'B'))value+=.25;
-  return value-cost/2-reservePenalty-stockPenalty+(step===1&&cost===0?.35:0)+aiNoise()
-}
-function aiWantsProliferation(p,cost,step){if(p.g<cost)return{use:false,score:-99};let score=aiProliferationScore(p,cost,step),threshold=step===1?AI_CFG.prolifFirstThreshold:AI_CFG.prolifSecondThreshold;return{use:score>=threshold,score,threshold}}
-function aiResourceValue(k){return B.includes(k)?1:2}
-function aiCurrentDemand(p,type){let d=0;for(let c of G.otMarket){for(let x of (c.req||[])){if(x===type)d+=1;else if(AParents[x]?.includes(type))d+=.22}}let dc=dealerContract(p);for(let x of (dc?.req||[])){if(x===type)d+=.9;else if(AParents[x]?.includes(type))d+=.2}let da=dealerAbility(p);for(let x of (da?.req||[]))if(x===type)d+=.35;return d}
-function aiBestPlacement(p,tile){let before=calcProd(p),best=null;for(let c of coords()){if(!legalHex(p,c.q,c.r,tile))continue;let k=key(c.q,c.r);p.board[k]=tile.type;let after=calcProd(p),own=tile.kind==='T2'?(tileBaseOutputAt(p,k)[tile.type]||0):0,delta=B.reduce((s,b)=>s+(after[b]-before[b]),0)+A.reduce((s,a)=>s+2*(after[a]-before[a]),0),adj=dirs.map(([dq,dr])=>p.board[key(c.q+dq,c.r+dr)]),potential=0;if(tile.kind==='T2'&&AParents[tile.type])potential=AParents[tile.type].reduce((s,b)=>s+adj.filter(x=>x===b).length,0);delete p.board[k];let score=delta*3-ring(c.q,c.r)*.06;if(tile.kind==='T1')score+=1.15+.3*aiCurrentDemand(p,tile.type);else{score+=own*1.2+potential*.25;if(own===0)score-=3.5}if(!best||score>best.score)best={q:c.q,r:c.r,score,output:own,delta,potential}}return best}
-function aiTileScore(p,tile){let b=aiBestPlacement(p,tile);if(!b)return null;let score=b.score-buildCost(tile,p)*.32;if(tile.kind==='T1')score+=.6;else if(b.output===0)score-=1.5;return {...b,score,tile}}
-function aiMarketCandidates(p){let out=[];G.t1market.forEach((x,i)=>{let z=aiTileScore(p,{kind:'T1',idx:i,type:x});if(z)out.push({...z,kind:'T1',idx:i,type:x})});G.t2market.forEach((x,i)=>{let z=aiTileScore(p,{kind:'T2',idx:i,type:x});if(z)out.push({...z,kind:'T2',idx:i,type:x})});return out.sort((a,b)=>b.score-a.score)}
-function aiBestContractScore(p){let acts=legalContracts(p);if(!acts.length)return 0;return aiRankContractActions(p,acts)[0]?.score||0}
-function aiPriv(p){let market=aiMarketCandidates(p),bestBuild=market[0]?.score||0,prod=aiProdValue(p),contract=Math.max(0,aiBestContractScore(p));let buildableHand=(p.hand||[]).filter(t=>canBuildTileNow(p,t)).length;let scores={
-  'fund-gold':3+(p.g<4?1.4:p.g<7?.5:0),
-  'fund-reset':1+p.fee*.45+(p.fee>=5?.6:0),
-  'fund-init':1+.35+Math.min(1.1,contract*.2),
-  'build-exp':2.3+Math.max(0,Math.min(3,bestBuild*.45))+(p.g>=4?.35:0),
-  'build-disc':1.8+Math.min(1.5,buildableHand*.55)+(p.g>=2?.3:0),
-  'prod':prod>0?1.1+Math.min(5,prod*.85):-4
-};if(p.g<2)scores['fund-gold']+=2;if(!market.length){scores['build-exp']-=2;scores['build-disc']-=1}let ranked=Object.entries(scores).map(([k,v])=>({k,score:v+aiNoise()})).sort((a,b)=>b.score-a.score);log('ai-eval',`${p.name} Privilege｜${ranked.map(x=>`${x.k} ${x.score.toFixed(2)}`).join(' | ')} → ${ranked[0].k}`);return ranked[0].k}
-function nextPhase(){if(G.phase&&G.phase!=='Privilege'&&G.turnPhases?.includes(G.phase)&&!G.completedPhases.includes(G.phase))G.completedPhases.push(G.phase);if(!G.phaseQueue.length){renderPhaseTracker();endTurn();return}G.phase=G.phaseQueue.shift();log('phase','=== '+G.phase+' ===');renderPhaseTracker();if(G.phase==='Funding')resolveFunding();else if(G.phase==='Build')startBuild();else if(G.phase==='Production')resolveProduction();else startContract();render()}
-function resolveFunding(){for(let p of G.players){p.g+=2;if(G.choices[p.id]=='fund-reset')p.fee=0;if(G.choices[p.id]=='fund-gold')p.g+=4}log('funding','All +2G; selected Funding privileges resolved.');nextPhase()}
-function buildCost(tile,p){let c=tile.kind==='T1'?2:4;if(G.choices[p.id]=='build-disc')c=Math.max(0,c-1); if(tile.kind==='T1'&&tile.type==='E'&&p.techChoice['E3']==='A')c=Math.max(0,c-1);return c}
-function handLimit(p){return 3}
-function makeHandTile(kind,type){if(!G.nextTileUid)G.nextTileUid=1;return{uid:`tile-${G.nextTileUid++}`,kind,type}}
-function tileLabel(t){return `${ICON[t.type]||'⛲'} ${t.kind==='T1'?(BN[t.type]||t.type)+' Tile':t.type+' Well'}`}
-function buildLayerLabel(layer){return layer==='exp-pre'?'Expansion 第一取得（所有非 Expansion 玩家之前）':layer==='exp-post'?'Expansion 第二取得（所有非 Expansion 玩家之後）':'Normal Acquisition'}
-function buildLayerClass(layer){return layer==='exp-pre'?'layer-pre':layer==='exp-post'?'layer-post':'layer-normal'}
-function isHumanBuildControl(){return G.phase==='Build'&&G.buildCurrent&&G.buildCurrent.pid===0}
-function canBuildTileNow(p,tile){return p.g>=buildCost(tile,p)&&coords().some(c=>legalHex(p,c.q,c.r,tile))}
-function takeMarketTile(kind,idx){let m=kind==='T1'?G.t1market:G.t2market;if(idx<0||idx>=m.length)return null;let type=m.splice(idx,1)[0];refillTiles();return makeHandTile(kind,type)}
-function startBuild(){
-  selectedBuild=null;
-  let exp=G.initiative.filter(pid=>G.choices[pid]==='build-exp');
-  let normal=G.initiative.filter(pid=>G.choices[pid]!=='build-exp');
-  G.buildQueue=[...exp.map(pid=>({pid,layer:'exp-pre'})),...normal.map(pid=>({pid,layer:'normal'})),...exp.map(pid=>({pid,layer:'exp-post'}))];
-  G.buildCurrent=null;
-  log('build',`Build order: pre Expansion [${exp.map(i=>G.players[i].name).join(', ')||'none'}] → normal [${normal.map(i=>G.players[i].name).join(', ')||'none'}] → post Expansion [${exp.map(i=>G.players[i].name).join(', ')||'none'}]`);
-  advanceBuildQueue();
-}
-function advanceBuildQueue(){
-  selectedBuild=null;
-  if(G.phase!=='Build')return;
-  if(!G.buildQueue||!G.buildQueue.length){
-    G.buildCurrent=null;
-    log('build','Build Phase end');
-    nextPhase();
-    return;
-  }
-  let entry=G.buildQueue.shift();
-  G.buildCurrent={...entry,acqUsed:false};
-  let p=G.players[entry.pid];
-  log('build',`${p.name} control: ${buildLayerLabel(entry.layer)}`);
-  if(p.type==='ai'){
-    aiBuildCheckpoint(p,entry.layer);
-    G.buildCurrent=null;
-    render();
-    setTimeout(advanceBuildQueue,0);
-  }else buildUI();
-}
-function humanHandHTML(){
-  let p=G.players[0];
-  if(!p.hand.length)return '<div class="small">手牌目前為空。</div>';
-  return `<div class="hand-grid">${p.hand.map((t,i)=>{let chosen=selectedBuild&&selectedBuild.source==='hand'&&selectedBuild.uid===t.uid;let ok=canBuildTileNow(p,t);return `<div class="hand-card ${chosen?'chosen':''}"><b>${tileLabel(t)}</b><div class="small">建造費 ${buildCost(t,p)}G</div><button onclick="selectHandBuild(${i})" ${(!isHumanBuildControl()||selectedBuild||!ok)?'disabled':''}>${chosen?'已選擇':'從手牌建造'}</button></div>`}).join('')}</div>`
-}
-function buildUI(){
-  if(!isHumanBuildControl())return;
-  let p=G.players[0],d=document.getElementById('decision'),cur=G.buildCurrent;
-  let remainingSecond=(G.buildQueue||[]).some(x=>x.pid===0&&x.layer==='exp-post');
-  let acqText=cur.acqUsed?'本 checkpoint 的取得機會已使用':'尚未使用本 checkpoint 的取得機會';
-  let blindDisabled=cur.acqUsed||p.hand.length>=handLimit(p)||!!selectedBuild;
-  d.innerHTML=`<p><b>Build Phase — Human control</b></p>
-  <div class="build-status"><span class="${buildLayerClass(cur.layer)}"><b>${buildLayerLabel(cur.layer)}</b></span><br>${acqText}<br>Hand：<b>${p.hand.length}/${handLimit(p)}</b>${remainingSecond?'<br><span class="small">你的 Expansion 第二次取得仍排在所有非 Expansion 玩家完成後。</span>':''}</div>
-  <p class="small">你可以在自己的 control window 中先從手牌建造任意張，再使用本次 acquisition；取得後也可繼續從手牌建造。從手牌建造不消耗 acquisition。</p>
-  <h3>Tile Hand</h3>${humanHandHTML()}
-  <div class="row"><button onclick="acquireBlind('T1')" ${blindDisabled||!G.t1deck.length?'disabled':''}>Blind T1 → Hand</button><button onclick="acquireBlind('T2')" ${blindDisabled||!G.t2deck.length?'disabled':''}>Blind T2 → Hand</button><button onclick="passHumanAcquisition()" ${cur.acqUsed||selectedBuild?'disabled':''}>Pass 本次取得</button></div>
-  <p class="small">公開市場的「取得到手牌」也使用本次 acquisition。手牌已滿時，只有符合規則的 public acquire-and-build 可直接從市場建造。</p>
-  <div class="row"><button onclick="cancelBuildSelection()" ${selectedBuild?'':'disabled'}>取消目前建造</button><button onclick="finishHumanBuildWindow()" ${selectedBuild?'disabled':''}>${cur.acqUsed?'完成此控制視窗':'Pass 取得並完成此控制視窗'}</button></div>`;
-  render();
-}
-function cancelBuildSelection(){selectedBuild=null;buildUI()}
-function finishHumanBuildWindow(){
-  if(!isHumanBuildControl()||selectedBuild)return;
-  if(!G.buildCurrent.acqUsed){G.buildCurrent.acqUsed=true;log('build',`Human passed ${buildLayerLabel(G.buildCurrent.layer)}`)}
-  G.buildCurrent=null;
-  render();
-  setTimeout(advanceBuildQueue,0);
-}
-function passHumanAcquisition(){if(!isHumanBuildControl()||G.buildCurrent.acqUsed||selectedBuild)return;G.buildCurrent.acqUsed=true;log('build',`Human passed acquisition (${buildLayerLabel(G.buildCurrent.layer)})`);buildUI()}
-function acquirePublic(kind,idx){
-  if(!isHumanBuildControl()||G.buildCurrent.acqUsed||selectedBuild)return;
-  let p=G.players[0];if(p.hand.length>=handLimit(p))return;
-  let tile=takeMarketTile(kind,idx);if(!tile)return;
-  p.hand.push(tile);G.buildCurrent.acqUsed=true;
-  log('build',`Human acquired ${tileLabel(tile)} to hand (${p.hand.length}/${handLimit(p)})`);
-  buildUI();
-}
-function acquireBlind(kind){
-  if(!isHumanBuildControl()||G.buildCurrent.acqUsed||selectedBuild)return;
-  let p=G.players[0];if(p.hand.length>=handLimit(p))return;
-  let deck=kind==='T1'?G.t1deck:G.t2deck;if(!deck.length)return;
-  let type=deck.pop(),tile=makeHandTile(kind,type);p.hand.push(tile);G.buildCurrent.acqUsed=true;
-  log('build',`Human blind-acquired ${tileLabel(tile)} to hand (${p.hand.length}/${handLimit(p)})`);
-  buildUI();
-}
-function selectHandBuild(i){
-  if(!isHumanBuildControl()||selectedBuild)return;
-  let p=G.players[0],tile=p.hand[i];if(!tile||!canBuildTileNow(p,tile))return;
-  selectedBuild={...tile,source:'hand'};buildUI();
-}
-function canAcquireBuildMarket(kind,idx){
-  if(!isHumanBuildControl()||G.buildCurrent.acqUsed||selectedBuild)return false;
-  let p=G.players[0];if(p.hand.length<handLimit(p))return false;
-  let m=kind==='T1'?G.t1market:G.t2market,type=m[idx];if(type===undefined)return false;
-  return canBuildTileNow(p,{kind,type});
-}
-function selectMarketAcquireBuild(kind,idx){
-  if(!canAcquireBuildMarket(kind,idx))return;
-  let m=kind==='T1'?G.t1market:G.t2market;
-  selectedBuild={source:'market-direct',kind,idx,type:m[idx]};buildUI();
-}
-function legalHex(p,q,r,tile){if(p.board[key(q,r)])return false;if(tile.kind==='T2')return true;let count=Object.values(p.board).filter(x=>x===tile.type).length;if(!count)return true;return dirs.some(([dq,dr])=>p.board[key(q+dq,r+dr)]===tile.type)}
-function placeTile(p,tile,q,r){
-  let c=buildCost(tile,p);if(p.g<c)return false;
-  p.g-=c;p.board[key(q,r)]=tile.type;
-  if(tile.kind==='T1'){
-    p.res[tile.type]++;
-    if(tile.type==='W'&&p.techChoice['W3']==='B'){p.res.W++;log('tech',`${p.name}｜新渠回流：建造 💧 Tile → +1💧`)}
-    if(tile.type==='E'&&p.techChoice['E3']==='B'){p.res.E++;log('tech',`${p.name}｜工程備料：建造 🌱 Tile → +1🌱`)}
-  }
-  return c
-}
-function clickHex(q,r){
-  if(!selectedBuild||!isHumanBuildControl())return;
-  let p=G.players[0],tile=selectedBuild;
-  if(!legalHex(p,q,r,tile))return;
-  if(tile.source==='hand'){
-    let idx=p.hand.findIndex(x=>x.uid===tile.uid);if(idx<0){selectedBuild=null;buildUI();return}
-    let live=p.hand[idx];let cost=placeTile(p,live,q,r);if(cost===false){alert('Gold 不足');return}
-    p.hand.splice(idx,1);log('build',`Human built ${tileLabel(live)} from hand at ${q},${r} for ${cost}G; hand ${p.hand.length}/${handLimit(p)}`);
-  }else if(tile.source==='market-direct'){
-    if(G.buildCurrent.acqUsed||p.hand.length<handLimit(p))return;
-    let market=tile.kind==='T1'?G.t1market:G.t2market;if(market[tile.idx]!==tile.type){selectedBuild=null;buildUI();return}
-    let cost=placeTile(p,tile,q,r);if(cost===false){alert('Gold 不足');return}
-    market.splice(tile.idx,1);refillTiles();G.buildCurrent.acqUsed=true;
-    log('build',`Human public acquire-and-build ${tileLabel(tile)} at ${q},${r} for ${cost}G`);
-  }
-  selectedBuild=null;buildUI();
-}
-function aiBuildFromHand(p){
-  let guard=20;
-  while(guard--&&p.hand.length){
-    let candidates=[];
-    for(let i=0;i<p.hand.length;i++){let t=p.hand[i];if(p.g<buildCost(t,p))continue;let z=aiTileScore(p,t);if(z)candidates.push({...z,i,t})}
-    candidates.sort((a,b)=>b.score-a.score);let choice=candidates[0];if(!choice)break;
-    if(choice.t.kind==='T2'&&choice.output===0&&choice.score<1.5)break;
-    let cost=placeTile(p,choice.t,choice.q,choice.r);if(cost===false)break;p.hand.splice(choice.i,1);
-    log('ai',`${p.name} built ${tileLabel(choice.t)} from hand at ${choice.q},${choice.r} for ${cost}G [AI score ${choice.score.toFixed(2)}, income Δ${choice.delta}]`);
-  }
-}
-function aiBuildCheckpoint(p,layer){
-  aiBuildFromHand(p);
-  if(p.hand.length<handLimit(p)){
-    let opts=aiMarketCandidates(p),top=opts.slice(0,5);if(top.length)log('ai-eval',`${p.name} Build candidates｜${top.map(x=>`${x.kind}-${x.type}@${x.q},${x.r} ${x.score.toFixed(2)}${x.kind==='T2'?` out${x.output}`:''}`).join(' | ')}`);
-    let pick=opts[0];
-    if(pick&&pick.score>-.25){let t=takeMarketTile(pick.kind,pick.idx);p.hand.push(t);log('ai',`${p.name} acquired ${tileLabel(t)} to hand (${buildLayerLabel(layer)}) [AI score ${pick.score.toFixed(2)}]`)}
-    else if(G.t1deck.length&&rng()<.12){let t=makeHandTile('T1',G.t1deck.pop());p.hand.push(t);log('ai',`${p.name} blind-acquired ${tileLabel(t)} to hand (${buildLayerLabel(layer)}) [fallback T1 only]`)}
-    else log('ai',`${p.name} passed acquisition (${buildLayerLabel(layer)}); no useful candidate`)
-  }else{
-    let opts=[];G.t1market.forEach((x,i)=>{let t={kind:'T1',idx:i,type:x},z=canBuildTileNow(p,t)?aiTileScore(p,t):null;if(z)opts.push({...z,...t})});G.t2market.forEach((x,i)=>{let t={kind:'T2',idx:i,type:x},z=canBuildTileNow(p,t)?aiTileScore(p,t):null;if(z)opts.push({...z,...t})});opts.sort((a,b)=>b.score-a.score);let t=opts[0];
-    if(t&&!(t.kind==='T2'&&t.output===0&&t.score<1.5)){let cost=placeTile(p,t,t.q,t.r),m=t.kind==='T1'?G.t1market:G.t2market;m.splice(t.idx,1);refillTiles();log('ai',`${p.name} public acquire-and-build ${tileLabel(t)} at ${t.q},${t.r} for ${cost}G (${buildLayerLabel(layer)}) [AI score ${t.score.toFixed(2)}]`)}else log('ai',`${p.name} passed acquisition; hand full / no useful direct build (${buildLayerLabel(layer)})`)
-  }
-  aiBuildFromHand(p);
-}
-
-function techHas(p,b,lv,opt){return p.techChoice?.[b+lv]===opt}
-function aTechOn(p,a,lv){let t=ATECH[a];return !!t&&Math.min(p.tech[t.parents[0]]||0,p.tech[t.parents[1]]||0)>=lv}
-function ring(q,r){return Math.max(Math.abs(q),Math.abs(r),Math.abs(-q-r))}
-function stationSpots(p){let used=new Set(p.stations||[]);return Object.entries(p.board).filter(([k,t])=>B.includes(t)&&!used.has(k)).map(([k])=>k)}
-function addStation(p,k,source='Tech'){if(!p.board[k]||!B.includes(p.board[k])||(p.stations||[]).includes(k))return false;p.stations=p.stations||[];p.stations.push(k);log('tech',`${p.name}｜${source}：在 ${k} ${ICON[p.board[k]]} Tile 建立生產站`);return true}
-function tileBaseOutputAt(p,k0){
-  let out={W:0,F:0,E:0,N:0,Steam:0,Magma:0,Sandstorm:0,Frost:0},t=p.board[k0];if(!t)return out;
-  let [q,r]=k0.split(',').map(Number),adj=dirs.map(([dq,dr])=>p.board[key(q+dq,r+dr)]);
-  if(t==='Extraction'||t==='DeepExtraction')for(let b of B)out[b]+=adj.filter(x=>x===b).length;
-  else if(AParents[t]){let [a,b]=AParents[t];out[t]=Math.min(adj.filter(x=>x===a).length,adj.filter(x=>x===b).length)}
-  return out
-}
-function calcProdDetail(p){
-  let total={W:0,F:0,E:0,N:0,Steam:0,Magma:0,Sandstorm:0,Frost:0},perTile={};
-  for(let k0 of Object.keys(p.board)){let out=tileBaseOutputAt(p,k0);if(Object.values(out).some(Boolean))perTile[k0]=out;for(let x in total)total[x]+=out[x]||0}
-  for(let s of (p.stations||[])){let t=p.board[s];if(B.includes(t))total[t]++}
-  return {total,perTile}
-}
-function addResources(p,o){for(let x in o)p.res[x]=(p.res[x]||0)+(o[x]||0)}
-function productionText(o){return Object.entries(o).filter(x=>x[1]).map(([k,v])=>`${ICON[k]||k}+${v}`).join(', ')||'0'}
-function calcProd(p){return calcProdDetail(p).total}
-function doProduction(p){
-  let d=calcProdDetail(p),o={...d.total};addResources(p,o);
-  if(p._magmaBoost&&!p._magmaBoostUsed){let extra=tileBaseOutputAt(p,'0,0');addResources(p,extra);for(let k in o)o[k]+=(extra[k]||0);p._magmaBoostUsed=true;log('tech',`${p.name}｜熔岩動力：中央 Production Tile 額外執行 → ${productionText(extra)}`)}
-  if(techHas(p,'F',3,'A')){p.fee=Math.min(10,p.fee+2);let n=p.fee>=5?2:1;p.res.F+=n;log('tech',`${p.name}｜爐壓累積：Fee +2 → ${p.fee}，+${n}🔥`)}
-  if(techHas(p,'F',3,'B')&&(o.F||0)>=3){p.g+=2;log('tech',`${p.name}｜燃料回收：本次 Production 產出至少 3🔥 → +2G`)}
-  log('production',`${p.name}: ${productionText(o)}`);
-  let effects=[];
-  if(techHas(p,'W',3,'A')&&p.g>0)effects.push({kind:'W3A',max:Math.min(2,p.g)});
-  for(let a of A){let [b1,b2]=ATECH[a].parents;if(aTechOn(p,a,2)&&(o[b1]||0)>0&&(o[b2]||0)>0&&p.g>=2)effects.push({kind:'A2',a,max:Math.min(2,Math.floor(p.g/2))})}
-  if(techHas(p,'E',10,'B')&&(o.E||0)>0){let eligible=Object.entries(d.perTile).filter(([k,x])=>Object.values(x).some(Boolean)).map(([k])=>k);if(eligible.length)effects.push({kind:'E10B',eligible})}
-  if(p.type==='human'&&effects.length){G.productionState.currentEffects=effects;G.productionState.currentPlayer=p.id;showNextProductionEffect();return false}
-  for(let e of effects)autoProductionEffect(p,e);
-  return true
-}
-function resolveProduction(){
-  let order=[...G.initiative],events=[];
-  for(let pid of order)events.push({kind:'complete',pid,label:'free'});
-  for(let pid of order)events.push({kind:'prolif',pid,step:1});
-  for(let pid of order)events.push({kind:'prolif',pid,step:2});
-  G.productionState={events,index:0,order,currentEffects:[],currentPlayer:null,startPending:false,decision:null,firstDone:{}};
-  for(let p of G.players){p._magmaBoost=false;p._magmaBoostUsed=false}
-  startMagmaPhaseChoices(0)
-}
-function startMagmaPhaseChoices(i){
-  let st=G.productionState;if(!st)return;let order=st.order||G.initiative;
-  for(;i<order.length;i++){let p=G.players[order[i]];if(aTechOn(p,'Magma',5)&&p.res.Magma>0){if(p.type==='human'){st.startPending=true;st.startIndex=i;let d=document.getElementById('decision');d.innerHTML=`<div class="effect-box"><b>🌋 Lv5 熔岩動力</b><p>Production Phase 開始：是否支付 1🌋，讓中央 Production Tile 的正常產出在本次 Production 中額外執行一次？</p><button onclick="chooseMagmaBoost(true)">支付 1🌋</button> <button onclick="chooseMagmaBoost(false)">Pass</button></div>`;render();return}else{p.res.Magma--;p._magmaBoost=true;log('tech',`${p.name}｜熔岩動力：支付 1🌋`)}}
-  }
-  st.startPending=false;processNextProductionEvent()
-}
-function chooseMagmaBoost(use){let st=G.productionState;if(!st||!st.startPending)return;let p=G.players[0];if(use&&p.res.Magma>0){p.res.Magma--;p._magmaBoost=true;log('tech','Human｜熔岩動力：支付 1🌋')}st.startPending=false;startMagmaPhaseChoices((st.startIndex||0)+1)}
-function proliferationCost(p,step){if(step===1)return G.choices[p.id]==='prod'?0:4;return 7}
-function productionPreview(p){let o=calcProd(p);return productionText(o)}
-function showProliferationDecision(p,step,cost){
-  let st=G.productionState;st.decision={pid:p.id,step,cost};let title=step===1?'First Proliferation':'Second Proliferation',elig=step===2?'（只有完成 First Proliferation 才有此機會）':'';
-  let d=document.getElementById('decision'),can=p.g>=cost;
-  d.innerHTML=`<div class="effect-box"><b>Production — ${title}</b><p>${elig}</p><p>目前單次基礎產量：<b>${productionPreview(p)}</b><br>費用：<b>${cost}G</b>（目前 ${p.g}G）${step===1&&cost===0?'<br><span class="good">Production Privilege：本次 First Proliferation 免費。</span>':''}</p><button onclick="resolveProliferationDecision(true)" ${can?'':'disabled'}>${cost?`支付 ${cost}G 並生產`:'免費生產'}</button> <button onclick="resolveProliferationDecision(false)">Pass</button>${step===1?'<p class="small">若 Pass First Proliferation，本 Phase 不會取得 Second Proliferation 資格。</p>':''}</div>`;render()
-}
-function resolveProliferationDecision(use){
-  let st=G.productionState;if(!st||!st.decision)return;let d=st.decision,p=G.players[d.pid],step=d.step,cost=d.cost;st.decision=null;
-  if(use&&p.g>=cost){p.g-=cost;if(step===1)st.firstDone[p.id]=true;log('production',`${p.name} ${step===1?'first':'second'} proliferation：${cost?`支付 ${cost}G`:'免費'} → Complete Production`);if(doProduction(p))processNextProductionEvent();return}
-  if(step===1)st.firstDone[p.id]=false;log('production',`${p.name} ${step===1?'first':'second'} proliferation：Pass`);processNextProductionEvent()
-}
-function processNextProductionEvent(){
-  let st=G.productionState;if(!st)return;
-  while(st.index<st.events.length){
-    let ev=st.events[st.index++],p=G.players[ev.pid];
-    if(ev.kind==='complete'){log('production',`${p.name} Complete Production (${ev.label})`);if(!doProduction(p))return;continue}
-    if(ev.kind==='prolif'){
-      if(ev.step===2&&!st.firstDone[p.id]){log('production',`${p.name} second proliferation：無資格（First 未完成）`);continue}
-      let cost=proliferationCost(p,ev.step);
-      if(p.type==='human'){showProliferationDecision(p,ev.step,cost);return}
-      let dec=aiWantsProliferation(p,cost,ev.step);log('ai-eval',`${p.name} ${ev.step===1?'First':'Second'} Proliferation｜score ${dec.score.toFixed(2)} / threshold ${dec.threshold.toFixed(2)}｜cost ${cost}G｜base ${productionPreview(p)} → ${dec.use?'TAKE':'PASS'}`);
-      if(dec.use){p.g-=cost;if(ev.step===1)st.firstDone[p.id]=true;log('production',`${p.name} ${ev.step===1?'first':'second'} proliferation：${cost?`支付 ${cost}G`:'免費'} → Complete Production`);doProduction(p)}else{if(ev.step===1)st.firstDone[p.id]=false;log('production',`${p.name} ${ev.step===1?'first':'second'} proliferation：Pass`)}
-    }
-  }
-  for(let p of G.players){delete p._magmaBoost;delete p._magmaBoostUsed}
-  G.productionState=null;log('production','Production resolved.');nextPhase()
-}
-function autoProductionEffect(p,e){
-  if(e.kind==='W3A'){let n=Math.min(e.max,p.g);p.g-=n;p.res.W+=n;if(n)log('tech',`${p.name}｜加壓供水：支付 ${n}G → +${n}💧`)}
-  else if(e.kind==='A2'){let n=Math.min(e.max,Math.floor(p.g/2));p.g-=2*n;p.res[e.a]+=n;if(n)log('tech',`${p.name}｜${ATECH[e.a][2].name}：支付 ${2*n}G → +${n}${ICON[e.a]}`)}
-  else if(e.kind==='E10B'){let k=e.eligible[0],o=tileBaseOutputAt(p,k);addResources(p,o);log('tech',`${p.name}｜自持工房：${k} 再執行一次 → ${productionText(o)}`)}
-}
-function showNextProductionEffect(){
-  let st=G.productionState,p=G.players[st.currentPlayer];if(!st.currentEffects.length){st.currentPlayer=null;processNextProductionEvent();return}
-  let e=st.currentEffects[0],d=document.getElementById('decision');
-  if(e.kind==='W3A')d.innerHTML=`<div class="effect-box"><b>💧 Lv3 加壓供水</b><p>本次 Complete Production 可支付最多 2G；每 1G → +1💧。</p>${Array.from({length:e.max+1},(_,n)=>`<button onclick="resolveProductionEffect(${n})">${n?'支付 '+n+'G → +'+n+'💧':'Pass'}</button>`).join(' ')}</div>`;
-  else if(e.kind==='A2')d.innerHTML=`<div class="effect-box"><b>${ICON[e.a]} Lv2 ${ATECH[e.a][2].name}</b><p>${ATECH[e.a][2].text}</p>${Array.from({length:e.max+1},(_,n)=>`<button onclick="resolveProductionEffect(${n})">${n?'支付 '+(2*n)+'G → +'+n+ICON[e.a]:'Pass'}</button>`).join(' ')}</div>`;
-  else if(e.kind==='E10B')d.innerHTML=`<div class="effect-box"><b>🌱 Lv10 自持工房</b><p>選擇一個本次有產出的 Production Tile 再執行一次。</p>${e.eligible.map((k,i)=>`<button class="effect-choice" onclick="resolveProductionEffect('${k}')">${k} ${ICON[p.board[k]]||'⛲'} → ${productionText(tileBaseOutputAt(p,k))}</button>`).join(' ')}</div>`;
-  render()
-}
-function resolveProductionEffect(v){
-  let st=G.productionState;if(!st||!st.currentEffects.length)return;let p=G.players[st.currentPlayer],e=st.currentEffects.shift();
-  if(e.kind==='W3A'){let n=+v||0;n=Math.min(n,e.max,p.g);p.g-=n;p.res.W+=n;if(n)log('tech',`Human｜加壓供水：支付 ${n}G → +${n}💧`)}
-  else if(e.kind==='A2'){let n=+v||0;n=Math.min(n,e.max,Math.floor(p.g/2));p.g-=2*n;p.res[e.a]+=n;if(n)log('tech',`Human｜${ATECH[e.a][2].name}：支付 ${2*n}G → +${n}${ICON[e.a]}`)}
-  else if(e.kind==='E10B'){let k=String(v);if(e.eligible.includes(k)){let o=tileBaseOutputAt(p,k);addResources(p,o);log('tech',`Human｜自持工房：${k} 再執行一次 → ${productionText(o)}`)}}
-  showNextProductionEffect()
-}
-function startContract(){G.contractPaymentPending=null;G.contractRecords={};for(let p of G.players){p.pass=false;p.completed=0;p.dealer=p.dealer||{id:'initial',step:0};p.dealer.completedDealerContractIdsThisPhase=[];G.contractRecords[p.id]=[]}G.contractCursor=0;G.contractNoActionStreak=0;G.contractHumanTurn=false;G.humanActs=[];contractStep()}
-function aiPaymentCost(p,o){let cost=(o.goldSpent||0)/2+(o.feeDelta||0)/2;for(let [k,n] of Object.entries(o.spent||{})){let stock=p.res[k]||0,inc=calcProd(p)[k]||0,scarcity=1+.65/(1+stock+inc*2);cost+=n*aiResourceValue(k)*scarcity}return cost}
-function aiActionReward(p,a){if(a.type==='OT')return rewardValue(a.c,p);if(a.type==='LT')return (a.c.reward.vp||0)+(a.c.reward.g||0)/2;if(a.type==='DA'){let r=a.ability?.reward||{};return (r.vp||0)+(r.g||0)/2}if(a.type==='DC'){let r=a.dc?.reward||{},v=(r.vp||0)+(r.g||0)/2+(a.dc?.tp?1:0)+(a.dc?.tpFromDeclaredB?1:0)+comboValue(p,a.dc)+(a.dc?.station?2:0);if(a.dc?.special?.kind==='fireHighFeePay'&&p.fee>=a.dc.special.minFee)v+=.8;return v}return 0}
-function aiActionUtility(p,a,o){let u=aiActionReward(p,a)-aiPaymentCost(p,o);if(a.type==='OT'){u+=.35;if(a.c.tp)u+=1.05;if((G.otDeck[G.tier]||[]).length<=2)u+=.12}if(a.type==='DC'){let d=dealerDef(p),last=d&&p.dealer.step===d.contracts.length-1;u+=.9+.25*(p.dealer.step||0);if(last)u+=1.15;if(a.dc?.combo&&comboActive(p,a.dc))u+=.35}if(a.type==='DA'){u-=.28;if(p.g<4)u+=.35}if(a.type==='LT')u-=.08;return u}
-function aiRankContractActions(p,acts){let ranked=[];for(let a of acts){let pays=a.payOptions||[];if(!pays.length)continue;let bestPay=null,best=-1e9;for(let o of pays){let u=aiActionUtility(p,a,o);if(u>best){best=u;bestPay=o}}ranked.push({action:a,payment:bestPay,score:best+aiNoise()})}return ranked.sort((a,b)=>b.score-a.score)}
-function aiApplyRankedContract(p,r){let a={...r.action,pay:r.payment.after,chosenPayment:r.payment.spent,declaredReq:r.payment.declaredReq,goldSpent:r.payment.goldSpent||0,feeDelta:r.payment.feeDelta||0,paymentTags:r.payment.tags||[]};executeContract(p,a)}
-function neighborA(a){return {Steam:['Magma','Frost'],Magma:['Steam','Sandstorm'],Sandstorm:['Magma','Frost'],Frost:['Sandstorm','Steam']}[a]||[]}
-function aiTransitionCandidates(p){let out=[];for(let from of B)for(let to of neighborB(from))out.push({from,to,amount:2,source:'Public 2B→neighbor B'});for(let a of A)for(let to of neighborA(a))out.push({from:a,to,amount:2,source:'Public 2A→neighbor A'});for(let a of A)for(let to of AParents[a])out.push({from:a,to,amount:1,source:'Public 1A→parent B'});for(let r of techTransitionRules(p))out.push(r);return out.filter(r=>(p.res[r.from]||0)>=r.amount&&p.g>=p.fee)}
-function aiTryTransitionForContract(p){let best=null;for(let r of aiTransitionCandidates(p)){let beforeRes={...p.res},beforeG=p.g,beforeFee=p.fee;p.res[r.from]-=r.amount;p.res[r.to]=(p.res[r.to]||0)+1;p.g-=beforeFee;p.fee=Math.min(10,beforeFee+1);let ranked=aiRankContractActions(p,legalContracts(p)),top=ranked[0];p.res={...beforeRes};p.g=beforeG;p.fee=beforeFee;if(!top)continue;let recipeLoss=r.amount*aiResourceValue(r.from)-aiResourceValue(r.to),score=top.score-Math.max(0,recipeLoss)*.7-beforeFee/2;if(!best||score>best.score)best={r,top,score}}if(!best||best.score<AI_CFG.transitionThreshold)return false;let r=best.r,paid=p.fee;p.res[r.from]-=r.amount;p.res[r.to]=(p.res[r.to]||0)+1;p.g-=paid;p.fee=Math.min(10,p.fee+1);log('transition',`${p.name} AI Transition ${r.amount>1?r.amount:''}${ICON[r.from]}→${ICON[r.to]}; paid ${paid}G; Fee now ${p.fee} [unlock score ${best.score.toFixed(2)}]`);let ranked=aiRankContractActions(p,legalContracts(p));if(ranked.length){log('ai-eval',`${p.name} post-Transition Contract｜${ranked.slice(0,4).map(x=>`${actName(x.action)} ${x.score.toFixed(2)}`).join(' | ')}`);aiApplyRankedContract(p,ranked[0]);return true}return false}
-function contractStep(){
-  if(G.techDecision){showTechDecision();return}
-  let active=G.players.filter(p=>!p.pass);
-  if(!active.length){endContract();return}
-  let tries=0,p;
-  do{p=G.players[G.initiative[G.contractCursor%4]];G.contractCursor=(G.contractCursor+1)%4;tries++}while(p.pass&&tries<5);
-  if(p.pass){endContract();return}
-  let acts=legalContracts(p);
-  if(!acts.length){
-    if(p.type==='ai'&&aiTryTransitionForContract(p)){G.contractNoActionStreak=0;render();setTimeout(contractStep,0);return}
-    G.contractNoActionStreak=(G.contractNoActionStreak||0)+1;
-    log('contract',`${p.name} auto-skip (no legal action)`);
-    // If every still-active player has auto-skipped consecutively, nothing can change the state, so end the phase.
-    if(G.contractNoActionStreak>=active.length){endContract();return}
-    setTimeout(contractStep,0);return
-  }
-  G.contractNoActionStreak=0;
-  if(p.type==='ai'){
-    G.contractHumanTurn=false;G.humanActs=[];
-    let ranked=aiRankContractActions(p,acts),best=ranked[0];
-    log('ai-eval',`${p.name} Contract candidates｜${ranked.slice(0,5).map(x=>`${actName(x.action)} ${x.score.toFixed(2)} [${spentText(x.payment.spent)}${x.payment.goldSpent?` +${x.payment.goldSpent}G`:''}]`).join(' | ')}`);
-    if(!best||best.score<AI_CFG.contractThreshold){p.pass=true;log('ai',`${p.name} Pass Out [best utility ${best?best.score.toFixed(2):'none'}]`)}else aiApplyRankedContract(p,best);
-    render();
-    setTimeout(contractStep,0)
-  }else contractUI(acts)
-}
-function legalContracts(p){
-  let a=[];
-  G.otMarket.forEach((c,i)=>{let payOptions=paymentOptionsReq(p,c.req);if(payOptions.length)a.push({type:'OT',i,c,payOptions,pay:payOptions[0].after,u:rewardValue(c,p)-c.req.length*.25})});
-  G.longTerm.forEach((c,i)=>{if(!G.ltUsed[c.id]){let payOptions=paymentOptionsLT(p,c);if(payOptions.length)a.push({type:'LT',i,c,payOptions,pay:payOptions[0].after,u:(c.reward.vp||0)+(c.reward.g||0)/2})}});
-  let ability=dealerAbility(p);if(ability&&!p.dealer.awaitingReplacement){let payOptions=p.dealer.id==='initial'?paymentOptionsReq(p,ability.req):dealerPaymentOptions(p,ability);if(payOptions.length)a.push({type:'DA',ability,req:ability.req,structuralPattern:ability.structuralPattern,payOptions,pay:payOptions[0].after,u:2,dealerName:dealerDef(p)?.name})}
-  let dc=dealerContract(p);if(dc&&!p.dealer.awaitingReplacement){let dp=p.dealer.id==='initial'?paymentOptionsReq(p,dc.req):dealerPaymentOptions(p,dc),needStations=dealerStationNeed(p,dc);if(dp.length&&stationSpots(p).length>=needStations)a.push({type:'DC',dc,req:dc.req,structuralPattern:dc.structuralPattern,payOptions:dp,pay:dp[0].after,u:2+(p.dealer.step||0),dealerName:dealerDef(p)?.name})}
-  return a
-}
-
-function resourceOrder(){return [...B,...Object.keys(AParents)]}
-function paymentSpent(before,after){let spent={};for(let k of resourceOrder()){let n=(before[k]||0)-(after[k]||0);if(n>0)spent[k]=n}return spent}
-function paymentKey(o){let declared=[...(o.declaredReq||[])].sort().join(',');return `${resourceOrder().map(k=>o.after[k]||0).join('|')}|g${o.goldSpent||0}|f${o.feeDelta||0}|d${declared}`}
-function uniquePayments(p,opts){let seen=new Set(),out=[];for(let o of opts){let k=paymentKey(o);if(seen.has(k))continue;seen.add(k);o.spent=o.spent||paymentSpent(p.res,o.after);out.push(o)}return out}
-function paymentOptionsReq(p,req){
-  let concrete=[];
-  function identities(i,arr,diff){if(i>=req.length){concrete.push([...arr]);return}let x=req[i];if(x==='ANYB'){for(let b of B)identities(i+1,[...arr,b],diff)}else if(x==='DIFFB'){for(let b of B)if(!diff.includes(b))identities(i+1,[...arr,b],[...diff,b])}else if(x==='ANYA'){for(let a of A)identities(i+1,[...arr,a],diff)}else identities(i+1,[...arr,x],diff)}
-  identities(0,[],[]);let all=[];for(let dec of concrete)all.push(...paymentOptionsConcrete(p,dec));return uniquePayments(p,all)
-}
-
-function paymentOptionsConcrete(p,declaredReq){
-  let out=[];
-  function walk(i,r,gold,feeDelta,usedGoldSub,tags){
-    if(i>=declaredReq.length){if(p.g>=gold)out.push({after:{...r},declaredReq:[...declaredReq],goldSpent:gold,feeDelta,spent:paymentSpent(p.res,r),tags:[...tags]});return}
-    let x=declaredReq[i];
-    if((r[x]||0)>0){let n={...r};n[x]--;walk(i+1,n,gold,feeDelta,usedGoldSub,tags)}
-    if(B.includes(x)&&techHas(p,'W',10,'A')&&x!=='W'&&(r.W||0)>0){let n={...r};n.W--;walk(i+1,n,gold,feeDelta,usedGoldSub,[...tags,'W10A'])}
-    if(B.includes(x)&&techHas(p,'F',10,'A')&&!usedGoldSub&&p.g>=gold+1){walk(i+1,{...r},gold+1,feeDelta+2,true,[...tags,'F10A'])}
-    if((x==='Steam'||x==='Frost')&&techHas(p,'W',6,'B')&&(r.W||0)>=2&&p.g>=gold+2){let n={...r};n.W-=2;walk(i+1,n,gold+2,feeDelta,usedGoldSub,[...tags,'W6B'])}
-  }
-  walk(0,{...p.res},0,0,false,[]);return out
-}
-function paymentOptionsLT(p,c){
-  if(c.k==='diff2'||c.k==='diff3')return paymentOptionsReq(p,Array(c.k==='diff2'?2:3).fill('DIFFB'));
-  if(c.k==='same2'||c.k==='same3'){let n=c.k==='same2'?2:3,out=[];for(let b of B)out.push(...paymentOptionsConcrete(p,Array(n).fill(b)));return uniquePayments(p,out)}
-  if(c.k==='anyA')return paymentOptionsReq(p,['ANYA']);if(c.k==='AB')return paymentOptionsReq(p,['ANYA','ANYB']);return []
-}
-function canPayReq(p,req){let o=paymentOptionsReq(p,req);return o.length?o[0].after:null}
-function canPayLT(p,c){let o=paymentOptionsLT(p,c);return o.length?o[0].after:null}
-function spentText(spent){let parts=[];for(let k of resourceOrder()){let n=spent?.[k]||0;if(n)parts.push(`${ICON[k]||k}${n>1?'×'+n:''}`)}return parts.join(' + ')||'0'}
-function afterText(after){return resourceOrder().map(k=>(after[k]||0)>0?`${ICON[k]||k}${after[k]}`:'').filter(Boolean).join(' ')}
-function contractUI(acts){G.contractPaymentPending=null;G.contractHumanTurn=true;G.humanActs=acts;let d=document.getElementById('decision');d.innerHTML='<p><b>Human Contract turn</b> — 可完成的 Contract / Dealer 會在原本卡片位置以綠框高亮，直接點擊卡片即可選擇。</p><button onclick="passOut()">Pass Out</button><hr><p>Transition 可在自己的 Contract turn 使用：</p>'+transitionButtons();render()}
-function actName(a){if(a.type==='OT')return `One-Time ${a.c.id}`;if(a.type==='LT')return `Long-Term ${a.c.req}`;if(a.type==='DA')return `${a.ability?.id==='initial_ability'?'Initial Dealer':a.dealerName||a.ability?.dealerName||'Dealer'} Ability`;if(a.type==='DC')return `${a.dc?.label||'Dealer Contract'} ${a.dc?.id||''}`;return a.type}
-function contractActionIndex(type,key){if(!G.contractHumanTurn||!Array.isArray(G.humanActs))return -1;return G.humanActs.findIndex(a=>a.type===type&&(type==='OT'||type==='LT'?a.c.id===key:true))}
-function selectContractCard(type,key=''){let i=contractActionIndex(type,key);if(i<0)return;let a=G.humanActs[i];if(a.structuralPattern){showDealerDeclarationChoice(i);return}let opts=a.payOptions||[];if(opts.length<=1){humanContract(i,0);return}showContractPaymentChoice(i)}
-function contractCardMeta(type,key=''){let i=contractActionIndex(type,key),legal=i>=0,pending=legal&&G.contractPaymentPending?.actionIndex===i;return {legal,cls:legal?`contract-selectable${pending?' contract-paying':''}`:'',onclick:legal?`onclick="selectContractCard('${type}','${key}')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectContractCard('${type}','${key}')}"`:''}}
-function declarationKey(req){return (req||[]).join('|')}
-function showDealerDeclarationChoice(i){if(!G.contractHumanTurn||!G.humanActs?.[i])return;let a=G.humanActs[i],groups=new Map();for(let o of (a.payOptions||[])){let k=declarationKey(o.declaredReq);if(!groups.has(k))groups.set(k,o.declaredReq)}G.contractPaymentPending={actionIndex:i,stage:'declare'};let d=document.getElementById('decision');d.innerHTML=`<p><b>${actName(a)}</b> 是 Wildcard structural requirement。請先宣告這次 Contract 的具體元素身份：</p><div class="pay-options">${[...groups.values()].map(req=>`<button class="pay-option" onclick="chooseDealerDeclaration(${i},'${declarationKey(req)}')"><div class="pay-icons">${reqIcons(req)}</div><div class="pay-after">宣告後才進入實際支付；substitution 不會改變此 identity。</div></button>`).join('')}</div><button onclick="cancelContractPayment()">取消，返回 Contract 選擇</button>`;render()}
-function chooseDealerDeclaration(i,k){let a=G.humanActs?.[i];if(!a)return;let opts=(a.payOptions||[]).filter(o=>declarationKey(o.declaredReq)===k);if(!opts.length)return;if(opts.length===1){let idx=(a.payOptions||[]).indexOf(opts[0]);humanContract(i,idx);return}showContractPaymentChoice(i,k)}
-function showContractPaymentChoice(i,declKey=null){if(!G.contractHumanTurn||!G.humanActs?.[i])return;let a=G.humanActs[i],all=a.payOptions||[],opts=declKey?all.filter(o=>declarationKey(o.declaredReq)===declKey):all,d=document.getElementById('decision');G.contractPaymentPending={actionIndex:i,stage:'pay',declKey};d.innerHTML=`<p><b>${actName(a)}</b> ${declKey?'已宣告 '+reqIcons(opts[0]?.declaredReq||[])+'；':''}請選擇這次實際支付：</p><div class="pay-options">${opts.map(o=>{let j=all.indexOf(o);return `<button class="pay-option" onclick="humanContract(${i},${j})"><div class="pay-icons">${spentText(o.spent)}${o.goldSpent?` + ${o.goldSpent}G`:''}</div><div class="pay-after">認定 requirement：${reqIcons(o.declaredReq||[])}${o.feeDelta?`｜Fee +${o.feeDelta}`:''}<br>支付後：${afterText(o.after)||'無元素'}</div></button>`}).join('')}</div><button onclick="${declKey?`showDealerDeclarationChoice(${i})`:'cancelContractPayment()'}">${declKey?'返回宣告':'取消，返回 Contract 選擇'}</button>`;render()}
-function cancelContractPayment(){G.contractPaymentPending=null;contractUI(G.humanActs)}
-function humanContract(i,payIndex=0){if(!G.contractHumanTurn||!G.humanActs?.[i])return;let a=G.humanActs[i],opts=a.payOptions||[];if(opts.length){let chosen=opts[payIndex];if(!chosen)return;a={...a,pay:chosen.after,chosenPayment:chosen.spent,declaredReq:chosen.declaredReq,goldSpent:chosen.goldSpent||0,feeDelta:chosen.feeDelta||0,paymentTags:chosen.tags||[]}}G.contractPaymentPending=null;G.contractHumanTurn=false;G.contractNoActionStreak=0;G.humanActs=[];G.effectResume='contract';executeContract(G.players[0],a);render();processPendingFlow()}
-function passOut(){if(!G.contractHumanTurn)return;G.contractPaymentPending=null;G.contractHumanTurn=false;G.humanActs=[];G.contractNoActionStreak=0;G.players[0].pass=true;log('contract','Human Pass Out');render();contractStep()}
-function rewardValue(c,p){let r=c.reward,v=(r.vp||0)+(r.g||0)/2+(c.tp?1:0);if(c.special?.startsWith('fire')&&p.fee>=5)v+=2;if(c.special?.startsWith('wind')&&p.fee>0)v+=.5;return v}
-function resolveWindDealerCombo(p,dc){let c=dc?.combo;if(!c||!comboActive(p,dc))return null;let preFee=p.fee,zeroFeeBonusTriggered=!!(c.preFeeZeroBonus&&preFee===0);if(zeroFeeBonusTriggered)applyReward(p,c.preFeeZeroBonus);let fr=reduceFeeWithCompensation(p,c.feeReduction||0,c.feeCompensationPerMissedPoint||1);log('dealer',`${p.name} ${dc.label} Combo｜preFee ${preFee}${zeroFeeBonusTriggered?' → +1VP':''}；Fee -${c.feeReduction||0}：實降 ${fr.actualFeeReduced}，補償 +${fr.feeCompensationGold}G`,{dealerId:p.dealer.id,dealerContractId:dc.id,preFee,zeroFeeBonusTriggered,requestedFeeReduction:c.feeReduction||0,actualFeeReduced:fr.actualFeeReduced,feeCompensationGold:fr.feeCompensationGold});return{preFee,zeroFeeBonusTriggered,...fr}}
-function queueTPGrants(p,grants){G.pendingTPGrants=G.pendingTPGrants||[];for(let tp of (grants||[]))G.pendingTPGrants.push({playerId:p.id,tp})}
-function resolveDealerCompletionReward(p,d){
-  let r=d.completionReward||{},preFee=p.fee,highFeeBonusTriggered=false;applyReward(p,{vp:r.vp||0,g:r.g||0});
-  if(r.highFeeBonus&&preFee>=r.highFeeBonus.minFee){applyReward(p,r.highFeeBonus.reward||{});highFeeBonusTriggered=true}
-  let fr={preFee,requestedFeeReduction:0,actualFeeReduced:0,feeCompensationGold:0};if(r.feeReduction)fr=reduceFeeWithCompensation(p,r.feeReduction,r.feeCompensationPerMissedPoint||1);
-  if(r.station){if(p.type==='ai'){for(let i=0;i<r.station;i++){let k=aiBestStationSpot(p);if(k)addStation(p,k,`${d.name} Completion`)}}else for(let i=0;i<r.station;i++)G.effectQueue.unshift({kind:'stationPlace',playerId:p.id,source:`${d.name} Completion`})}
-  if(r.tp?.length)queueTPGrants(p,r.tp);
-  log('dealer',`${p.name} completed ${d.name}｜Completion: ${completionRewardText(d)}${highFeeBonusTriggered?' [high-Fee bonus triggered]':''}`,{dealerId:d.id,preFee,highFeeBonusTriggered,requestedFeeReduction:fr.requestedFeeReduction||0,actualFeeReduced:fr.actualFeeReduced||0,feeCompensationGold:fr.feeCompensationGold||0});return{...fr,highFeeBonusTriggered}
-}
-function dealerChoiceTier(){return G.tier||1}
-function recycleDealerDeckIfConfigured(tier){let deck=G.dealerDecks?.[tier]||[],disc=G.dealerDiscard?.[tier]||[];if(deck.length||!DEALER_TEST_CONFIG.discardReshuffle||!disc.length)return false;G.dealerDecks[tier]=shuf(disc.splice(0));log('dealer',`TEST RULE：Tier ${tier} Dealer discard reshuffled into deck.`);return true}
-function startDealerReplacement(p){
-  let tier=dealerChoiceTier();p.dealer.awaitingReplacement=true;
-  if(!G.dealerContentLoaded?.[tier]){log('dealer',`${p.name} needs a new Dealer, but Tier ${tier} Dealer content is not loaded. Existing Dealer market remains visible; no fallback Dealer is invented.`);return false}
-  recycleDealerDeckIfConfigured(tier);let deck=G.dealerDecks?.[tier]||[];if(deck.length)G.dealerMarket.push(deck.pop());
-  if(G.dealerMarket.length<4){log('dealer',`${p.name} Dealer replacement blocked: official Tier ${tier} Dealer deck is exhausted and cannot form the required 4-choice market. No Dealer is generated.`);return false}
-  if(p.type==='human'){G.dealerChoicePending={playerId:p.id,tier,marketIds:G.dealerMarket.map(x=>x.instanceId)};showDealerChoice();return true}
-  let ranked=G.dealerMarket.map(x=>({x,score:aiDealerChoiceScore(p,x)+aiNoise()})).sort((a,b)=>b.score-a.score);log('ai-eval',`${p.name} Dealer choice｜${ranked.map(z=>`${dealerMarketName(z.x)} ${z.score.toFixed(2)}`).join(' | ')}`);applyDealerChoice(p,ranked[0].x.instanceId,false);return true
-}
-function dealerRequirementPressure(p,entry){let opts=dealerPaymentOptions(p,entry);if(!opts.length)return-1.2;let best=Math.min(...opts.map(o=>aiPaymentCost(p,o)));return .7-Math.min(1.5,best*.18)}
-function aiDealerChoiceScore(p,x){let d=DEALERS[x.dealerId];if(!d)return-99;let score=1+dealerRequirementPressure(p,d.ability)*.5+dealerRequirementPressure(p,d.contracts[0])*.8;let prod=calcProd(p);if(d.id==='water_t1_routes')score+=(p.res.W+prod.W*2)*.06;if(d.id==='fire_t1_forge')score+=(p.res.F+prod.F*2)*.06+(p.fee>=5?.7:0);if(d.id==='earth_t1_works')score+=(p.res.E+prod.E*2)*.05+Math.min(1,stationSpots(p).length*.15);if(d.id==='wind_t1_logistics')score+=(p.res.N+prod.N*2)*.06+(p.fee>0?.25:.05);if(d.id==='steam_t1_union')score+=(p.res.Steam+prod.Steam*2)*.16+(p.tech.W+p.tech.F)*.04;if(d.id==='wild_t1_consortium')score+=.45;return score}
-function applyDealerChoice(p,instanceId,resume=true){let i=G.dealerMarket.findIndex(x=>x.instanceId===instanceId);if(i<0)return false;let x=G.dealerMarket.splice(i,1)[0],d=DEALERS[x.dealerId];p.dealer={id:x.dealerId,instanceId:x.instanceId,step:0,completedDealerContractIdsThisPhase:[],awaitingReplacement:false};log('dealer',`${p.name} acquired Dealer：${d.name} (T${d.tier})`);if(G.dealerChoicePending?.playerId===p.id)G.dealerChoicePending=null;render();if(resume)processPendingFlow();return true}
-function showDealerChoice(){let q=G.dealerChoicePending;if(!q)return;let d=document.getElementById('decision');d.innerHTML=`<div class=\"effect-box\"><b>選擇新的 Dealer</b><p>Dealer market 已由 3 張暫時變成 4 張。請直接點擊 Dealer Market 中綠框卡片；選走 1 張後市場回到 3 張。</p><p class=\"small\">T1 Dealer pool 為 6 張正式 prototype，建立市場與補牌皆無放回；不會生成 placeholder 或重複正式 Dealer。</p></div>`;renderDealer()}
-function selectDealerMarketCard(instanceId){let q=G.dealerChoicePending;if(!q||q.playerId!==0||!q.marketIds.includes(instanceId))return;applyDealerChoice(G.players[0],instanceId,true)}
-function executeContract(p,a){
-  let chosen=a.payOptions?.[0];if(!a.declaredReq&&chosen){a={...a,pay:chosen.after,chosenPayment:chosen.spent,declaredReq:chosen.declaredReq,goldSpent:chosen.goldSpent||0,feeDelta:chosen.feeDelta||0,paymentTags:chosen.tags||[]}}
-  p.res=a.pay;p.g-=a.goldSpent||0;p.fee=Math.min(10,p.fee+(a.feeDelta||0));
-  let rec={type:a.type,declaredReq:a.declaredReq||contractBaseReq(a),paid:a.chosenPayment||{},goldSpent:a.goldSpent||0,dealerId:p.dealer?.id||null,dealerContractId:a.dc?.id||null};
-  let tpGrants=[];
-  if(a.type==='OT'){
-    let c=a.c,r={...c.reward};if(c.special==='fire5'&&p.fee>=5){r.vp++;r.g=(r.g||0)+2}if(c.special==='fire5vp'&&p.fee>=5)r.vp+=2;if(c.special==='windStable'){if(p.fee>0)p.fee--;else r.g=(r.g||0)+1}if(c.special==='windConditional'){if(p.fee>0)p.fee--;else{r.vp+=2;r.g=(r.g||0)+1}}applyReward(p,r);if(c.tp)tpGrants.push(c.tp);G.otMarket.splice(a.i,1);p.completed++;G.contractRecords[p.id].push(rec);log('contract',`${p.name} completed ${c.id}，支付 ${spentText(rec.paid)}${a.goldSpent?` + ${a.goldSpent}G`:''} → ${rewardText(r)}${c.special?` (${specialRewardText(c)})`:''}`);refillOT(c.tier)
-  }else if(a.type==='LT'){applyReward(p,a.c.reward);G.ltUsed[a.c.id]=true;log('contract',`${p.name} completed ${a.c.id}，支付 ${spentText(rec.paid)}`)
-  }else if(a.type==='DA'){
-    let rw=a.ability?.reward||{vp:1,g:2};applyReward(p,rw);log('dealer',`${p.name} used ${p.dealer.id==='initial'?'Initial Dealer':dealerDef(p)?.name||'Dealer'} Ability，認定 ${reqIcons(rec.declaredReq)}；支付 ${spentText(rec.paid)} → ${rewardText(rw)}`,{dealerId:p.dealer?.id,declaredRequirement:rec.declaredReq,actualPayment:rec.paid})
-  }else if(a.type==='DC'){
-    let dc=a.dc||dealerContract(p),wasInitial=p.dealer.id==='initial',preFee=p.fee;applyReward(p,dc.reward||{});
-    if(dc.tp)tpGrants.push(dc.tp);if(dc.tpFromDeclaredB&&B.includes(rec.declaredReq?.[0]))tpGrants.push(rec.declaredReq[0]);
-    if(!wasInitial&&p.dealer.id==='wind_t1_logistics')resolveWindDealerCombo(p,dc);
-    if(!wasInitial&&dc.station)for(let i=0;i<dc.station;i++)enqueueEffect(p,{kind:'stationPlace',source:`${dealerDef(p)?.name} ${dc.label}`});
-    if(!wasInitial&&dc.special?.kind==='fireHighFeePay')enqueueEffect(p,{kind:'DealerFireC3',preFee,minFee:dc.special.minFee,payElement:dc.special.payElement,reward:dc.special.reward,dealerId:p.dealer.id,dealerContractId:dc.id});
-    p.dealer.completedDealerContractIdsThisPhase=p.dealer.completedDealerContractIdsThisPhase||[];p.dealer.completedDealerContractIdsThisPhase.push(dc.id);p.dealer.step++;p.completed++;G.contractRecords[p.id].push(rec);
-    log('dealer',`${p.name} completed ${wasInitial?'Initial Dealer '+dc.label:(dealerDef(p)?.name||'Dealer')+' '+dc.label}，認定 ${reqIcons(rec.declaredReq)}；支付 ${spentText(rec.paid)} → ${dealerEntryRewardSummary(dc)}`,{dealerId:rec.dealerId,dealerContractId:dc.id,declaredRequirement:rec.declaredReq,actualPayment:rec.paid,preFee});
-    if(wasInitial&&p.dealer.step===4){tpGrants.push('wild');enqueueEffect(p,{kind:'postContractTech',action:a,rec});enqueueEffect(p,{kind:'dealerInitialReplacement'});log('dealer',`${p.name} completed Initial Dealer; Wildcard Tech Token granted`)}
-    else if(!wasInitial){let d=dealerDef(p),finished=d&&p.dealer.step>=d.contracts.length;if(finished)enqueueEffect(p,{kind:'dealerCompletion',dealerId:d.id,instanceId:p.dealer.instanceId});enqueueEffect(p,{kind:'postContractTech',action:a,rec});if(finished)enqueueEffect(p,{kind:'dealerReplacement'})}
-    else enqueueEffect(p,{kind:'postContractTech',action:a,rec})
-  }
-  if(a.type!=='DC')applyContractTechEffects(p,a,rec);queueTPGrants(p,tpGrants);if(p.type==='ai'){while(G.pendingTPGrants?.length&&G.pendingTPGrants[0].playerId===p.id){let q=G.pendingTPGrants.shift();gainTP(p,q.tp)}processAIEffectQueue(p)}
-}
-
-function contractBaseReq(a){if(a.req)return a.req;if(a.type==='OT')return a.c.req||[];if(a.type==='LT')return [];if(a.type==='DA')return a.ability?.req||['ANYB','ANYB'];if(a.type==='DC')return a.dc?.req||[];return []}
-function reqHas(rec,x){return (rec.declaredReq||[]).includes(x)}
-function reqCount(rec,x){return (rec.declaredReq||[]).filter(y=>y===x).length}
-function completedVolumeType(a){return a.type==='OT'||a.type==='DC'}
-function enqueueEffect(p,e){G.effectQueue=G.effectQueue||[];G.effectQueue.push({...e,playerId:p.id})}
-function applyContractTechEffects(p,a,rec){
-  // Automatic B-track / A-family effects tied to completion/payment.
-  if(techHas(p,'W',6,'A')&&reqHas(rec,'W')){p.res.W++;log('tech',`${p.name}｜流轉回饋：printed/認定 requirement 含 💧 → +1💧`)}
-  if(techHas(p,'F',6,'A')&&a.type==='OT'&&p.fee>=5){p.vp+=2;log('tech',`${p.name}｜高壓交付：Fee≥5 完成 One-Time → +2VP`)}
-  if(aTechOn(p,'Frost',5)&&reqHas(rec,'Frost')){let n=rec.paid.Frost||0;if(n){p.g+=n;p.res.W+=n;log('tech',`${p.name}｜冰晶回流：實付 ${n}❄️ → +${n}G +${n}💧`)}}
-  if(aTechOn(p,'Steam',9)&&reqHas(rec,'Steam')){let vp=2+(p.fee>=5?2:0),w=1+((rec.paid.Steam||0)>=2?1:0);p.vp+=vp;p.res.W+=w;log('tech',`${p.name}｜超臨界循環：+${vp}VP +${w}💧`)}
-  if(techHas(p,'F',6,'B')&&reqHas(rec,'F')&&p.res.F>=1)enqueueEffect(p,{kind:'F6B'});
-  if(techHas(p,'F',10,'B')&&reqHas(rec,'F')&&p.res.F>=2)enqueueEffect(p,{kind:'F10B'});
-  if(aTechOn(p,'Steam',5)&&a.type==='OT'&&p.res.Steam>=1)enqueueEffect(p,{kind:'Steam5'});
-  if(aTechOn(p,'Magma',9)&&reqHas(rec,'Magma')&&p.res.Magma>0&&(p.stations||[]).length>0)enqueueEffect(p,{kind:'Magma9',max:Math.min(2,p.res.Magma,(p.stations||[]).length)});
-  if(aTechOn(p,'Sandstorm',5)&&a.type==='DC'&&p.res.Sandstorm>=1)enqueueEffect(p,{kind:'Sandstorm5'});
-  if(techHas(p,'E',6,'A')&&a.type==='DC'&&reqHas(rec,'E')&&p.g>=4&&stationSpots(p).length)enqueueEffect(p,{kind:'E6A'});
-  if(techHas(p,'N',6,'A')&&completedVolumeType(a)&&p.completed>=4){let opts=[...new Set((rec.declaredReq||[]).filter(x=>B.includes(x)))];if(opts.length)enqueueEffect(p,{kind:'N6A',options:opts})}
-  if(techHas(p,'W',10,'B')&&reqCount(rec,'W')>0)enqueueEffect(p,{kind:'W10B',remaining:reqCount(rec,'W')});
-  // Wind throughput automatic effects happen after other completion triggers are queued.
-  if(completedVolumeType(a)&&techHas(p,'N',3,'B')&&p.completed>=3){p.g++;log('tech',`${p.name}｜連續履約：本 Phase 第 ${p.completed} 個 One-Time/Dealer → +1G`)}
-  if(completedVolumeType(a)&&techHas(p,'N',6,'B')){let old=p.fee;p.fee=Math.max(0,p.fee-1);log('tech',`${p.name}｜風行減阻：Fee ${old}→${p.fee}`)}
-}
-function resolveAIEffect(p,e){
-  if(e.kind==='F6B'&&p.res.F>=1){p.res.F--;p.vp++;p.g++;log('tech',`${p.name}｜燃盡庫存：支付 1🔥 → +1VP +1G`)}
-  else if(e.kind==='F10B'&&p.res.F>=2){p.res.F-=2;let n=p.fee;p.g+=n;p.fee=0;log('tech',`${p.name}｜熱能變現：支付 🔥🔥 → +${n}G，Fee→0`)}
-  else if(e.kind==='Steam5'&&p.res.Steam>=1){p.res.Steam--;p.vp+=2;p.res.W++;log('tech',`${p.name}｜蒸汽加壓：支付 1💨 → +2VP +1💧`)}
-  else if(e.kind==='Magma9'){let n=Math.min(e.max||0,p.res.Magma);p.res.Magma-=n;p.vp+=2*n;if(p.fee>=5)p.g+=n;log('tech',`${p.name}｜熔爐網路：支付 ${n}🌋 → +${2*n}VP${p.fee>=5?` +${n}G`:''}`)}
-  else if(e.kind==='Sandstorm5'&&p.res.Sandstorm>=1){p.res.Sandstorm--;if(p.g>=2&&stationSpots(p).length){p.g-=2;addStation(p,stationSpots(p)[0],'流動工班')}else{p.fee=Math.max(0,p.fee-3);log('tech',`${p.name}｜流動工班：支付 1⏳ → Fee -3`)}}
-  else if(e.kind==='E6A'&&p.g>=4&&stationSpots(p).length){p.g-=4;addStation(p,stationSpots(p)[0],'現地設站')}
-  else if(e.kind==='N6A'&&e.options?.length){let b=e.options[0];p.res[b]++;log('tech',`${p.name}｜順風補給：+1${ICON[b]}`)}
-  else if(e.kind==='W10B'&&e.remaining){for(let i=0;i<e.remaining;i++)p.res.W++;log('tech',`${p.name}｜水脈回流：+${e.remaining}💧（AI 選擇 Water）`)}
-  else if(e.kind==='stationPlace'){let k=aiBestStationSpot(p);if(k)addStation(p,k,e.source||'Dealer')}
-  else if(e.kind==='DealerFireC3'){let eligible=e.preFee>=e.minFee&&p.res[e.payElement]>=1,inc=calcProd(p)[e.payElement]||0,scarcity=1+.65/(1+(p.res[e.payElement]||0)+inc*2),take=eligible&&((e.reward?.vp||0)-aiResourceValue(e.payElement)*scarcity>.15);if(take){p.res[e.payElement]--;applyReward(p,e.reward||{});}log('dealer',`${p.name} Fire C3 optional｜preFee ${e.preFee}; highFeeBonusTriggered ${take}; ${take?'paid '+ICON[e.payElement]+' → +'+(e.reward?.vp||0)+'VP':'Pass'}`,{dealerId:e.dealerId,dealerContractId:e.dealerContractId,preFee:e.preFee,highFeeBonusTriggered:take})}
-  else if(e.kind==='dealerCompletion'||e.kind==='dealerInitialReplacement')resolveAutomaticDealerEffect(e)
-}
-function processAIEffectQueue(p){G.effectQueue=G.effectQueue||[];let guard=0;while(guard++<100){while(G.pendingTPGrants?.length&&G.pendingTPGrants[0].playerId===p.id){let q=G.pendingTPGrants.shift();gainTP(p,q.tp)}if(!G.effectQueue.length||G.effectQueue[0].playerId!==p.id)break;let e=G.effectQueue.shift();if(e.kind==='dealerCompletion'||e.kind==='dealerReplacement'||e.kind==='dealerInitialReplacement'||e.kind==='postContractTech')resolveAutomaticDealerEffect(e);else resolveAIEffect(p,e)}if(guard>=100)log('error',`${p.name} AI effect queue guard triggered`)}
-function aiBestStationSpot(p){let ss=stationSpots(p),prod=calcProd(p);return ss.sort((a,b)=>{let ta=p.board[a],tb=p.board[b],sa=aiCurrentDemand(p,ta)*.8+(prod[ta]||0)*.12-(p.res[ta]||0)*.015,sb=aiCurrentDemand(p,tb)*.8+(prod[tb]||0)*.12-(p.res[tb]||0)*.015;return sb-sa})[0]||null}
-function resolveAutomaticDealerEffect(e){let p=G.players[e.playerId];if(!p)return;if(e.kind==='dealerReplacement'||e.kind==='dealerInitialReplacement'){startDealerReplacement(p);return}if(e.kind==='dealerCompletion'){let d=DEALERS[e.dealerId];if(!d)return;resolveDealerCompletionReward(p,d);if(G.dealerDiscard?.[d.tier]&&e.instanceId)G.dealerDiscard[d.tier].push({instanceId:e.instanceId,dealerId:d.id,tier:d.tier})}else if(e.kind==='postContractTech')applyContractTechEffects(p,e.action,e.rec)}
-function processPendingFlow(){
-  if(G.techDecision){showTechDecision();return}
-  if(G.pendingTPGrants?.length){let q=G.pendingTPGrants.shift(),p=G.players[q.playerId];gainTP(p,q.tp);if(G.techDecision){showTechDecision();return}return processPendingFlow()}
-  if(G.effectQueue?.length){let e=G.effectQueue[0];if(e.kind==='dealerCompletion'||e.kind==='dealerReplacement'||e.kind==='dealerInitialReplacement'||e.kind==='postContractTech'){G.effectQueue.shift();resolveAutomaticDealerEffect(e);return processPendingFlow()}showEffectDecision();return}
-  if(G.dealerChoicePending){showDealerChoice();return}
-  let r=G.effectResume;G.effectResume=null;
-  if(r==='contract'){setTimeout(contractStep,0);return}
-  render()
-}
-function showEffectDecision(){
-  let e=G.effectQueue?.[0];if(!e)return processPendingFlow();let p=G.players[e.playerId],d=document.getElementById('decision');let buttons='';
-  if(e.kind==='F6B')buttons=`<button onclick="resolveHumanEffect('yes')">支付 1🔥 → +1VP +1G</button> <button onclick="resolveHumanEffect('no')">Pass</button>`;
-  else if(e.kind==='F10B')buttons=`<button onclick="resolveHumanEffect('yes')">支付 🔥🔥 → +目前 Fee(${p.fee})G，Fee→0</button> <button onclick="resolveHumanEffect('no')">Pass</button>`;
-  else if(e.kind==='Steam5')buttons=`<button onclick="resolveHumanEffect('yes')">支付 1💨 → +2VP +1💧</button> <button onclick="resolveHumanEffect('no')">Pass</button>`;
-  else if(e.kind==='Magma9')buttons=Array.from({length:(e.max||0)+1},(_,n)=>`<button onclick="resolveHumanEffect('${n}')">${n?`支付 ${n}🌋 → +${2*n}VP${p.fee>=5?` +${n}G`:''}`:'Pass'}</button>`).join(' ');
-  else if(e.kind==='Sandstorm5')buttons=`<button onclick="resolveHumanEffect('fee')">支付 1⏳ → Fee -3</button> ${p.g>=2&&stationSpots(p).length?`<button onclick="resolveHumanEffect('station')">支付 1⏳ +2G → 建 1 生產站</button>`:''} <button onclick="resolveHumanEffect('no')">Pass</button>`;
-  else if(e.kind==='E6A')buttons=`<button onclick="resolveHumanEffect('yes')">支付 4G → 建 1 生產站</button> <button onclick="resolveHumanEffect('no')">Pass</button>`;
-  else if(e.kind==='N6A')buttons=e.options.map(b=>`<button onclick="resolveHumanEffect('${b}')">+1${ICON[b]}</button>`).join(' ');
-  else if(e.kind==='W10B')buttons=B.map(b=>`<button onclick="resolveHumanEffect('${b}')">+1${ICON[b]}</button>`).join(' ');
-  else if(e.kind==='DealerFireC3')buttons=`${e.preFee>=e.minFee&&p.res[e.payElement]>=1?`<button onclick="resolveHumanEffect('yes')">額外支付 1${ICON[e.payElement]} → +${e.reward?.vp||0}VP</button>`:''} <button onclick="resolveHumanEffect('no')">Pass</button>`;
-  else if(e.kind==='stationPlace')buttons=`<span class="small">合法 Element Tile 已在版圖上高亮；請直接點擊其中一格放置生產站。</span>`;
-  else if(e.kind==='E10APlace'){buttons=coords().filter(c=>ring(c.q,c.r)===3&&!p.board[key(c.q,c.r)]).map(c=>`<button onclick="resolveHumanEffect('${key(c.q,c.r)}')">${key(c.q,c.r)}</button>`).join(' ')}
-  let title={DealerFireC3:'🔥 熔爐商會 C3 高 Fee 加碼',F6B:'🔥 Lv6 燃盡庫存',F10B:'🔥 Lv10 熱能變現',Steam5:'💨 Lv5 蒸汽加壓',Magma9:'🌋 Lv9 熔爐網路',Sandstorm5:'⏳ Lv5 流動工班',E6A:'🌱 Lv6 現地設站',N6A:'🌪️ Lv6 順風補給',W10B:'💧 Lv10 水脈回流',stationPlace:'🌱 生產站放置',E10APlace:'🌱 Lv10 深層基座：放置特殊 Extraction Production Tile'}[e.kind]||'Tech Effect';
-  d.innerHTML=`<div class="effect-box"><b>${title}</b><p>${e.kind==='W10B'?`仍有 ${e.remaining} 個 B 回補要選擇。`:e.kind==='stationPlace'?'請在 Human 版圖上點擊高亮的合法 Element Tile。':e.kind==='E10APlace'?'這是一張特殊 Production Tile，不來自 market；只能放在最外圍 Ring 3。其生產效果與起始中央 Extraction Well 相同：生產所有相鄰 Base Element Tile。':''}</p>${buttons}</div>`;render()
-}
-function resolveHumanEffect(v){
-  let e=G.effectQueue.shift(),p=G.players[e.playerId];
-  if(e.kind==='F6B'&&v==='yes'&&p.res.F>=1){p.res.F--;p.vp++;p.g++;log('tech','Human｜燃盡庫存：支付 1🔥 → +1VP +1G')}
-  else if(e.kind==='F10B'&&v==='yes'&&p.res.F>=2){p.res.F-=2;let n=p.fee;p.g+=n;p.fee=0;log('tech',`Human｜熱能變現：支付 🔥🔥 → +${n}G，Fee→0`)}
-  else if(e.kind==='Steam5'&&v==='yes'&&p.res.Steam>=1){p.res.Steam--;p.vp+=2;p.res.W++;log('tech','Human｜蒸汽加壓：支付 1💨 → +2VP +1💧')}
-  else if(e.kind==='Magma9'){let n=Math.min(+v||0,e.max||0,p.res.Magma);p.res.Magma-=n;p.vp+=2*n;if(p.fee>=5)p.g+=n;if(n)log('tech',`Human｜熔爐網路：支付 ${n}🌋 → +${2*n}VP${p.fee>=5?` +${n}G`:''}`)}
-  else if(e.kind==='Sandstorm5'&&v!=='no'&&p.res.Sandstorm>=1){p.res.Sandstorm--;if(v==='fee'){p.fee=Math.max(0,p.fee-3);log('tech','Human｜流動工班：支付 1⏳ → Fee -3')}else if(v==='station'&&p.g>=2){p.g-=2;G.effectQueue.unshift({kind:'stationPlace',playerId:p.id,source:'流動工班'})}}
-  else if(e.kind==='E6A'&&v==='yes'&&p.g>=4){p.g-=4;G.effectQueue.unshift({kind:'stationPlace',playerId:p.id,source:'現地設站'})}
-  else if(e.kind==='N6A'&&e.options.includes(v)){p.res[v]++;log('tech',`Human｜順風補給：+1${ICON[v]}`)}
-  else if(e.kind==='W10B'&&B.includes(v)){p.res[v]++;e.remaining--;log('tech',`Human｜水脈回流：+1${ICON[v]}`);if(e.remaining>0)G.effectQueue.unshift(e)}
-  else if(e.kind==='DealerFireC3'){let take=v==='yes'&&e.preFee>=e.minFee&&p.res[e.payElement]>=1;if(take){p.res[e.payElement]--;applyReward(p,e.reward||{});}log('dealer',`Human Fire C3 optional｜preFee ${e.preFee}; highFeeBonusTriggered ${take}; ${take?'paid '+ICON[e.payElement]+' → +'+(e.reward?.vp||0)+'VP':'Pass'}`,{dealerId:e.dealerId,dealerContractId:e.dealerContractId,preFee:e.preFee,highFeeBonusTriggered:take})}
-  else if(e.kind==='stationPlace'&&stationSpots(p).includes(v)){addStation(p,v,e.source||'Dealer')}
-  else if(e.kind==='E10APlace'){let [q,r]=String(v).split(',').map(Number);if(ring(q,r)===3&&!p.board[v]){p.board[v]='DeepExtraction';log('tech',`Human｜深層基座：免費放置特殊 Extraction Production Tile 於 Ring3 ${v}`)}}
-  processPendingFlow()
-}
-function applyReward(p,r){p.vp+=r.vp||0;p.g+=r.g||0} function tierContentLoaded(t){if(G.otContentLoaded?.[t])return true;if((G.otDeck?.[t]||[]).length)return true;if((G.otMarket||[]).some(c=>c.tier===t))return true;return false}
-function activateNextTier(){if(G.tier>=3)return false;G.tier++;addLongTerms(G.tier);let loaded=tierContentLoaded(G.tier);log('tier',`Tier ${G.tier} activated; One-Time ${loaded?'content loaded':'Content Not Loaded — waiting for future card content / debug injection'}.`);return true}
-function refillOT(completedTier=null){
-  let fill=()=>{let d=G.otDeck[G.tier]||[];while(G.otMarket.length<4&&d.length)G.otMarket.push(d.pop())};fill();
-  if(completedTier===G.tier&&(G.otDeck[G.tier]||[]).length===0&&G.tier<3){activateNextTier();fill()}
-}
-function gainTP(p,tp){
-  let opts=tp==='wild'?[...B]:tp.includes('/')?tp.split('/'):[tp];
-  opts=opts.filter(b=>B.includes(b)&&p.tech[b]<10);
-  if(!opts.length){log('tech',`${p.name} 獲得 Tech Point，但可選 Track 已達 Lv10。`);return}
-  if(p.type==='human'&&opts.length>1){G.techDecision={stage:'track',playerId:p.id,options:opts,source:tp};showTechDecision();return}
-  let pick=p.type==='human'?opts[0]:opts.map(b=>({b,score:aiTechTrackScore(p,b)+aiNoise()})).sort((a,b)=>b.score-a.score)[0].b;
-  if(p.type==='ai')log('ai-eval',`${p.name} TP choice ${opts.map(b=>`${BN[b]} ${aiTechTrackScore(p,b).toFixed(2)}`).join(' | ')} → ${BN[pick]}`);
-  applyTechPoint(p,pick);
-}
-function applyTechPoint(p,b){
-  p.tech[b]=Math.min(10,p.tech[b]+1);
-  log('tech',`${p.name} +1 ${ICON[b]} ${BN[b]} Tech Point → Lv${p.tech[b]}`);
-  let pending=checkTech(p,b);
-  if(!pending)finishTechPointGain(p);
-}
-function finishTechPointGain(p){
-  if(p.techChoice['N3']==='A')p.g++;
-  if(p.techChoice['N10']==='B')p.vp++;
-}
-function checkTech(p,b){
-  let lv=p.tech[b],k=b+lv;if(!B_BREAKPOINTS.includes(lv)||p.techChoice[k])return false;
-  if(p.type==='human'){
-    G.techDecision={stage:'breakpoint',playerId:p.id,track:b,level:lv};
-    showTechDecision();return true;
-  }
-  let pick=aiBreakpointChoice(p,b,lv);p.techChoice[k]=pick;let opt=BTECH[b][lv][pick];
-  log('tech',`${p.name} 解鎖 ${ICON[b]} ${BN[b]} Lv${lv}：${opt.name}`);if(b==='E'&&lv===6&&pick==='B')unlockEarthStations(p,2,'地脈開發');if(b==='E'&&lv===10&&pick==='A')unlockDeepFoundation(p);return false;
-}
-function aiTechTrackScore(p,b){let prod=calcProd(p),board=Object.values(p.board).filter(x=>x===b).length,score=(prod[b]||0)*1.7+(p.res[b]||0)*.18+board*.35;for(let a of A){if(ATECH[a].parents.includes(b)){let other=ATECH[a].parents.find(x=>x!==b),gap=(p.tech[other]||0)-(p.tech[b]||0);if(gap>0)score+=Math.min(1.2,gap*.35)}}let next=B_BREAKPOINTS.find(lv=>lv>p.tech[b]);if(next&&next-p.tech[b]===1)score+=.45;return score}
-function aiBreakpointChoice(p,b,lv){let prod=calcProd(p);let scoreA=0,scoreB=0;if(lv===1){let own=p.res[b]||0,neighbors=neighborB(b).reduce((s,x)=>s+(p.res[x]||0),0);scoreA=own*.15+(prod[b]||0)*.5;scoreB=neighbors*.08+(own===0?.5:0)}else if(b==='W'&&lv===3){scoreA=p.g>=5?1.2:.5;scoreB=Object.values(p.board).filter(x=>x==='W').length*.45}else if(b==='W'&&lv===6){scoreA=1.1+aiCurrentDemand(p,'W')*.2;scoreB=(p.res.W||0)>=2?.9:.25}else if(b==='W'&&lv===10){scoreA=1.2;scoreB=aiCurrentDemand(p,'W')*.35}else if(b==='F'&&lv===3){scoreA=p.fee>=2?1.1:.65;scoreB=(prod.F||0)>=2?1.2:.4}else if(b==='F'&&lv===6){scoreA=p.fee>=4?1.4:.5;scoreB=(p.res.F||0)>=2?1.1:.6}else if(b==='F'&&lv===10){scoreA=p.g>=4?.9:.5;scoreB=p.fee>=3?1.3:.55}else if(b==='E'&&lv===3){scoreA=1;scoreB=.9}else if(b==='E'&&lv===6){scoreA=p.g>=8?1.15:.55;scoreB=stationSpots(p).length>=2?1.05:.3}else if(b==='E'&&lv===10){scoreA=coords().some(c=>ring(c.q,c.r)===3&&!p.board[key(c.q,c.r)])?1.1:.2;scoreB=(prod.E||0)>0?1.15:.4}else if(b==='N'&&lv===3){scoreA=1;scoreB=1+(p.completed||0)*.2}else if(b==='N'&&lv===6){scoreA=.9;scoreB=p.fee>0?1.2:.75}else if(b==='N'&&lv===10){scoreA=1.1;scoreB=1.05}scoreA+=aiNoise();scoreB+=aiNoise();let pick=scoreA>=scoreB?'A':'B';log('ai-eval',`${p.name} ${BN[b]} Lv${lv} choice｜A ${scoreA.toFixed(2)} / B ${scoreB.toFixed(2)} → ${pick}`);return pick}
-function nextBreakpoint(p,b){return B_BREAKPOINTS.find(lv=>lv>p.tech[b])||null}
-function techTrackChoicePreview(p,b){
-  let newLv=Math.min(10,p.tech[b]+1),hit=B_BREAKPOINTS.includes(newLv)?newLv:nextBreakpoint({...p,tech:{...p.tech,[b]:newLv}},b),html=`<b>${ICON[b]} ${BN[b]} Lv${p.tech[b]} → Lv${newLv}</b>`;
-  if(hit&&BTECH[b][hit])html+=`<span class="future-note">${hit===newLv?'本點立即到達':'下一個'} Breakpoint Lv${hit}</span><span class="effect"><b>A｜${BTECH[b][hit].A.name}</b>${BTECH[b][hit].A.text}<br><b>B｜${BTECH[b][hit].B.name}</b>${BTECH[b][hit].B.text}</span>`;
-  else html+=`<span class="future-note">此 Track 已接近／到達 Lv10。</span>`;
-  return html;
-}
-function showTechDecision(){
-  if(!G?.techDecision)return;let d=G.techDecision,p=G.players[d.playerId],el=document.getElementById('decision');
-  if(d.stage==='track'){
-    el.innerHTML=`<p><b>取得 Tech Point：選擇要投入的 Tech Track</b></p><p class="small">這次 Tech Point 可以投入下列方向。未解鎖的未來 Breakpoint 也一併展示，方便你比較長期路線。</p><div class="tech-choice-list">${d.options.map(b=>`<button class="tech-choice-card" onclick="chooseTechTrack('${b}')" ${p.tech[b]>=10?'disabled':''}>${techTrackChoicePreview(p,b)}</button>`).join('')}</div>`;
-  }else{
-    let o=BTECH[d.track][d.level];
-    el.innerHTML=`<p><b>${ICON[d.track]} ${BN[d.track]} Lv${d.level} Breakpoint：選擇 Tech 方向</b></p><p class="small">此選擇永久鎖定。以下直接顯示完整效果，不再使用 L${d.level}A / L${d.level}B 縮寫。</p><div class="tech-choice-list"><button class="tech-choice-card" onclick="chooseBreakpointOption('A')"><b>A｜${o.A.name}</b><span class="effect">${o.A.text}</span></button><button class="tech-choice-card" onclick="chooseBreakpointOption('B')"><b>B｜${o.B.name}</b><span class="effect">${o.B.text}</span></button></div>`;
-  }
-  renderTech();
-}
-function chooseTechTrack(b){
-  let d=G.techDecision;if(!d||d.stage!=='track'||!d.options.includes(b))return;let p=G.players[d.playerId];G.techDecision=null;applyTechPoint(p,b);render();if(G.techDecision){showTechDecision();return}resumeAfterTechDecision();
-}
-function chooseBreakpointOption(choice){
-  let d=G.techDecision;if(!d||d.stage!=='breakpoint'||!['A','B'].includes(choice))return;let p=G.players[d.playerId],k=d.track+d.level,opt=BTECH[d.track][d.level][choice];p.techChoice[k]=choice;G.techDecision=null;log('tech',`${p.name} 選擇 ${ICON[d.track]} ${BN[d.track]} Lv${d.level}：${opt.name} — ${opt.text}`);
-  if(d.track==='E'&&d.level===6&&choice==='B')unlockEarthStations(p,2,'地脈開發');
-  if(d.track==='E'&&d.level===10&&choice==='A')unlockDeepFoundation(p);
-  finishTechPointGain(p);render();processPendingFlow()
-}
-function resumeAfterTechDecision(){processPendingFlow()}
-
-function unlockEarthStations(p,n,source){let spots=stationSpots(p);if(!spots.length){log('tech',`${p.name}｜${source}：無合法 Element Tile 可放生產站`);return}if(p.type==='human'){G.effectQueue=G.effectQueue||[];for(let i=0;i<Math.min(n,spots.length);i++)G.effectQueue.push({kind:'stationPlace',playerId:p.id,source})}else for(let i=0;i<Math.min(n,spots.length);i++){let ss=stationSpots(p);if(ss.length)addStation(p,ss[0],source)}}
-function unlockDeepFoundation(p){let spots=coords().filter(c=>ring(c.q,c.r)===3&&!p.board[key(c.q,c.r)]);if(!spots.length){log('tech',`${p.name}｜深層基座：Ring 3 沒有可放置空格`);return}if(p.type==='human'){G.effectQueue=G.effectQueue||[];G.effectQueue.push({kind:'E10APlace',playerId:p.id})}else{let c=spots[0];p.board[key(c.q,c.r)]='DeepExtraction';log('tech',`${p.name}｜深層基座：免費放置特殊 Extraction Production Tile 於 Ring3 ${key(c.q,c.r)}`)}}
-function windTriggers(p,a){if(!['OT','DC'].includes(a.type))return;if(p.techChoice['N3']==='B'&&p.completed>=3)p.g++;if(p.techChoice['N6']==='B')p.fee=Math.max(0,p.fee-1)}
-function neighborB(b){return {W:['F','N'],F:['W','E'],E:['F','N'],N:['E','W']}[b]}
-function techTransitionRules(p){
-  let rules=[],seen=new Map();
-  for(let b of B){
-    let choice=p.techChoice[b+'1'];
-    if(!choice)continue;
-    let tech=BTECH[b][1][choice];
-    if(choice==='A')for(let to of neighborB(b))rules.push({from:b,to,amount:1,source:`${ICON[b]} Lv1 ${tech.name}`});
-    else for(let from of neighborB(b))rules.push({from,to:b,amount:1,source:`${ICON[b]} Lv1 ${tech.name}`});
-  }
-  for(let r of rules){let k=`${r.from}>${r.to}>${r.amount}`;if(seen.has(k))seen.get(k).source+=' / '+r.source;else seen.set(k,{...r})}
-  return [...seen.values()];
-}
-function transitionButtons(){
-  let p=G.players[0],pub=[];
-  for(let from of B)for(let to of neighborB(from))pub.push(`<button ${p.res[from]<2||p.g<p.fee?'disabled':''} onclick="executeTransition('${from}','${to}',2)">2${ICON[from]}→${ICON[to]} (${p.fee}G)</button>`);
-  for(let a of A)for(let to of neighborA(a))pub.push(`<button ${p.res[a]<2||p.g<p.fee?'disabled':''} onclick="executeTransition('${a}','${to}',2)">2${ICON[a]}→${ICON[to]} (${p.fee}G)</button>`);
-  for(let a in AParents)for(let b of AParents[a])pub.push(`<button ${p.res[a]<1||p.g<p.fee?'disabled':''} onclick="executeTransition('${a}','${b}',1)">${ICON[a]}→${ICON[b]} (${p.fee}G)</button>`);
-  let tech=techTransitionRules(p),techHtml=tech.length?`<div class="transition-group transition-tech"><b>Tech Lv1 新增 Transition Rules</b><div class="row">${tech.map(r=>`<button ${p.res[r.from]<r.amount||p.g<p.fee?'disabled':''} title="${r.source}" onclick="executeTransition('${r.from}','${r.to}',${r.amount})">${r.amount>1?r.amount:''}${ICON[r.from]}→${ICON[r.to]} (${p.fee}G)<span class="transition-source">${r.source}</span></button>`).join('')}</div></div>`:'';
-  return `<div class="transition-group"><b>Public Transition Rules</b><div class="row">${pub.join('')}</div></div>${techHtml}`;
-}
-function executeTransition(from,to,amount){
-  let p=G.players[0];
-  if((p.res[from]||0)<amount||p.g<p.fee)return;
-  let paidFee=p.fee;
-  p.res[from]-=amount;p.res[to]=(p.res[to]||0)+1;p.g-=paidFee;p.fee=Math.min(10,p.fee+1);
-  log('transition',`Human ${amount>1?amount:''}${ICON[from]}→${ICON[to]}; paid ${paidFee}G; Fee now ${p.fee}`);
-  contractUI(legalContracts(p));
-}
-function transitionB(f,t,n){executeTransition(f,t,n)}
-function transitionA(a,b){executeTransition(a,b,1)}
-function endContract(){G.contractPaymentPending=null;G.contractHumanTurn=false;G.humanActs=[];for(let p of G.players){let recs=G.contractRecords?.[p.id]||[],n=recs.length;if(techHas(p,'N',10,'A')){let gain=n>=6?5:n>=4?3:n>=2?1:0;p.vp+=gain;if(gain)log('tech',`${p.name}｜連環履約：本 Phase ${n} 張 → +${gain}VP`)}if(aTechOn(p,'Frost',9)){let f=recs.filter(r=>reqHas(r,'Frost')).length;if(f>=6){p.vp+=5;p.g+=4;log('tech',`${p.name}｜高頻交付：${f} 張 Frost → +5VP +4G`)}else if(f>=4){p.vp+=2;p.g+=2;log('tech',`${p.name}｜高頻交付：${f} 張 Frost → +2VP +2G`)}else if(f>=2){p.g+=2;log('tech',`${p.name}｜高頻交付：${f} 張 Frost → +2G`)}}if(aTechOn(p,'Sandstorm',9)){if(n>=2){let g=Math.min(3,(p.stations||[]).length);p.g+=g;if(g)log('tech',`${p.name}｜沙暴供應網：生產站回報 +${g}G`)}if(n>=4){p.res.Sandstorm++;log('tech',`${p.name}｜沙暴供應網：≥4 張 → +1⏳`)}if(n>=6){p.vp+=4;log('tech',`${p.name}｜沙暴供應網：≥6 張 → +4VP`)}}p.dealer.completedDealerContractIdsThisPhase=[]}log('contract','Contract Phase end');nextPhase()}
-function endTurn(){G.contractPaymentPending=null;G.techDecision=null;selectedBuild=null;G.buildQueue=[];G.buildCurrent=null;G.techDecision=null;G.effectQueue=[];G.effectResume=null;G.effectDecision=null;G.productionState=null;G.contractHumanTurn=false;G.humanActs=[];G.dealerChoicePending=null;G.pendingTPGrants=[];G.turn++;G.ltUsed={};G.phaseQueue=[];for(let p of G.players){p.pass=false;p.completed=0;p.prolif=0}if(G.turn>12)log('game','Canonical 12-turn clock reached; Branch end trigger unresolved — debug/continue allowed.');render();privilegeUI()}
-function render(){renderStatus();renderPhaseTracker();renderPlayers();renderMarkets();renderContracts();renderBoard();renderTech();renderDealer();renderLog()}
-function renderPhaseTracker(){let el=document.getElementById('phaseTracker');if(!el||!G)return;if(G.phase==='Privilege'||!G.turnPhases?.length){el.innerHTML='<div class="phase-pending">Phase 尚未揭露。提交 Privilege 後會顯示本回合實際執行順序。</div>';return}el.innerHTML=G.turnPhases.map(ph=>{let cls,state;if(G.completedPhases?.includes(ph)){cls='done';state='✓ 已執行'}else if(G.phase===ph){cls='current';state='● 正在執行'}else{cls='future';state='→ 將被執行'}return `<div class="phase-step ${cls}"><div class="phase-name">${ph}</div><div class="phase-state">${state}</div></div>`}).join('')}
-function renderStatus(){document.getElementById('status').textContent=`Turn ${G?.turn||'-'} · ${G?.phase||'-'} · Initiative ${G?G.initiative.map(i=>G.players[i].name).join(' › '):''}`}
-function renderPlayers(){document.getElementById('players').innerHTML=G.players.map(p=>{let hand=p.hand||[],prod=calcProd(p);let h=p.type==='human'?`<div class="small">Tile Hand ${hand.length}/${handLimit(p)}：${hand.map(t=>ICON[t.type]||'⛲').join(' ')||'—'}</div><div class="prod-note">元素後的 <span class="income">(+X)</span> = 依目前版圖與生產站計算的單次 Complete Production 產量；不含需額外付款或選擇的 Tech 效果。</div>`:'';return `<div class="card player ${p.type==='human'?'human':''}"><b>${p.name}</b> <span class="tag">${p.g}G</span> <span class="tag">${p.vp}VP</span> <span class="tag">Fee ${p.fee}</span><div class="res">${B.map(x=>`<span>${ICON[x]}${p.res[x]} <span class="income">(+${prod[x]||0})</span></span>`).join('')} ${Object.keys(AParents).map(x=>`<span>${ICON[x]}${p.res[x]} <span class="income">(+${prod[x]||0})</span></span>`).join('')}</div>${h}</div>`}).join('')}
-function renderMarkets(){let p=G.players[0],humanTurn=isHumanBuildControl(),used=humanTurn?G.buildCurrent.acqUsed:true,full=p.hand.length>=handLimit(p),cols=tileMarketSize();document.getElementById('t1market').style.gridTemplateColumns=`repeat(${cols},minmax(0,1fr))`;document.getElementById('t2market').style.gridTemplateColumns=`repeat(${cols},minmax(0,1fr))`;document.getElementById('t1market').innerHTML=G.t1market.map((x,i)=>{let tile={kind:'T1',idx:i,type:x},cost=buildCost(tile,p),direct=canAcquireBuildMarket('T1',i),canHand=humanTurn&&!used&&!selectedBuild&&!full,chosen=selectedBuild&&selectedBuild.source==='market-direct'&&selectedBuild.kind==='T1'&&selectedBuild.idx===i;let label=full?'取得並建造':'取得到手牌',onclick=full?`selectMarketAcquireBuild('T1',${i})`:`acquirePublic('T1',${i})`,ok=full?direct:canHand;return `<div class="card marketCard ${chosen?'chosen':''}"><b>${ICON[x]} ${BN[x]} Tile</b><div class="market-note">建造時 ${cost}G</div><button onclick="${onclick}" ${ok?'':'disabled'}>${chosen?'已選擇':label}</button></div>`}).join('');document.getElementById('t2market').innerHTML=G.t2market.map((x,i)=>{let tile={kind:'T2',idx:i,type:x},cost=buildCost(tile,p),direct=canAcquireBuildMarket('T2',i),canHand=humanTurn&&!used&&!selectedBuild&&!full,chosen=selectedBuild&&selectedBuild.source==='market-direct'&&selectedBuild.kind==='T2'&&selectedBuild.idx===i;let label=full?'取得並建造':'取得到手牌',onclick=full?`selectMarketAcquireBuild('T2',${i})`:`acquirePublic('T2',${i})`,ok=full?direct:canHand;return `<div class="card marketCard ${chosen?'chosen':''}"><b>${ICON[x]} ${x} Well</b><div class="market-note">建造時 ${cost}G</div><button onclick="${onclick}" ${ok?'':'disabled'}>${chosen?'已選擇':label}</button></div>`}).join('')}
-function ltReqIcons(c){if(c.k==='diff2')return `2 種不同 ${B_ICONS}`;if(c.k==='same2')return `相同 2× ${B_ICONS}`;if(c.k==='diff3')return `3 種不同 ${B_ICONS}`;if(c.k==='same3')return `相同 3× ${B_ICONS}`;if(c.k==='anyA')return `任意 ${A_ICONS}`;return `任意 ${A_ICONS} + 任意 ${B_ICONS}`}
-function renderContracts(){document.getElementById('tier').textContent=G.tier;document.getElementById('deckcount').textContent=tierContentLoaded(G.tier)?(G.otDeck[G.tier]||[]).length:'Content Not Loaded';document.getElementById('otmarket').innerHTML=G.otMarket.map(c=>{let m=contractCardMeta('OT',c.id);return `<div class="card ot ${m.cls}" ${m.onclick}><b>${c.id}</b><div class="reqline icon-run">${reqIcons(c.req)}</div><div>Reward: ${rewardText(c.reward)}</div>${specialRewardText(c)?`<div class="small good">${specialRewardText(c)}</div>`:''}<div>${c.tp?`TP ${tpIcons(c.tp)}`:''}</div></div>`}).join('');document.getElementById('ltmarket').innerHTML=G.longTerm.map(c=>{let m=contractCardMeta('LT',c.id),inactive=G.contractHumanTurn&&!m.legal?'contract-inactive':'';return `<div class="card lt ${G.ltUsed[c.id]?'used':''} ${m.cls} ${inactive}" ${m.onclick}><b>${c.id}</b><div class="icon-run">${ltReqIcons(c)}</div><div>${rewardText(c.reward)}</div><div class="small">每 Turn 全桌最多一次</div></div>`}).join('')}
-function renderBoard(){let el=document.getElementById('board'),p=G.players[0],stationEffect=G.effectQueue?.[0]?.kind==='stationPlace'&&G.effectQueue[0].playerId===0,stationLegal=stationEffect?new Set(stationSpots(p)):new Set();el.innerHTML='';const size=31,hexW=Math.sqrt(3)*size,hexH=2*size,cx=230,cy=218;for(let c of coords()){let k0=key(c.q,c.r),t=p.board[k0],d=document.createElement('button');let x=cx+hexW*(c.q+c.r/2)-hexW/2,y=cy+1.5*size*c.r-hexH/2;d.className='hex '+(t?(B.includes(t)?t:'P'):'empty');d.style.width=hexW+'px';d.style.height=hexH+'px';d.style.left=x+'px';d.style.top=y+'px';d.title=`q${c.q}, r${c.r}${t?` · ${t==='DeepExtraction'?'特殊 Extraction Production Tile':t}`:''}`;d.innerHTML=t?`${ICON[t]||'⛲'}${(p.stations||[]).includes(k0)?'<span class="station-mark">⚙️</span>':''}`:'';if(selectedBuild&&!t&&legalHex(p,c.q,c.r,selectedBuild))d.classList.add('selected');if(stationLegal.has(k0))d.classList.add('selected');d.onclick=()=>stationLegal.has(k0)?resolveHumanEffect(k0):clickHex(c.q,c.r);el.appendChild(d)}}
-function renderLevelStrip(lv){return `<div class="level-strip">${Array.from({length:10},(_,i)=>`<span class="level-dot ${i<lv?'on':''}"></span>`).join('')}</div>`}
-function renderBMilestone(p,b,lv){let selected=p.techChoice[b+lv],reached=p.tech[b]>=lv,state=reached?(selected?'✓ 已選擇':'! 等待選擇'):`🔒 未解鎖 Lv${lv}`,stateCls=reached?(selected?'unlocked':'pending'):'';let opts=BTECH[b][lv];return `<div class="tech-milestone"><div class="milestone-head"><b>Lv${lv}</b><span class="milestone-state ${stateCls}">${state}</span></div><div class="tech-options"><div class="tech-option ${selected==='A'?'selected':selected==='B'?'rejected':reached?'':'future'}"><strong>A｜${opts.A.name}</strong><span class="small">${opts.A.text}</span></div><div class="tech-option ${selected==='B'?'selected':selected==='A'?'rejected':reached?'':'future'}"><strong>B｜${opts.B.name}</strong><span class="small">${opts.B.text}</span></div></div></div>`}
-function renderBTrack(p,b){return `<div class="btrack"><div class="track-head"><b>${ICON[b]} ${BN[b]} Track</b><span class="track-level">Lv${p.tech[b]}/10</span></div>${renderLevelStrip(p.tech[b])}${B_BREAKPOINTS.map(lv=>renderBMilestone(p,b,lv)).join('')}</div>`}
-function aDepth(p,a){let q=ATECH[a].parents;return Math.min(p.tech[q[0]],p.tech[q[1]])}
-function renderATrack(p,a){let t=ATECH[a],depth=aDepth(p,a),parents=t.parents.map(b=>`${ICON[b]} ${BN[b]} Lv${p.tech[b]}`).join(' + ');return `<div class="atrack"><div class="track-head"><b>${ICON[a]} ${a} Family</b><span class="small">${parents}</span></div><div class="tech-note">A Tech 沒有獨立 meter；兩條 Parent B Track 同時達門檻即自動解鎖。</div>${A_MILESTONES.map(lv=>{let on=depth>=lv,x=t[lv];return `<div class="atech-milestone ${on?'unlocked':''}"><div class="milestone-head"><b>Lv${lv}｜${x.name}</b><span class="milestone-state ${on?'unlocked':''}">${on?'✓ 已解鎖':`🔒 兩 Parent 均需 Lv${lv}`}</span></div><div class="small">${x.text}</div></div>`}).join('')}</div>`}
-function aiTechSummary(p){let au=A.filter(a=>A_MILESTONES.some(lv=>aDepth(p,a)>=lv)).map(a=>`${ICON[a]} Lv${A_MILESTONES.filter(lv=>aDepth(p,a)>=lv).pop()}`).join(' ');return `<div class="ai-tech-row"><b>${p.name}</b>　${B.map(b=>`${ICON[b]}${p.tech[b]}`).join(' ')}${au?`　A: ${au}`:''}</div>`}
-function renderTech(){let p=G.players[0];document.getElementById('techs').innerHTML=`<div class="tech-human"><div><div class="tech-section-title"><b>Human — Base Element Tracks</b><span class="small">Breakpoint：Lv1 / 3 / 6 / 10，皆為永久二選一</span></div><div class="btech-grid">${B.map(b=>renderBTrack(p,b)).join('')}</div></div><div><div class="tech-section-title"><b>Human — Advanced Element Family Tech</b><span class="small">自動門檻：兩 Parent Track 同時達 Lv2 / 5 / 9</span></div><div class="atech-grid">${A.map(a=>renderATrack(p,a)).join('')}</div></div></div><div class="ai-tech-summary"><b>AI 公開 Tech 摘要</b>${G.players.slice(1).map(aiTechSummary).join('')}</div>`}
-function dealerComboText(dc){let c=dc?.combo;if(!c)return'';let z=c.preFeeZeroBonus?'；若效果開始前 Fee=0，先 +1VP':'';return `Combo：同一 Contract Phase 已完成 ${c.prerequisiteDealerContractId.replace('wind_t1_','').toUpperCase()} 才生效${z}；再 Fee -${c.feeReduction}${c.feeCompensationPerMissedPoint?`，每點無法降低 → +${c.feeCompensationPerMissedPoint}G`:''}`}
-function dealerSpecialText(c){if(c.special?.kind==='fireHighFeePay')return `Fee ≥ ${c.special.minFee} 時，可額外支付 ${ICON[c.special.payElement]} → +${c.special.reward.vp}VP`;return ''}
-function renderDealer(){
-  let p=G.players[0],isInitial=p.dealer?.id==='initial',d=dealerDef(p),ability=dealerAbility(p),da=contractCardMeta('DA',''),daInactive=G.contractHumanTurn&&!da.legal?'contract-inactive':'',cards='';
-  if(isInitial){cards=INITIAL_DEALER.map((c,i)=>{let current=i===p.dealer.step,m=current?contractCardMeta('DC',''):{legal:false,cls:'',onclick:''},inactive=G.contractHumanTurn&&current&&!m.legal?'contract-inactive':'';return `<div class="dealer-card ${i<p.dealer.step?'done':current?'current':''} ${m.cls} ${inactive}" ${m.onclick}><b>Initial #${i+1}</b><div class="reqline">${c.label}</div><div>→ ${rewardText(c.reward)}</div><div class="small">${i<p.dealer.step?'已完成':current?'目前進度':'尚未解鎖'}</div></div>`}).join('')}
-  else if(d){cards=d.contracts.map((c,i)=>{let current=i===p.dealer.step,m=current?contractCardMeta('DC',''):{legal:false,cls:'',onclick:''},done=i<p.dealer.step,prereq=(p.dealer.completedDealerContractIdsThisPhase||[]).includes(c.combo?.prerequisiteDealerContractId),combo=current&&c.combo&&prereq;return `<div class="dealer-card ${done?'done':current?'current':''} ${combo?'combo-ready':''} ${m.cls}" ${m.onclick}><b>${c.label}</b><div class="reqline icon-run">${dealerRequirementText(c)}</div><div>→ ${dealerEntryRewardSummary(c)}</div>${dealerSpecialText(c)?`<div class="small good">${dealerSpecialText(c)}</div>`:''}${c.combo?`<div class="small ${combo?'combo-mark':''}">${dealerComboText(c)}${combo?' ✓ READY':''}</div>`:''}<div class="small">${done?'已完成':current?'目前進度':'尚未解鎖'}</div></div>`}).join('')}
-  let abilityHtml=ability?`<div class="dealer-ability ${da.cls} ${daInactive}" ${da.onclick}><b>${isInitial?'Initial Dealer Ability':d.name+' — Dealer Ability'}</b><div class="reqline icon-run">${isInitial?`任意 2B ${B_ICONS}`:dealerRequirementText(d.ability)} → ${rewardText(ability.reward)}</div><div class="small">私人 recurring outlet；Dealer Ability 是 Contract action，不計 qualifying Contract。</div></div>`:`<div class="dealer-ability contract-inactive"><b>Dealer Ability</b><div class="dealer-wait">等待取得下一個 Dealer</div></div>`;
-  let completion=isInitial?`${B_ICONS} Wildcard Tech Token ×1`:d?completionRewardText(d):'—';
-  let pending=G.dealerChoicePending?.playerId===0;let market=(G.dealerMarket||[]).map(x=>{let md=DEALERS[x.dealerId],selectable=pending&&G.dealerChoicePending.marketIds.includes(x.instanceId);return `<div class="dealer-market-card ${selectable?'selectable':''}" ${selectable?`onclick="selectDealerMarketCard('${x.instanceId}')" role="button" tabindex="0"`:''}><b>T${x.tier}｜${md.name}</b><div class="small">${md.archetype}｜${md.contracts.length}-step</div><div class="small"><b>Ability</b>：${dealerRequirementText(md.ability)} → ${rewardText(md.ability.reward)}</div><div class="small"><b>Progression</b>：${md.contracts.map(c=>`${c.label} ${dealerRequirementText(c)} → ${dealerEntryRewardSummary(c)}`).join('<br>')}</div><div class="small"><b>Completion</b>：${completionRewardText(md)}</div></div>`}).join('');
-  let ai=G.players.slice(1).map(x=>{let xd=dealerDef(x);return `<div>${x.name}: ${x.dealer?.id==='initial'?`Initial ${x.dealer.step}/4`:xd?`${xd.name} ${x.dealer.step}/${xd.contracts.length}`:'等待 Dealer'}</div>`}).join('');
-  document.getElementById('dealer').innerHTML=`${abilityHtml}<b>Human — ${isInitial?'Initial Dealer':d?.name||'等待 Dealer'}</b>${d?`<div class="small">${d.archetype}｜完整 progression ${d.contracts.length} steps</div>`:''}<div class="dealer-grid">${cards||'<div class="dealer-wait">目前沒有可執行的 Dealer progression。</div>'}</div><div class="dealer-completion"><b>Completion Reward</b><div>${completion}</div></div><hr><b>Dealer Market</b><div class="small">T1 正式 pool 共 6 張；起始市場由 6 張中無放回翻 3 張。完成 Dealer 時從最高已載入 Tier 翻 1 張形成 4 選 1；deck 耗盡時不生成不存在的 Dealer。</div><div class="dealer-market-grid">${market}</div><div class="ai-dealer small"><b>AI 公開進度</b>${ai}</div>`
-}
-function renderLog(){if(!G)return;document.getElementById('log').innerHTML=G.log.slice(-120).reverse().map(x=>`<div>[T${x.turn} ${x.phase}] ${x.msg}</div>`).join('')}
-function exportState(){let b=new Blob([JSON.stringify(G,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='contract_branch_state.json';a.click()}function importState(e){let f=e.target.files[0];if(!f)return;let r=new FileReader;r.onload=()=>{G=JSON.parse(r.result);if(!G.nextTileUid)G.nextTileUid=1;G.otContentLoaded=G.otContentLoaded||{1:true,2:(G.otDeck?.[2]||[]).length>0||(G.otMarket||[]).some(c=>c.tier===2),3:(G.otDeck?.[3]||[]).length>0||(G.otMarket||[]).some(c=>c.tier===3)};G.turnPhases=G.turnPhases||[];G.completedPhases=G.completedPhases||[];G.dealerContentLoaded=G.dealerContentLoaded||{1:true,2:false,3:false};G.dealerChoicePending=null;G.nextDealerUid=G.nextDealerUid||1;G.pendingTPGrants=[];G.dealerDiscard=G.dealerDiscard||{1:[],2:[],3:[]};if(!G.dealerMarket||!G.dealerDecks){initDealerSupply()}for(let p of G.players){p.hand=(p.hand||[]).map(t=>typeof t==='string'?makeHandTile(B.includes(t)?'T1':'T2',t):t);p.dealer=p.dealer||{id:'initial',step:0};if(!p.dealer.id)p.dealer.id='initial';p.dealer.completedDealerContractIdsThisPhase=p.dealer.completedDealerContractIdsThisPhase||[];p.dealer.awaitingReplacement=!!p.dealer.awaitingReplacement};G.buildQueue=[];G.buildCurrent=null;G.techDecision=null;G.effectQueue=[];G.effectResume=null;G.effectDecision=null;G.productionState=null;G.contractHumanTurn=false;G.humanActs=[];selectedBuild=null;refillTiles();render();privilegeUI()};r.readAsText(f)}function downloadLog(){let b=new Blob([JSON.stringify(G.log,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='contract_branch_log.json';a.click()}
-
-function techAuditRows(){
-  let rows=[];for(let b of B)for(let lv of B_BREAKPOINTS)for(let opt of ['A','B'])rows.push({id:`${b}${lv}${opt}`,name:BTECH[b][lv][opt].name,status:'wired'});for(let a of A)for(let lv of A_MILESTONES)rows.push({id:`${a}${lv}`,name:ATECH[a][lv].name,status:'wired'});return rows
-}
-function showTechAudit(){let rows=techAuditRows(),d=document.getElementById('decision');d.innerHTML=`<b>Tech 實作檢查</b><p class="small">共 ${rows.length} 個效果：${rows.filter(x=>x.status==='wired').length} 個已接線。</p><div style="max-height:320px;overflow:auto">${rows.map(x=>`<div><span class="${x.status==='wired'?'audit-ok':'audit-warn'}">${x.status==='wired'?'✓':'△'}</span> <b>${x.id}</b> ${x.name} — ${x.status}</div>`).join('')}</div>`}
-function debugGive(){let p=G.players[0];p.g+=10;B.forEach(x=>p.res[x]+=3);render()}function debugFee(){G.players[0].fee=Math.min(10,G.players[0].fee+5);render()}function debugProduction(){let p=G.players[0],o=calcProd(p);addResources(p,o);log('debug',`Human debug base Production → ${productionText(o)}`);render()}
-window.addEventListener('error',e=>{
-  const box=document.getElementById('decision');
-  if(box)box.innerHTML=`<div class="warn bad"><b>Runtime Error</b><br>${String(e.message||e.error||e)}</div>`;
-  const st=document.getElementById('status');
-  if(st)st.textContent='Runtime Error';
-});
-try{newGame()}catch(e){
-  console.error(e);
-  const box=document.getElementById('decision');
-  if(box)box.innerHTML=`<div class="warn bad"><b>Boot Error</b><br>${String(e.message||e)}</div>`;
-  const st=document.getElementById('status');
-  if(st)st.textContent='Boot Error';
-}
-
+function isAnyContract(type){return ['oneTime','longTerm','dealerContract'].includes(type)}
+function optionalFire6B(p){if(p.type==='ai'){p.resources.F--;p.vp++;p.gold++;return Promise.resolve()}return new Promise(resolve=>{effectQueue.push({kind:'fire6b',pid:p.id,resolve});drainEffects()})}
+function steamBurn(p,max,is9){if(p.type==='ai'){const n=Math.min(max,p.resources.Steam,p.gold>2?1:0);p.resources.Steam-=n;p.vp+=2*n;p.resources.W+=n;if(is9&&p.engineFee>=5)p.gold+=n;return Promise.resolve()}return new Promise(resolve=>{effectQueue.push({kind:'steamBurn',pid:p.id,max,is9,resolve});drainEffects()})}
+function magmaBurn(p){const max=p.engineFee>=5?Math.min(2,p.resources.Magma):1;if(p.type==='ai'){const n=max;p.resources.Magma-=n;p.vp+=2*n;p.gold+=2*n;return Promise.resolve()}return new Promise(resolve=>{effectQueue.push({kind:'magmaBurn',pid:p.id,max,resolve});drainEffects()})}
+function sandstorm5(p){if(p.type==='ai'){if(p.engineFee>=2)reduceFee(p,4,'Sandstorm Lv5');else return placeChargeChoice(p,null,1,'Sandstorm Lv5');return Promise.resolve()}return new Promise(resolve=>{effectQueue.push({kind:'sand5',pid:p.id,resolve});drainEffects()})}
+async function comboTriggers(p,identity){if(techHas(p,'N',3,'B'))p.gold+=2;for(const s of p.sectors){if(s.inner?.id==='wind'){p.resources.N++;if(trackLv(p,'N')>=8)p.gold++}if(s.inner?.id==='Frost'){p.resources.N++;if(trackLv(p,'W')>=8&&trackLv(p,'N')>=8){if(p.engineFee===0)p.vp++;else reduceFee(p,2,'Frost Inner Combo')}}if(s.inner?.id==='Sandstorm'){const n=trackLv(p,'E')>=8&&trackLv(p,'N')>=8?2:1;for(let i=0;i<n;i++){const targets=legalChargeTargets(p,i===0?p.sectors.indexOf(s):null);if(targets.length)placeChargeAt(p,targets[0],'Sandstorm Inner Combo');else p.gold+=2}}}
+ if(techHas(p,'N',10,'B')){if(p.engineFee===0)p.vp+=2;else reduceFee(p,1,'Wind Lv10-B')}if(aTechOn(p,'Frost',9))p.vp++}
+async function contractPhaseEndTriggers(){for(const p of G.players){const n=p.qualifyingContractsThisPhase;if(techHas(p,'N',10,'A'))p.vp+=n>=6?5:n>=4?3:n>=2?1:0;if(aTechOn(p,'Frost',9)&&n>=4)p.vp+=3;if(aTechOn(p,'Sandstorm',9)){if(n>=2){await placeChargeChoice(p,null,1,'Sandstorm Lv9');reduceFee(p,1,'Sandstorm Lv9')}if(n>=4){p.resources.Sandstorm++;p.resources.E++;p.resources.N++}if(n>=6)p.vp+=4}}await drainEffects()}
+// ---------- Transition ----------
+function transitionOptions(p){const o=[];for(let i=0;i<B.length;i++){const a=B[i],n1=B[(i+1)%4];if(p.resources[a]>=2)o.push({from:{[a]:2},to:n1,label:`2${BNAME[a]} → 1${BNAME[n1]}`});}const ANEIGH={Steam:['Magma','Frost'],Magma:['Steam','Sandstorm'],Sandstorm:['Magma','Frost'],Frost:['Sandstorm','Steam']};for(const a of A){if(p.resources[a]>=2){for(const to of ANEIGH[a])o.push({from:{[a]:2},to,label:`2 ${a} → 1 ${to}`})}if(p.resources[a]>=1)for(const to of PARENTS[a])o.push({from:{[a]:1},to,label:`1 ${a} → 1 ${BNAME[to]}`})}
+ // Lv1 tech transitions
+ const rules=[['W','A',['F','N']],['W','B',['W'],['F','N']],['F','A',['W','E']],['F','B',['F'],['W','E']],['E','A',['F','N']],['E','B',['E'],['F','N']],['N','A',['W','E']],['N','B',['N'],['W','E']]];
+ for(const r of rules){const [t,ch,tos,froms]=r;if(!techHas(p,t,1,ch))continue;if(froms){for(const fr of froms)if(p.resources[fr]>=1)o.push({from:{[fr]:1},to:tos[0],label:`Tech Transition ${BNAME[fr]}→${BNAME[t]}`})}else if(p.resources[t]>=1)for(const to of tos)o.push({from:{[t]:1},to,label:`Tech Transition ${BNAME[t]}→${BNAME[to]}`})}
+ return o.filter(x=>p.gold>=p.engineFee)}
+function transitionButtons(p){const opts=transitionOptions(p);if(!opts.length)return '<div class="tiny">目前無可支付 Transition。</div>';return `<hr><b>Transition Rule</b><div class="tiny">先付 recipe，再付目前 Engine Fee ${p.engineFee}G，之後 Fee+1。</div>`+opts.slice(0,20).map((x,i)=>`<button class="btn" onclick="doHumanTransition(${i})">${x.label}</button>`).join('')}
+function doHumanTransition(i){const p=human(),o=transitionOptions(p)[i];if(!o)return;if(!spendRes(p,o.from))return;if(!feeTrigger(p,'Transition')){addRes(p,o.from);return}p.resources[o.to]++;log('transition',`${p.name} ${o.label}`,o);render();if(G.phase==='Contract'&&humanWait?.kind==='contract')humanContractChoiceRepaint(p)}
+// ---------- Effect queue UI ----------
+async function drainEffects(){if(processingEffects)return;processingEffects=true;while(effectQueue.length&&!G.gameOver){const e=effectQueue.shift();await showEffect(e)}processingEffects=false;render()}
+let processingEffects=false;
+function showEffect(e){const p=player(e.pid);if(!p||p.type==='ai')return Promise.resolve();return new Promise(done=>{let h='';const finish=()=>{done()};window._effectDone=finish;window._effect=e;
+ if(e.kind==='tpChoice'){h=`<b>Tech Point 選擇</b><div>${e.source||''}</div>`+e.opts.map(t=>`<button class="btn" onclick="effectTP('${t}')">${BNAME[t]}</button>`).join('')}
+ else if(e.kind==='techChoice'){h=`<b>${BNAME[e.t]} Lv${e.lv} 二選一</b><button class="btn" onclick="effectTech('A')">A</button><button class="btn" onclick="effectTech('B')">B</button>`}
+ else if(e.kind==='w3a'){h=`<b>Water Lv3-A 加壓供水</b><div>可支付最多 2G，每 1G 得 1W。</div>`+[0,1,2].map(n=>`<button class="btn" ${p.gold<n?'disabled':''} onclick="effectW3A(${n})">付 ${n}G</button>`).join('')}
+ else if(e.kind==='a2'){h=`<b>${e.a} Lv2</b><div>每 2G 得 1 ${e.a}，最多 2。</div>`+[0,2,4].map(n=>`<button class="btn" ${p.gold<n?'disabled':''} onclick="effectA2(${n})">付 ${n}G</button>`).join('')}
+ else if(e.kind==='freeReverse'){h=`<b>Fire Lv3-B</b><div>本次實際產出 ≥4F，可立即免費 Reverse Pointer。</div><button class="btn good" onclick="effectFreeReverse(true)">Reverse</button><button class="btn" onclick="effectFreeReverse(false)">不 Reverse</button>`}
+ else if(e.kind==='reflux'){h=`<b>產線回流核心</b><button class="btn" onclick="effectReflux('G')">+4G</button>`+e.opts.map(x=>`<button class="btn" onclick="effectReflux('${x}')">+1 ${ICON[x]||x}</button>`).join('')}
+ else if(e.kind==='chargePlace'){h=`<b>放置 Charge｜${e.reason}</b>`+e.opts.map((q,i)=>`<button class="btn" onclick="effectCharge(${i})">${SNAME[q.si]} ${q.kind}${q.idx+1}</button>`).join('')}
+ else if(e.kind==='dealerChoose'){h=`<b>選擇新 Dealer</b>`+G.dealerMarket.map((id,i)=>`<div class="choice legal" onclick="effectDealer(${i})"><b>${DEALERS[id].name}</b></div>`).join('')}
+ else if(e.kind==='fireDealerBurn'){h=`<b>Fire Dealer C3</b><div>Fee≥5：可額外支付 1F → +2VP。</div><button class="btn" onclick="effectFireDealer(true)">支付</button><button class="btn" onclick="effectFireDealer(false)">不支付</button>`}
+ else if(e.kind==='fire6b'){h=`<b>Fire Lv6-B</b><div>完成包含 Fire 的 Contract：可付 1F → +1VP+1G。</div><button class="btn" onclick="effectFire6B(true)">支付</button><button class="btn" onclick="effectFire6B(false)">不支付</button>`}
+ else if(e.kind==='steamBurn'){h=`<b>Steam Tech ${e.is9?'Lv9':'Lv5'}</b>`;for(let n=0;n<=e.max;n++)h+=`<button class="btn" onclick="effectSteamBurn(${n})">支付 ${n} Steam</button>`}
+ else if(e.kind==='magmaBurn'){h=`<b>Magma Lv9</b><div>每顆 +2VP+2G；高 Fee 最多 2。</div>`;for(let n=0;n<=e.max;n++)h+=`<button class="btn" onclick="effectMagmaBurn(${n})">支付 ${n}</button>`}
+ else if(e.kind==='sand5'){h=`<b>Sandstorm Lv5</b><button class="btn" onclick="effectSand5('charge')">放 1 Charge</button><button class="btn" onclick="effectSand5('fee')">Engine Fee -4</button>`}
+ else if(e.kind==='steamInner'){h=`<b>雙流混合核心</b><div>剩餘可執行 ${e.times} 次。</div><button class="btn" onclick="effectSteamInner('wf')">1W+1F→1Steam</button><button class="btn" onclick="effectSteamInner('s')">1Steam→1W+1F</button><button class="btn" onclick="effectSteamInner('done')">Done</button>`}
+ else if(e.kind==='waterRouting'){h=`<b>流體路由核心</b><div>最多改變 ${e.limit} 個 B output。此測試 UI 以「來源→目標」逐次處理。</div><button class="btn" onclick="effectWaterRoutingDone()">不改 / Done</button>`;const seen=[...new Set(e.flat.map(x=>x.from))];for(const fr of seen)for(const to of B)if(to!==fr)h+=`<button class="btn" onclick="effectWaterRoute('${fr}','${to}')">${BNAME[fr]}→${BNAME[to]}</button>`}
+ else h='<button class="btn" onclick="effectGenericDone()">OK</button>';
+ document.getElementById('decisionBody').innerHTML=h;window._effectFinish=()=>{e.resolve?.();finish()}})}
+function effectTP(t){const e=window._effect;applyTP(player(e.pid),t,e.source);window._effectFinish()}function effectTech(ch){const e=window._effect,p=player(e.pid);p.techChoices[`${e.t}${e.lv}`]=ch;log('tech_choice',`${p.name} ${BNAME[e.t]} Lv${e.lv} 選 ${ch}`);window._effectFinish()}
+function effectW3A(n){const e=window._effect,p=player(e.pid);p.gold-=n;p.resources.W+=n;e.ctx.produced.W+=n;window._effectFinish()}function effectA2(n){const e=window._effect,p=player(e.pid);p.gold-=n;p.resources[e.a]+=n/2;window._effectFinish()}
+function effectFreeReverse(y){const e=window._effect,p=player(e.pid);if(y)p.pointer.direction=p.pointer.direction==='CW'?'CCW':'CW';window._effectFinish()}function effectReflux(x){const e=window._effect,p=player(e.pid);if(x==='G')p.gold+=4;else p.resources[x]++;window._effectFinish()}
+function effectCharge(i){const e=window._effect,p=player(e.pid);placeChargeAt(p,e.opts[i],e.reason);window._effectFinish()}function effectDealer(i){const e=window._effect,p=player(e.pid),id=G.dealerMarket.splice(i,1)[0];p.currentDealer={id};p.dealerProgressIndex=0;log('dealer_acquire',`${p.name} 取得 ${DEALERS[id].name}`);window._effectFinish()}
+function effectFireDealer(y){const e=window._effect,p=player(e.pid);if(y&&p.resources.F){p.resources.F--;p.vp+=2}window._effectFinish()}function effectFire6B(y){const e=window._effect,p=player(e.pid);if(y&&p.resources.F){p.resources.F--;p.vp++;p.gold++}window._effectFinish()}
+function effectSteamBurn(n){const e=window._effect,p=player(e.pid);n=Math.min(n,p.resources.Steam);p.resources.Steam-=n;p.vp+=2*n;p.resources.W+=n;if(e.is9&&p.engineFee>=5)p.gold+=n;window._effectFinish()}function effectMagmaBurn(n){const e=window._effect,p=player(e.pid);n=Math.min(n,p.resources.Magma);p.resources.Magma-=n;p.vp+=2*n;p.gold+=2*n;window._effectFinish()}
+function effectSand5(x){const e=window._effect,p=player(e.pid);if(x==='fee'){reduceFee(p,4,'Sandstorm Lv5');window._effectFinish()}else{const opts=legalChargeTargets(p,null);if(opts.length)placeChargeAt(p,opts[0],'Sandstorm Lv5');window._effectFinish()}}
+function effectSteamInner(x){const e=window._effect,p=player(e.pid);if(x==='done'||e.times<=0){window._effectFinish();return}if(x==='wf'&&p.resources.W&&p.resources.F){p.resources.W--;p.resources.F--;p.resources.Steam++;p.gold+=p.engineFee>=5?2:1;e.times--}else if(x==='s'&&p.resources.Steam){p.resources.Steam--;p.resources.W++;p.resources.F++;p.gold+=p.engineFee>=5?2:1;e.times--}if(e.times<=0)window._effectFinish();else showEffect(e)}
+function effectWaterRoute(fr,to){const e=window._effect;if(e.limit<=0)return;for(const ev of e.outs){if(ev.out.resources?.[fr]>0){ev.out.resources[fr]--;ev.out.resources[to]=(ev.out.resources[to]||0)+1;e.limit--;player(e.pid).gold++;break}}if(e.limit<=0)window._effectFinish();else showEffect(e)}function effectWaterRoutingDone(){window._effectFinish()}function effectGenericDone(){window._effectFinish()}
+function chooseBonusB(p,reason){if(p.type==='ai'){p.resources[leastResourceB(p)]++;return Promise.resolve()}return chooseFromList(p,B,reason,x=>p.resources[x]++)}
+function chooseFromList(p,opts,title,fn){return new Promise(resolve=>{effectQueue.push({kind:'genericList',pid:p.id,opts,title,fn,resolve}); // fallback handled inline override
+ const e=effectQueue.pop();e.kind='genericList';effectQueue.push(e);const oldShow=showEffect;drainEffects();resolve()})}
+function leastResourceB(p){return B.slice().sort((a,b)=>p.resources[a]-p.resources[b])[0]}
+// generic list helper patched via direct simple AI/human prompt
+async function chooseFromList(p,opts,title,fn){if(p.type==='ai'){fn(opts[0]);return}return new Promise(resolve=>{const h=`<b>${title}</b>`+opts.map(x=>`<button class="btn" onclick="window.__listPick('${x}')">${ICON[x]||x}</button>`).join('');document.getElementById('decisionBody').innerHTML=h;window.__listPick=(x)=>{fn(x);window.__listPick=null;resolve()}})}
+// ---------- Render ----------
+function render(){if(!G)return;document.getElementById('phasePill').textContent=`Turn ${G.turnNumber}｜${G.phase}${G.subphase?`｜${G.subphase}`:''}${G.gameOver?'｜GAME OVER':''}`;document.getElementById('clockPill').textContent=`T1 One-Time remaining: ${G.t1OneTimeDeck.length+G.oneTimeMarket.length} (deck ${G.t1OneTimeDeck.length} + market ${G.oneTimeMarket.length})`;const hp=human();document.getElementById('pointerPill').textContent=`Human Pointer ${boundaryText(hp.pointer.boundary)}｜${hp.pointer.direction}`;document.getElementById('seedPill').textContent=`Seed ${G.seed}`;renderPlayers();renderMarkets();renderDealerMarket();renderLog();renderAssertions();if(G.gameOver)showGameOver()}
+function renderPlayers(){const el=document.getElementById('players');el.innerHTML=G.players.map(p=>{const te=`W${p.tech.water}/F${p.tech.fire}/E${p.tech.earth}/N${p.tech.wind}`;const d=getDealer(p);return `<div class="player ${G.activePlayerId===p.id?'active':''}"><div style="display:flex;justify-content:space-between"><b>${p.name}</b><span>VP <b>${p.vp}</b>｜G <b>${p.gold}</b>｜Fee <b>${p.engineFee}</b></span></div><div class="res">${RES.map(r=>`<span class="r ${CLS[r]}">${ICON[r]} ${p.resources[r]}</span>`).join('')}</div><div class="tiny">Tech ${te}｜Dealer ${d?d.name:'—'} ${d?`${p.dealerProgressIndex}/${d.contracts.length}`:''}</div><div class="pointer">${boundaryText(p.pointer.boundary)}｜${p.pointer.direction}</div>${wheelHtml(p)}</div>`}).join('')}
+function wheelHtml(p){return `<div class="wheel">${p.sectors.map((s,si)=>`<div class="sector"><h4><span>${SNAME[si]}</span><span>${sectorComposition(p,si).map(x=>ICON[x]).join('')}</span></h4><div class="slots">${s.outers.map((t,i)=>slotHtml(t,'O'+(i+1))).join('')}${s.middles.map((t,i)=>slotHtml(t,'M'+(i+1),true)).join('')}${slotHtml(s.inner,'Inner',false,true)}</div></div>`).join('')}</div>`}
+function slotHtml(t,label,mid=false,inner=false){if(!t)return `<div class="slot ${mid?'mid':''} ${inner?'inner':''}">${label}<br>—</div>`;let text=inner?t.name:t.type==='outer'?`${ICON[t.element]} ${BNAME[t.element]}`:middleLabel(t);return `<div class="slot ${mid?'mid':''} ${inner?'inner':''}" title="${escapeHtml(JSON.stringify(t))}">${label}<br>${text}${t.charge?` <span class="charge">${t.charge}</span>`:''}</div>`}
+function middleLabel(t){return {standard:'Standard',enhance:'B Enhance',a:'A Production',breadth:'Breadth'}[t.mode]||t.mode}
+function renderMarkets(){document.getElementById('oneTime').innerHTML=G.oneTimeMarket.map((c,i)=>`<div class="mcard"><strong>${c.id}</strong><div class="req">${reqTxt(c.req)}</div><div class="reward">${rewardText(c)}</div></div>`).join('')||'<div class="sub">No One-Time cards remain.</div>';document.getElementById('longTerm').innerHTML=G.longTermContracts.map(c=>`<div class="mcard ${G.longTermUsedThisTurn[c.instanceId]?'used':''}"><strong>${c.name}</strong><div class="req">${c.pattern}</div><div class="reward">${rewardObjText(c.reward)}</div><div class="tiny">${G.longTermUsedThisTurn[c.instanceId]?'本 Turn 已使用':'可用'}</div></div>`).join('')}
+function renderDealerMarket(){document.getElementById('dealerMarket').innerHTML=G.dealerMarket.map(id=>{const d=DEALERS[id];return `<div class="dealer"><b>${d.name}</b><div class="tiny">Ability ${d.ability.req?reqTxt(d.ability.req):d.ability.pattern}</div><div>${d.contracts.map((c,i)=>`C${i+1}: ${c.req?reqTxt(c.req):c.pattern}`).join('<br>')}</div></div>`}).join('')||'<div class="sub">Dealer market empty (TEST RULE: no refill / no reshuffle).</div>'}
+function rewardText(c){return rewardObjText(c.reward)+(c.tp?`｜TP ${c.tp}`:'')+(c.special?`｜${c.special}`:'')}function rewardObjText(r={}){return `${r.vp?`${r.vp}VP `:''}${r.gold?`${r.gold}G`:''}`.trim()||'—'}function reqTxt(a){return a.map(x=>ICON[x]||x).join(' + ')}function paymentTxt(p){return `${resTxt(p.res)}${p.gold?` + ${p.gold}G`:''}`}
+function renderLog(){if(!G)return;const el=document.getElementById('log');el.innerHTML=G.log.slice(-180).reverse().map(x=>`<div class="logline">#${x.id} T${x.turn} [${x.phase}] ${escapeHtml(x.msg)}</div>`).join('')}
+function renderAssertions(){const errs=runtimeAssertions();document.getElementById('assertions').innerHTML=errs.length?`<span style="color:var(--bad)">ASSERT FAIL: ${errs.join('；')}</span>`:`<span style="color:var(--good)">Runtime assertions OK</span>`}
+function runtimeAssertions(){const e=[];for(const p of G.players){if(p.gold<0)e.push(`${p.name} gold<0`);for(const r of RES)if(p.resources[r]<0)e.push(`${p.name} ${r}<0`);if(p.engineFee<0||p.engineFee>feeCap(p))e.push(`${p.name} fee out of cap`);for(const s of p.sectors)for(const t of [...s.outers,...s.middles])if(t&&t.charge>chargeCap(p,t,p.sectors.indexOf(s)))e.push(`${p.name} charge cap`)}if(G.gameOver&&G.phase==='Privilege')e.push('gameOver created new privilege state');return e}
+function showGameOver(){const o=document.getElementById('overlay');o.classList.add('show');document.getElementById('overlayBody').innerHTML=`<h2 class="gameover">T1 GAME OVER</h2><div class="summary">Reason: ${G.gameOverReason}</div>${G.players.slice().sort((a,b)=>b.vp-a.vp).map(p=>`<div class="choice"><b>${p.name}</b>｜VP ${p.vp}｜G ${p.gold}｜Fee ${p.engineFee}｜${resTxt(p.resources)}</div>`).join('')}<div class="actions"><button class="btn" onclick="downloadState()">Export JSON</button><button class="btn" onclick="downloadLog()">Export Log</button><button class="btn" onclick="document.getElementById('overlay').classList.remove('show')">Close</button></div>`}
+function escapeHtml(s){return String(s).replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
+// ---------- Export / Debug ----------
+function download(name,obj){const blob=new Blob([typeof obj==='string'?obj:JSON.stringify(obj,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500)}function downloadState(){download(`contract_branch_v015_state_seed_${G.seed}.json`,G)}function downloadLog(){download(`contract_branch_v015_log_seed_${G.seed}.json`,G.log)}
+function importStateFile(ev){const f=ev.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{const x=JSON.parse(rd.result);G=x;effectQueue=[];humanWait=null;processing=false;log('import','Imported state');render();resumeImportedState()};rd.readAsText(f)}
+function resumeImportedState(){if(G.gameOver){showGameOver();return}if(G.phase==='Privilege'){showPrivilegeDecision();return}document.getElementById('decisionBody').innerHTML='<div class="testdefault">Imported mid-phase state loaded. Use End Current Phase / debug or restart same seed if a human decision continuation was not serialized.</div>'}
+function restartSameSeed(){newGame(G.seed)}function copyLatestState(){navigator.clipboard?.writeText(JSON.stringify({turn:G.turnNumber,phase:G.phase,remaining:G.t1OneTimeDeck.length+G.oneTimeMarket.length,players:G.players.map(p=>({name:p.name,vp:p.vp,gold:p.gold,fee:p.engineFee,res:p.resources,tech:p.tech,dealer:p.currentDealer}))},null,2))}
+function debugResources(){const p=human(),v=prompt('輸入 W,F,E,N,Steam,Magma,Sandstorm,Frost,Gold，例如 3,3,3,3,1,1,1,1,20');if(!v)return;const a=v.split(',').map(Number);['W','F','E','N','Steam','Magma','Sandstorm','Frost'].forEach((r,i)=>p.resources[r]=a[i]||0);p.gold=a[8]||0;log('debug','Set Human resources');render()}
+function debugTech(){const p=human(),v=prompt('Water,Fire,Earth,Wind levels，例如 4,4,4,4');if(!v)return;const a=v.split(',').map(Number);p.tech={water:a[0]||0,fire:a[1]||0,earth:a[2]||0,wind:a[3]||0};for(const t of B)for(const lv of [1,3,6,10])if(trackLv(p,t)>=lv&&!p.techChoices[`${t}${lv}`])p.techChoices[`${t}${lv}`]='A';log('debug','Set Human Tech');render()}
+function debugFee(){const n=Number(prompt('Engine Fee 0-10',human().engineFee));if(Number.isFinite(n))human().engineFee=Math.max(0,Math.min(feeCap(human()),n));render()}function debugPointer(){const p=human(),b=Number(prompt('Boundary index: 0=W|F,1=F|E,2=E|Wind,3=Wind|W',p.pointer.boundary));const d=prompt('Direction CW / CCW',p.pointer.direction);if([0,1,2,3].includes(b))p.pointer.boundary=b;if(['CW','CCW'].includes(d))p.pointer.direction=d;render()}function debugCharge(){const p=human(),opts=legalChargeTargets(p,null);if(opts[0])placeChargeAt(p,opts[0],'DEBUG');render()}function debugEndGame(){G.gameOver=true;G.gameOverReason='DEBUG_ONLY';log('debug','TEST ONLY End Game');showGameOver()}
+// Basic non-UI smoke helpers exposed for testing
+window.__CB={newGame,contractCandidates,patternIdentities,paymentOptions,legalMiddleBuilds,legalInnerBuilds,runtimeAssertions,executeSectorProduction,feeTrigger,reduceFee,placeChargeAt,legalChargeTargets};
+newGame(new URLSearchParams(location.search).get('seed')||'150930');
 </script></body></html>
