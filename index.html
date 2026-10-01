@@ -18,7 +18,7 @@ button,select,input{font:inherit}.top{position:sticky;top:0;z-index:20;backgroun
 .machine-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.machine-card{border:1px solid #4b5872;border-radius:10px;background:#151c28;padding:8px}.machine-card.locked{border-color:#9a6f45;background:#241d16}.machine-head{display:flex;justify-content:space-between;gap:8px;align-items:center}.machine-parts{display:grid;grid-template-columns:1fr;gap:5px;margin-top:6px}.machine-part{border:1px solid #39465f;border-radius:7px;background:#111722;padding:6px}.machine-part.loaded{opacity:.55;background:#18211e}.machine-part.machine-legal{border-color:var(--good);box-shadow:0 0 0 1px #7dd3a744;cursor:pointer}.machine-part.machine-legal:hover{background:#173126}.machine-owner{color:#9fe0ff;font-weight:800}.stage2{color:#f0d77a;font-weight:800}.externality{color:var(--warn);font-size:11px;font-weight:700}@media(max-width:850px){.machine-grid{grid-template-columns:1fr}}
 </style>
 </head><body>
-<div class="top"><div class="title">元素管道｜Machine Branch v0.2｜Canonical v1.0</div><span id="phasePill" class="pill">Setup</span><span id="turnPlanPill" class="pill">本 Turn：—</span><span id="clockPill" class="pill clock">Stage / One-Time: —</span><span id="pointerPill" class="pill pointer">Pointer —</span><span id="seedPill" class="pill">Seed —</span><span id="gapPill" class="pill testdefault">Machine v0.2 TEST: Special Sector Production NO_BASE_FEE｜Activation +6G</span></div>
+<div class="top"><div class="title">元素管道｜Machine Branch v0.2｜Canonical v1.0｜Web v1.2</div><span id="phasePill" class="pill">Setup</span><span id="turnPlanPill" class="pill">本 Turn：—</span><span id="clockPill" class="pill clock">Stage / One-Time: —</span><span id="pointerPill" class="pill pointer">Pointer —</span><span id="seedPill" class="pill">Seed —</span><span id="gapPill" class="pill testdefault">Machine v0.2 TEST: Special Sector Production NO_BASE_FEE｜Activation +6G</span></div>
 <div class="app">
   <div class="col">
     <div class="card"><h2>四人工房</h2><div id="players" class="players"></div></div>
@@ -430,7 +430,7 @@ makePlayer=function(i){const p=_oldMakePlayer(i);p.machines=[makeMachine(p.id)];
 function refreshMachinesAtTurnStart(){for(const p of G.players){for(const m of p.machines||[]){if(m.status==='LOCKED'&&m.activatedTurn<G.turnNumber){m.status='ACTIVE';m.activatedTurn=null;for(const part of m.parts){part.loaded=false;part.loadedBy=null;part.loadedTurn=null}log('machine_refresh',`${p.name} Machine refresh → ACTIVE`,{ownerId:p.id,machineId:m.id})}}}}
 
 newGame=function(seed=String(Date.now()).slice(-7)){
-  G={version:'machine-v0.2-canonical-v1.0-web-1.1',seed:String(seed),rngState:hashSeed(seed),uid:0,turnNumber:1,phase:'Setup',subphase:null,activePlayerId:null,initiativeOrder:['human','ai1','ai2','ai3'],gameOver:false,gameOverReason:null,stage:1,tileBag:[],oneTimeMarket:[],t1OneTimeDeck:[],t2OneTimeDeck:[],longTermContracts:[],longTermUsedThisTurn:{},dealerMarket:[],t1DealerDeck:[],players:[],log:[],config:{...deep(CFG),machineBranch:deep(MACHINE_CFG)},phaseChoices:{},buildContext:null,productionContext:null,contractContext:null,sourceGaps:{}};
+  G={version:'machine-v0.2-canonical-v1.0-web-1.2',seed:String(seed),rngState:hashSeed(seed),uid:0,turnNumber:1,phase:'Setup',subphase:null,activePlayerId:null,initiativeOrder:['human','ai1','ai2','ai3'],gameOver:false,gameOverReason:null,stage:1,tileBag:[],oneTimeMarket:[],t1OneTimeDeck:[],t2OneTimeDeck:[],longTermContracts:[],longTermUsedThisTurn:{},dealerMarket:[],t1DealerDeck:[],players:[],log:[],config:{...deep(CFG),machineBranch:deep(MACHINE_CFG)},phaseChoices:{},buildContext:null,productionContext:null,contractContext:null,sourceGaps:{}};
   for(const b of B)for(let i=0;i<16;i++)G.tileBag.push({id:`${b}-${i+1}`,element:b});
   G.tileBag=shuffle(G.tileBag);G.players=[0,1,2,3].map(makePlayer);
   G.initiativeOrder=shuffle(G.players.map(p=>p.id));
@@ -578,6 +578,130 @@ contractPhase=async function(){G.phase='Contract';for(const p of G.players){p.pa
 
 // Basic non-UI smoke helpers exposed for testing
 window.__CB={newGame,contractCandidates,patternIdentities,paymentOptions,machineCandidates,legalMiddleBuilds,legalInnerBuilds,runtimeAssertions,executeSectorProduction,feeTrigger,reduceFee,placeChargeAt,legalChargeTargets,activateT2,runAIOnlyOne};
+
+// ---------- Inner trigger audit / UX fix v1.2 ----------
+// Canonical v1.0 Inner audit: Water/Steam interactive effects use a single live dialog;
+// Fire/Frost completion triggers are wired; Magma/Sandstorm human target choices are explicit.
+function innerCount(p,id){return p.sectors.filter(s=>s.inner?.id===id).length}
+function waterRoutingTokens(outs){
+  const tokens=[];
+  outs.forEach((ev,ei)=>{const rr=ev.out?.resources||{};for(const [r,n] of Object.entries(rr))if(B.includes(r))for(let j=0;j<n;j++)tokens.push({ei,orig:r,cur:r})});
+  return tokens;
+}
+function waterRoutingChangedCount(e){return e.tokens.filter(t=>t.cur!==t.orig).length}
+function waterRoutingNetChanges(e){
+  const a=Object.fromEntries(B.map(x=>[x,0])),b=Object.fromEntries(B.map(x=>[x,0]));
+  for(const t of e.tokens){a[t.orig]++;b[t.cur]++}
+  return B.reduce((n,x)=>n+Math.max(0,b[x]-a[x]),0);
+}
+function finalizeWaterRoutingV12(e){
+  for(const ev of e.outs){if(!ev.out?.resources)continue;for(const k of B)delete ev.out.resources[k]}
+  for(const t of e.tokens){const rr=e.outs[t.ei].out.resources||(e.outs[t.ei].out.resources={});rr[t.cur]=(rr[t.cur]||0)+1}
+  const p=player(e.pid),net=waterRoutingNetChanges(e);p.gold+=net;
+  log('inner',`${p.name} 流體路由核心：最終 composition 有效改變 ${net} 個 B output → +${net}G`,{tokens:e.tokens.map(t=>({from:t.orig,to:t.cur})),net});
+}
+function renderWaterRoutingV12(e){
+  const p=player(e.pid),changed=waterRoutingChangedCount(e),net=waterRoutingNetChanges(e);
+  let h=`<b>流體路由核心</b><div class="sub">最多改變 ${e.maxChanges} 個 B output。每個 output 最終只能算一次；Gold 依<b>最終 multiset composition</b>的有效改變計算，不能用互換刷 G。</div><div style="margin:6px 0">已改 ${changed}/${e.maxChanges}｜目前結算：<b>+${net}G</b></div>`;
+  e.tokens.forEach((t,i)=>{const ev=e.outs[t.ei],loc=`${ev.kind==='outer'?'Outer':'Middle'} ${ev.idx+1}`;h+=`<div class="choice"><b>${loc}</b>｜原 ${ICON[t.orig]} ${BNAME[t.orig]} → 現 ${ICON[t.cur]} ${BNAME[t.cur]}<div class="actions" style="margin-top:5px">`;for(const to of B){const wouldNew=t.cur===t.orig&&to!==t.orig,disabled=wouldNew&&changed>=e.maxChanges;h+=`<button class="btn ${to===t.cur?'good':''}" ${disabled?'disabled':''} onclick="effectWaterRouteV12(${i},'${to}')">${ICON[to]} ${BNAME[to]}</button>`}h+='</div></div>'});
+  h+=`<button class="btn primary" onclick="effectWaterRoutingDoneV12()">完成路由並生產</button>`;
+  document.getElementById('decisionBody').innerHTML=h;
+}
+function effectWaterRouteV12(i,to){const e=window._effect;if(!e||e.kind!=='waterRoutingV12')return;const t=e.tokens[i];if(!t)return;const changed=waterRoutingChangedCount(e);if(t.cur===t.orig&&to!==t.orig&&changed>=e.maxChanges)return;t.cur=to;renderWaterRoutingV12(e)}
+function effectWaterRoutingDoneV12(){const e=window._effect;if(!e||e.kind!=='waterRoutingV12')return;finalizeWaterRoutingV12(e);window._effectFinish()}
+function routingDemandTarget(p){
+  const d=Object.fromEntries(B.map(x=>[x,0]));
+  for(const c of G.oneTimeMarket||[])for(const r of c.req||[])if(B.includes(r))d[r]+=2;
+  const dealer=getDealer(p),dc=dealer?.contracts?.[p.dealerProgressIndex];for(const r of dc?.req||[])if(B.includes(r))d[r]+=1.5;
+  return B.slice().sort((a,b)=>d[b]-d[a] || p.resources[a]-p.resources[b])[0];
+}
+waterRouting=function(p,outs,limit){
+  const tokens=waterRoutingTokens(outs);if(!tokens.length||limit<=0)return Promise.resolve(outs);
+  if(p.type==='ai'){
+    const target=routingDemandTarget(p),e={pid:p.id,outs,tokens,maxChanges:limit};let used=0;
+    for(const t of tokens){if(used>=limit)break;if(t.orig!==target){t.cur=target;used++}}
+    finalizeWaterRoutingV12(e);return Promise.resolve(outs)
+  }
+  return new Promise(resolve=>{effectQueue.push({kind:'waterRoutingV12',pid:p.id,outs,tokens,maxChanges:limit,resolve});drainEffects()})
+};
+
+function renderSteamInnerV12(e){
+  const rate=player(e.pid).engineFee>=5?2:1,net=Math.abs(e.temp.Steam-e.initial.Steam);
+  let h=`<b>雙流混合核心</b><div class="sub">最多 ${e.maxOps} 次，本次已用 ${e.used} 次。互相抵銷的正反向交換不產 G；依最終 net composition 結算。</div><div style="margin:6px 0">暫存：W ${e.temp.W}｜F ${e.temp.F}｜Steam ${e.temp.Steam}｜目前有效淨轉換 ${net} → <b>+${net*rate}G</b></div>`;
+  const done=e.used>=e.maxOps;h+=`<button class="btn good" ${done||e.temp.W<1||e.temp.F<1?'disabled':''} onclick="effectSteamInnerV12('forward')">1W + 1F → 1 Steam</button><button class="btn" ${done||e.temp.Steam<1?'disabled':''} onclick="effectSteamInnerV12('reverse')">1 Steam → 1W + 1F</button><button class="btn primary" onclick="effectSteamInnerV12('done')">Done / 結算</button>`;
+  document.getElementById('decisionBody').innerHTML=h;
+}
+function finalizeSteamInnerV12(e){const p=player(e.pid),rate=p.engineFee>=5?2:1,net=Math.abs(e.temp.Steam-e.initial.Steam);p.resources.W=e.temp.W;p.resources.F=e.temp.F;p.resources.Steam=e.temp.Steam;p.gold+=net*rate;log('inner',`${p.name} 雙流混合核心：淨轉換 ${net} 次 → +${net*rate}G`,{initial:e.initial,final:e.temp,rate})}
+function effectSteamInnerV12(x){const e=window._effect;if(!e||e.kind!=='steamInnerV12')return;if(x==='done'){finalizeSteamInnerV12(e);window._effectFinish();return}if(e.used>=e.maxOps)return;if(x==='forward'&&e.temp.W>0&&e.temp.F>0){e.temp.W--;e.temp.F--;e.temp.Steam++;e.used++}else if(x==='reverse'&&e.temp.Steam>0){e.temp.Steam--;e.temp.W++;e.temp.F++;e.used++}else return;if(e.used>=e.maxOps){finalizeSteamInnerV12(e);window._effectFinish()}else renderSteamInnerV12(e)}
+steamInner=function(p,ctx){
+  const maxOps=trackLv(p,'W')>=8&&trackLv(p,'F')>=8?2:1,initial={W:p.resources.W,F:p.resources.F,Steam:p.resources.Steam};
+  if(p.type==='ai'){
+    const temp={...initial};let used=0;const targetDemand=(G.oneTimeMarket||[]).reduce((n,c)=>n+(c.req||[]).filter(x=>x==='Steam').length,0);
+    while(used<maxOps){if(temp.W>0&&temp.F>0&&(targetDemand>0||temp.Steam===0)){temp.W--;temp.F--;temp.Steam++;used++}else if(temp.Steam>0&&(temp.W===0||temp.F===0)){temp.Steam--;temp.W++;temp.F++;used++}else break}
+    const e={pid:p.id,initial,temp,maxOps,used};finalizeSteamInnerV12(e);return Promise.resolve()
+  }
+  return new Promise(resolve=>effectQueue.push({kind:'steamInnerV12',pid:p.id,initial,temp:{...initial},maxOps,used:0,resolve})&&drainEffects())
+};
+
+function repeatTileEvent(p,ctx,q){const s=p.sectors[q.si],tile=q.kind==='outer'?s.outers[q.idx]:s.middles[q.idx];return {tile,kind:q.kind,idx:q.idx,out:q.kind==='outer'?{resources:{[tile.element]:1}}:middleOutput(p,tile)}}
+function repeatTileValue(p,q){const ev=repeatTileEvent(p,{si:q.si},q),o=ev.out;let v=(o.gold||0)*.5+(o.tp?1:0);for(const [k,n] of Object.entries(o.resources||{}))v+=n*(B.includes(k)?1:2);return v}
+function chooseMagmaRepeatV12(p,ctx){
+  const seen=new Set(),opts=[];for(const q0 of ctx.chargeConsumed){const k=`${q0.si}|${q0.kind}|${q0.idx}`;if(!seen.has(k)){seen.add(k);opts.push({...q0})}}
+  if(!opts.length)return Promise.resolve(null);if(p.type==='ai'){opts.sort((a,b)=>repeatTileValue(p,b)-repeatTileValue(p,a));return Promise.resolve(opts[0])}
+  return new Promise(resolve=>{effectQueue.push({kind:'magmaRepeatV12',pid:p.id,opts,resolve});drainEffects()})
+}
+function effectMagmaRepeatV12(i){const e=window._effect;if(!e||e.kind!=='magmaRepeatV12')return;e.pick=e.opts[i];window._effectFinish()}
+magmaInner=async function(p,ctx){
+  const times=trackLv(p,'F')>=8&&trackLv(p,'E')>=8?2:1;
+  for(let i=0;i<times;i++){
+    if(p.engineFee>=5&&ctx.chargeConsumed.length){const q=await chooseMagmaRepeatV12(p,ctx);if(q){await applyBasicOutput(p,ctx,repeatTileEvent(p,ctx,q),1,false);log('inner',`${p.name} 熔壓核心：重複 ${SNAME[q.si]} ${q.kind}${q.idx+1} 基本生產`)}}
+    else {if(p.engineFee<=4)feeIncreaseNoPay(p,2,'Magma Inner');await placeChargeChoice(p,ctx.si,1,'Magma Inner')}
+  }
+};
+
+async function innerContractTriggersV12(p,identity,qualifying,type){
+  if(qualifying&&innerCount(p,'fire')&&p.engineFee>=5){const mastery=trackLv(p,'F')>=8;p.resources.F++;if(mastery)p.gold++;log('inner',`${p.name} 高壓熔爐核心：qualifying Contract + Fee≥5 → +1F${mastery?' +1G':''}`)}
+  if(isAnyContract(type)&&identity.includes('Frost')&&innerCount(p,'Frost')){p.resources.W++;log('inner',`${p.name} 冷鏈協調核心：完成包含 Frost 的 Contract → +1W`);if(trackLv(p,'W')>=8&&trackLv(p,'N')>=8){if(p.engineFee===0){p.vp++;log('inner',`${p.name} 冷鏈協調核心 Mastery：Fee=0 → +1VP`)}else reduceFee(p,2,'Frost Inner Contract')}}
+}
+const _contractTechTriggersV11=contractTechTriggers;
+contractTechTriggers=async function(p,identity,paid,qualifying,combo,type){await innerContractTriggersV12(p,identity,qualifying,type);return _contractTechTriggersV11(p,identity,paid,qualifying,combo,type)};
+
+async function sandstormInnerComboV12(p,s,si){
+  const n=trackLv(p,'E')>=8&&trackLv(p,'N')>=8?2:1;
+  for(let i=0;i<n;i++){
+    const scope=i===0?si:null,opts=legalChargeTargets(p,scope);
+    if(!opts.length){p.gold+=2;log('inner',`${p.name} 風積蓄能核心：無合法 Charge 位置 → +2G`,{scope});continue}
+    if(p.type==='ai'){opts.sort((a,b)=>chargeTargetValue(p,b)-chargeTargetValue(p,a));placeChargeAt(p,opts[0],'Sandstorm Inner Combo')}
+    else await placeChargeChoice(p,scope,1,'Sandstorm Inner Combo')
+  }
+}
+comboTriggers=async function(p,identity){
+  if(techHas(p,'N',3,'B'))p.gold+=2;
+  for(let si=0;si<p.sectors.length;si++){const s=p.sectors[si];
+    if(s.inner?.id==='wind'){p.resources.N++;if(trackLv(p,'N')>=8)p.gold++;log('inner',`${p.name} 連鎖物流核心：Combo → +1Wind${trackLv(p,'N')>=8?' +1G':''}`)}
+    if(s.inner?.id==='Frost'){p.resources.N++;log('inner',`${p.name} 冷鏈協調核心：Combo → +1Wind`);if(trackLv(p,'W')>=8&&trackLv(p,'N')>=8){if(p.engineFee===0){p.vp++;log('inner',`${p.name} 冷鏈協調核心 Mastery：Fee=0 → +1VP`)}else reduceFee(p,2,'Frost Inner Combo')}}
+    if(s.inner?.id==='Sandstorm')await sandstormInnerComboV12(p,s,si)
+  }
+  if(techHas(p,'N',10,'B')){if(p.engineFee===0)p.vp+=2;else reduceFee(p,1,'Wind Lv10-B')}
+  if(aTechOn(p,'Frost',9))p.vp++
+};
+
+const _showEffectV11=showEffect;
+showEffect=function(e){
+  const p=player(e.pid);if(!p||p.type==='ai')return Promise.resolve();
+  if(!['waterRoutingV12','steamInnerV12','magmaRepeatV12'].includes(e.kind))return _showEffectV11(e);
+  return new Promise(done=>{window._effect=e;window._effectFinish=()=>{const rv=e.kind==='waterRoutingV12'?e.outs:e.kind==='magmaRepeatV12'?e.pick:undefined;e.resolve?.(rv);done()};
+    if(e.kind==='waterRoutingV12')renderWaterRoutingV12(e);
+    else if(e.kind==='steamInnerV12')renderSteamInnerV12(e);
+    else if(e.kind==='magmaRepeatV12'){document.getElementById('decisionBody').innerHTML=`<b>熔壓核心</b><div class="sub">本次有 Charge 被消耗且 Engine Fee ≥5；選擇其中 1 個被消耗 Charge 的 tile，再執行一次基本生產。</div>`+e.opts.map((q,i)=>`<button class="btn good" onclick="effectMagmaRepeatV12(${i})">${SNAME[q.si]} ${q.kind}${q.idx+1}</button>`).join('')}
+  })
+};
+
+// Regression hook: summarizes which Inner trigger pathways are wired in this build.
+function innerTriggerAuditV12(){return {
+  standard:'PASSIVE_BUILD_DRAW_DISCOUNT',reflux:'AFTER_SECTOR_CHOICE',water:'INTERACTIVE_ROUTING_FIXED',fire:'QUALIFYING_CONTRACT_WIRED',earth:'AFTER_SECTOR_CHARGE',wind:'COMBO_WIRED',Steam:'INTERACTIVE_NET_CONVERSION_FIXED',Magma:'CHARGE_REPEAT_TARGET_CHOICE_FIXED',Frost:'CONTRACT_AND_COMBO_WIRED',Sandstorm:'COMBO_CHARGE_TARGET_CHOICE_FIXED',wildcard:'SECTOR_WILDCARD_TP'
+}}
+
 // UX v1.1: keep the restart-seed field synchronized without overwriting while the user is typing.
 const _machineRenderV11=render;
 render=function(){_machineRenderV11();const inp=document.getElementById('restartSeedInput');if(inp&&document.activeElement!==inp&&G)inp.value=G.seed};
