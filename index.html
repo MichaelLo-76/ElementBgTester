@@ -18,7 +18,7 @@ button,select,input{font:inherit}.top{position:sticky;top:0;z-index:20;backgroun
 .machine-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.machine-card{border:1px solid #4b5872;border-radius:10px;background:#151c28;padding:8px}.machine-card.locked{border-color:#9a6f45;background:#241d16}.machine-head{display:flex;justify-content:space-between;gap:8px;align-items:center}.machine-parts{display:grid;grid-template-columns:1fr;gap:5px;margin-top:6px}.machine-part{border:1px solid #39465f;border-radius:7px;background:#111722;padding:6px}.machine-part.loaded{opacity:.55;background:#18211e}.machine-part.machine-legal{border-color:var(--good);box-shadow:0 0 0 1px #7dd3a744;cursor:pointer}.machine-part.machine-legal:hover{background:#173126}.machine-owner{color:#9fe0ff;font-weight:800}.stage2{color:#f0d77a;font-weight:800}.externality{color:var(--warn);font-size:11px;font-weight:700}@media(max-width:850px){.machine-grid{grid-template-columns:1fr}}
 </style>
 </head><body>
-<div class="top"><div class="title">元素管道｜Machine Branch v0.2｜Canonical v1.0｜Web v1.2</div><span id="phasePill" class="pill">Setup</span><span id="turnPlanPill" class="pill">本 Turn：—</span><span id="clockPill" class="pill clock">Stage / One-Time: —</span><span id="pointerPill" class="pill pointer">Pointer —</span><span id="seedPill" class="pill">Seed —</span><span id="gapPill" class="pill testdefault">Machine v0.2 TEST: Special Sector Production NO_BASE_FEE｜Activation +6G</span></div>
+<div class="top"><div class="title">元素管道｜Machine Branch v0.2｜Density Patch v0.1｜Canonical v1.0｜Web v1.4</div><span id="phasePill" class="pill">Setup</span><span id="turnPlanPill" class="pill">本 Turn：—</span><span id="clockPill" class="pill clock">Stage / One-Time: —</span><span id="pointerPill" class="pill pointer">Pointer —</span><span id="seedPill" class="pill">Seed —</span><span id="gapPill" class="pill testdefault">Density Patch v0.1：全桌 2 台 Machine｜NO_BASE_FEE｜Activation +6G</span></div>
 <div class="app">
   <div class="col">
     <div class="card"><h2>四人工房</h2><div id="players" class="players"></div></div>
@@ -430,7 +430,7 @@ makePlayer=function(i){const p=_oldMakePlayer(i);p.machines=[makeMachine(p.id)];
 function refreshMachinesAtTurnStart(){for(const p of G.players){for(const m of p.machines||[]){if(m.status==='LOCKED'&&m.activatedTurn<G.turnNumber){m.status='ACTIVE';m.activatedTurn=null;for(const part of m.parts){part.loaded=false;part.loadedBy=null;part.loadedTurn=null}log('machine_refresh',`${p.name} Machine refresh → ACTIVE`,{ownerId:p.id,machineId:m.id})}}}}
 
 newGame=function(seed=String(Date.now()).slice(-7)){
-  G={version:'machine-v0.2-canonical-v1.0-web-1.2',seed:String(seed),rngState:hashSeed(seed),uid:0,turnNumber:1,phase:'Setup',subphase:null,activePlayerId:null,initiativeOrder:['human','ai1','ai2','ai3'],gameOver:false,gameOverReason:null,stage:1,tileBag:[],oneTimeMarket:[],t1OneTimeDeck:[],t2OneTimeDeck:[],longTermContracts:[],longTermUsedThisTurn:{},dealerMarket:[],t1DealerDeck:[],players:[],log:[],config:{...deep(CFG),machineBranch:deep(MACHINE_CFG)},phaseChoices:{},buildContext:null,productionContext:null,contractContext:null,sourceGaps:{}};
+  G={version:'machine-v0.2-canonical-v1.0-web-1.3',seed:String(seed),rngState:hashSeed(seed),uid:0,turnNumber:1,phase:'Setup',subphase:null,activePlayerId:null,initiativeOrder:['human','ai1','ai2','ai3'],gameOver:false,gameOverReason:null,stage:1,tileBag:[],oneTimeMarket:[],t1OneTimeDeck:[],t2OneTimeDeck:[],longTermContracts:[],longTermUsedThisTurn:{},dealerMarket:[],t1DealerDeck:[],players:[],log:[],config:{...deep(CFG),machineBranch:deep(MACHINE_CFG)},phaseChoices:{},buildContext:null,productionContext:null,contractContext:null,sourceGaps:{}};
   for(const b of B)for(let i=0;i<16;i++)G.tileBag.push({id:`${b}-${i+1}`,element:b});
   G.tileBag=shuffle(G.tileBag);G.players=[0,1,2,3].map(makePlayer);
   G.initiativeOrder=shuffle(G.players.map(p=>p.id));
@@ -705,5 +705,267 @@ function innerTriggerAuditV12(){return {
 // UX v1.1: keep the restart-seed field synchronized without overwriting while the user is typing.
 const _machineRenderV11=render;
 render=function(){_machineRenderV11();const inp=document.getElementById('restartSeedInput');if(inp&&document.activeElement!==inp&&G)inp.value=G.seed};
+</script>
+<script>
+// ================= UX / async decision safety v1.3 =================
+// Fixes a race where a human Tech breakpoint choice could be queued while another
+// effect was still resolving. Older drainEffects() returned immediately when a drain
+// was already active, allowing the phase / Contract loop to overwrite the pending UI.
+// All callers now share one drain barrier and cannot advance until the queue is empty.
+let effectDrainPromiseV13 = null;
+
+function techChoicePendingV13(pid,t,lv){
+  if(window._effect?.kind==='techChoice' && window._effect.pid===pid && window._effect.t===t && window._effect.lv===lv)return true;
+  return effectQueue.some(e=>e.kind==='techChoice'&&e.pid===pid&&e.t===t&&e.lv===lv);
+}
+function ensureMissingTechChoicesV13(p){
+  if(!p)return;
+  for(const t of B){
+    const lvNow=trackLv(p,t);
+    for(const lv of [1,3,6,10]){
+      if(lvNow<lv || p.techChoices[`${t}${lv}`])continue;
+      if(p.type==='ai'){
+        p.techChoices[`${t}${lv}`]=chooseAItech(p,t,lv);
+        log('tech_choice',`${p.name} ${BNAME[t]} Lv${lv} 選 ${p.techChoices[`${t}${lv}`]}（補全 missing breakpoint）`,{repair:true});
+      }else if(!techChoicePendingV13(p.id,t,lv)){
+        effectQueue.push({kind:'techChoice',pid:p.id,t,lv,repair:true});
+        log('tech_choice_pending',`${p.name} ${BNAME[t]} Lv${lv} 等待二選一`,{repair:true});
+      }
+    }
+  }
+}
+function ensureAllMissingTechChoicesV13(){for(const p of G?.players||[])ensureMissingTechChoicesV13(p)}
+
+const _applyTPV13 = applyTP;
+applyTP = function(p,t,source){
+  _applyTPV13(p,t,source);
+  // Defensive scan catches any breakpoint reached from wildcard / family / nested effects.
+  ensureMissingTechChoicesV13(p);
+};
+
+// Shared barrier: if a drain is already running, return that SAME promise instead of
+// returning immediately. This prevents Contract / Production from progressing over a
+// still-open Tech / Inner / Charge decision.
+drainEffects = function(){
+  ensureAllMissingTechChoicesV13();
+  if(effectDrainPromiseV13)return effectDrainPromiseV13;
+  if(!effectQueue.length)return Promise.resolve();
+  effectDrainPromiseV13=(async()=>{
+    // Force an async boundary so the promise is assigned before finally can clear it.
+    await Promise.resolve();
+    processingEffects=true;
+    try{
+      while(!G?.gameOver){
+        ensureAllMissingTechChoicesV13();
+        if(!effectQueue.length)break;
+        const e=effectQueue.shift();
+        await showEffect(e);
+      }
+    }finally{
+      processingEffects=false;
+      effectDrainPromiseV13=null;
+      render();
+    }
+  })();
+  return effectDrainPromiseV13;
+};
+
+// Make the tech choice log human-readable instead of only recording A/B.
+effectTech = function(ch){
+  const e=window._effect,p=player(e.pid),d=BTECH_TEXT[e.t],txt=d?.[`lv${e.lv}`]?.[ch]||ch;
+  p.techChoices[`${e.t}${e.lv}`]=ch;
+  log('tech_choice',`${p.name} ${BNAME[e.t]} Lv${e.lv} 選擇：${txt}`,{track:e.t,lv:e.lv,choice:ch,text:txt,repair:!!e.repair});
+  window._effectFinish();
+};
+
+// Clear the cosmetic SectorProduction subphase only after the full action + all queued
+// effects are resolved. This makes it much easier to distinguish a real wait from a stale label.
+const _executeSectorProductionV13=executeSectorProduction;
+executeSectorProduction=async function(p,reverse,prolifIndex){
+  try{
+    const r=await _executeSectorProductionV13(p,reverse,prolifIndex);
+    await drainEffects();
+    return r;
+  }finally{
+    if(G && G.subphase && String(G.subphase).startsWith(`SectorProduction:${p.id}:`)){
+      G.subphase=G.phase==='Contract'?'ContractRoundRobin':(G.phase==='Production'?'ProductionResolution':null);
+      render();
+    }
+  }
+};
+// Machine special production and normal production call executeSectorProduction dynamically,
+// so they automatically use the guarded version above.
+
+// Imported saves cannot serialize live Promise/click continuations, but v1.3 can at least
+// repair missed Tech choices before showing the mid-phase recovery notice.
+resumeImportedState = async function(){
+  if(G.gameOver){showGameOver();return}
+  ensureAllMissingTechChoicesV13();
+  if(effectQueue.length)await drainEffects();
+  if(G.phase==='Privilege'){showPrivilegeDecision();return}
+  document.getElementById('decisionBody').innerHTML='<div class="testdefault">Imported mid-phase state loaded. v1.3 已補齊缺失的 Tech breakpoint 選擇；但進行中的點擊 / Promise 狀態不會寫入 JSON。若此檔是在 action 正中央匯出，請用相同 Seed 重開以完整重播。</div>';
+};
+
+// Small debug hook used by regression tests.
+window.__CB.effectQueueAuditV13=()=>({
+  version:G?.version,
+  activeDrain:!!effectDrainPromiseV13,
+  processingEffects,
+  queued:effectQueue.map(e=>({kind:e.kind,pid:e.pid,t:e.t,lv:e.lv})),
+  humanMissing:B.flatMap(t=>[1,3,6,10].filter(lv=>trackLv(human(),t)>=lv&&!human().techChoices[`${t}${lv}`]).map(lv=>`${t}${lv}`))
+});
+</script>
+<script>
+// ================= Density Patch v0.1 + production deadlock hardening v1.4 =================
+// Patch target: Machine Branch v0.2. Only Machine quantity / ownership setup changes.
+// Part requirements, Loader Rewards, Activation +6G, NO_BASE_FEE, part order, refresh timing
+// and action rules remain unchanged.
+const DENSITY_PATCH_V14={
+  enabled:true,
+  version:'0.2-density-patch-0.1',
+  machineCount:2,
+  ownerSelectionMode:'SEEDED_DISTINCT_PLAYERS',
+  publicMachineCount:0,
+  specialSectorProductionFeeMode:'NO_BASE_FEE',
+  allowSelfLoad:true,
+  sequentialParts:false,
+  activationBonusGold:6,
+  externalityWeight:.35,
+  leaderModifier:.15
+};
+function densityOwnerIdsV14(seed){
+  // Separate deterministic stream so the density experiment does not perturb the canonical
+  // tile / Contract / Dealer RNG sequence for the same seed.
+  let x=hashSeed(String(seed)+'|machine-owners|density-0.1')>>>0;
+  const rr=()=>{x^=x<<13;x^=x>>>17;x^=x<<5;return (x>>>0)/4294967296};
+  const a=['human','ai1','ai2','ai3'];
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(rr()*(i+1));[a[i],a[j]]=[a[j],a[i]]}
+  return a.slice(0,2);
+}
+function applyDensitySetupV14(seed){
+  for(const p of G.players)p.machines=[];
+  const owners=densityOwnerIdsV14(seed);
+  for(const id of owners)player(id).machines=[makeMachine(id)];
+  G.config.machineBranch=deep(DENSITY_PATCH_V14);
+  G.machineOwners=owners.slice();
+  return owners;
+}
+
+newGame=function(seed=String(Date.now()).slice(-7)){
+  G={version:'machine-v0.2-density-patch-0.1-canonical-v1.0-web-1.4',seed:String(seed),rngState:hashSeed(seed),uid:0,turnNumber:1,phase:'Setup',subphase:null,activePlayerId:null,initiativeOrder:['human','ai1','ai2','ai3'],gameOver:false,gameOverReason:null,stage:1,tileBag:[],oneTimeMarket:[],t1OneTimeDeck:[],t2OneTimeDeck:[],longTermContracts:[],longTermUsedThisTurn:{},dealerMarket:[],t1DealerDeck:[],players:[],log:[],config:{...deep(CFG),machineBranch:deep(DENSITY_PATCH_V14)},phaseChoices:{},buildContext:null,productionContext:null,contractContext:null,sourceGaps:{},machineOwners:[]};
+  for(const b of B)for(let i=0;i<16;i++)G.tileBag.push({id:`${b}-${i+1}`,element:b});
+  G.tileBag=shuffle(G.tileBag);
+  G.players=[0,1,2,3].map(makePlayer);
+  // makePlayer from the v0.2 baseline creates one Machine each. Density Patch deletes them,
+  // then creates exactly two machines for seeded distinct owners.
+  for(const p of G.players)p.machines=[];
+  G.initiativeOrder=shuffle(G.players.map(p=>p.id));
+  const owners=applyDensitySetupV14(seed);
+  G.t1OneTimeDeck=shuffle(ONE_TIME.map(deep));
+  G.t2OneTimeDeck=shuffle(T2_ONE_TIME.map(deep));
+  for(let i=0;i<CFG.oneTimeMarketSize;i++)G.oneTimeMarket.push(G.t1OneTimeDeck.shift());
+  G.longTermContracts=shuffle(LT_TEMPLATES.map(x=>({...deep(x),tier:1,instanceId:uid('LT1')}))).slice(0,4);
+  const ds=shuffle(Object.keys(DEALERS));G.dealerMarket=ds.slice(0,3);G.t1DealerDeck=ds.slice(3);
+  log('setup','Canonical v1.0 + Machine v0.2 Density Patch v0.1 Setup 完成',{seed,initiativeOrder:G.initiativeOrder,machineOwners:owners,machineBranch:deep(DENSITY_PATCH_V14)});
+  startPrivilegeSelection();render();
+};
+
+// Density Patch AI correction: future activation exposure is only a penalty when the
+// partially-loaded Machine belongs to an opponent. Progressing your own non-final Machine
+// must not receive a negative externality.
+machineExternality=function(p,x){
+  const owner=player(x.targetOwnerId),m=owner?.machines?.find(z=>z.id===x.targetMachineId);
+  if(!m)return -999;
+  const final=m.parts.filter(z=>!z.loaded).length===1;
+  if(final){
+    if(owner.id===p.id)return 3; // +6G = +3 VPE
+    const lead=Math.max(...G.players.map(q=>q.vp));
+    let w=(G.config.machineBranch?.externalityWeight??.35)+(owner.vp===lead?(G.config.machineBranch?.leaderModifier??.15):0);
+    w=Math.min(.6,w);return -w*3;
+  }
+  if(owner.id===p.id)return 0;
+  const progress=(m.parts.filter(z=>z.loaded).length+1)/m.parts.length;
+  return -.10*3*progress;
+};
+
+// Make non-owner state explicit while still showing the two actual Machines to everybody.
+renderMachines=function(){
+  const el=document.getElementById('machines');if(!el)return;
+  const owners=G.players.filter(p=>(p.machines||[]).length).map(p=>p.name);
+  let h=`<div class="sub" style="margin-bottom:6px"><b>Density Patch v0.1</b>｜全桌 exactly 2 台 Private Prototype Machine A｜Owners：${owners.join('、')||'—'}。非 owner 仍可正常裝填任何存在的 Machine。</div>`;
+  for(const owner of G.players){
+    for(const m of owner.machines||[]){
+      const loaded=m.parts.filter(x=>x.loaded).length;
+      h+=`<div class="machine-card ${m.status==='LOCKED'?'locked':''}"><div class="machine-head"><div><span class="machine-owner">${owner.name}</span>｜Prototype A</div><b>${m.status}</b></div><div class="tiny">Activation Bonus：Owner +${m.activationBonus.gold}G｜${loaded}/${m.parts.length} Loaded${m.status==='LOCKED'?`｜Turn ${m.activatedTurn} activated`:''}</div><div class="machine-parts">${m.parts.map(part=>{const legal=machinePartIsLegal(owner.id,part.id),final=!part.loaded&&m.parts.filter(z=>!z.loaded).length===1;return `<div class="machine-part ${part.loaded?'loaded':''} ${legal?'machine-legal':''}" ${legal?`onclick="humanMachinePartClick('${owner.id}','${part.id}')"`:''}><b>${part.name}</b>${part.loaded?` <span class="tag">Loaded by ${player(part.loadedBy)?.name||part.loadedBy}</span>`:''}<div class="req">${part.requirementText}</div><div class="reward">${part.rewardText}</div>${final&&legal?`<div class="externality">⚠ 此格完成後：${owner.name} +6G 並 LOCKED</div>`:''}${legal?'<div class="contract-hint">✓ 可裝填｜直接點選</div>':''}</div>`}).join('')}</div></div>`;
+    }
+  }
+  el.innerHTML=h;
+};
+
+const _renderPlayersV14=renderPlayers;
+renderPlayers=function(){
+  _renderPlayersV14();
+  const cards=[...document.querySelectorAll('#players .player')];
+  G.players.forEach((p,i)=>{if(!cards[i])return;const tiny=cards[i].querySelector('.tiny');if(tiny&&!p.machines?.length)tiny.innerHTML=tiny.innerHTML.replace(/Machine —/,'Machine —（非 owner）')});
+};
+
+// --- Bug hardening: TP breakpoint decisions cannot be left behind inside a Sector Production. ---
+// The uploaded bug state stops during a Machine Pressure special production immediately after
+// a B Enhance raises Fire Tech to Lv4. We now force all pending / repaired breakpoint choices
+// to drain before continuing past every TP-bearing basic output, and before a Sector Production
+// begins if an imported/older state already contains missed choices.
+const _applyBasicOutputV14=applyBasicOutput;
+applyBasicOutput=async function(p,ctx,ev,mult,suppressTP=false){
+  const r=await _applyBasicOutputV14(p,ctx,ev,mult,suppressTP);
+  if(ev?.out?.tp&&!suppressTP){ensureMissingTechChoicesV13(p);await drainEffects()}
+  return r;
+};
+const _executeSectorProductionV14=executeSectorProduction;
+executeSectorProduction=async function(p,reverse,prolifIndex){
+  ensureMissingTechChoicesV13(p);
+  await drainEffects();
+  const r=await _executeSectorProductionV14(p,reverse,prolifIndex);
+  ensureMissingTechChoicesV13(p);
+  await drainEffects();
+  return r;
+};
+
+// Contract / Dealer TP can also cross a breakpoint. Resolve the choice before later triggers
+// are allowed to use the newly-earned level.
+const _resolveContractActionCanonicalV14=resolveContractActionCanonical;
+resolveContractActionCanonical=async function(p,x,stageBefore){
+  const before=deep(p.tech);
+  const r=await _resolveContractActionCanonicalV14(p,x,stageBefore);
+  if(B.some(t=>trackLv(p,t)!==before[{W:'water',F:'fire',E:'earth',N:'wind'}[t]])){
+    ensureMissingTechChoicesV13(p);await drainEffects();
+  }
+  return r;
+};
+
+const _runtimeAssertionsV14=runtimeAssertions;
+runtimeAssertions=function(){
+  const e=_runtimeAssertionsV14();
+  const machines=G.players.flatMap(p=>(p.machines||[]).map(m=>({ownerId:p.id,m})));
+  if(G.config?.machineBranch?.version==='0.2-density-patch-0.1'){
+    if(machines.length!==2)e.push(`Density Patch machine count = ${machines.length}, expected 2`);
+    if(new Set(machines.map(x=>x.ownerId)).size!==machines.length)e.push('Density Patch duplicate Machine owner');
+    if((G.machineOwners||[]).length!==2)e.push('Density Patch machineOwners missing');
+  }
+  return e;
+};
+
+function densityTelemetryV14(){
+  const log=G.log||[],loads=log.filter(x=>x.type==='machine_load'),acts=log.filter(x=>x.type==='contract_action').length;
+  const byPart={assembly:0,pressure:0,regulator:0},byBand={early:0,mid:0,late:0};
+  for(const x of loads){const id=x.data?.partId;if(byPart[id]!==undefined)byPart[id]++;const t=x.turn||0;if(t<=3)byBand.early++;else if(t<=6)byBand.mid++;else byBand.late++}
+  const self=loads.filter(x=>x.actor===x.data?.ownerId).length,opp=loads.length-self;
+  return {machineOwners:(G.machineOwners||[]).slice(),machineCount:G.players.reduce((n,p)=>n+(p.machines||[]).length,0),machineLoads:loads.length,contractActions:acts,machineActionRatio:acts?loads.length/acts:0,loadsByPart:byPart,loadsByTurnBand:byBand,selfLoads:self,opponentLoads:opp,activations:log.filter(x=>x.type==='machine_activate').length,specialSectorProductions:log.filter(x=>x.type==='sector_production_start'&&x.data?.prolifIndex==='machine-special').length};
+}
+window.__CB.densityTelemetryV14=densityTelemetryV14;
+window.__CB.densityOwnerIdsV14=densityOwnerIdsV14;
+window.__CB.runtimeAssertions=runtimeAssertions;
+
+// Start only after every override above is installed.
 newGame(new URLSearchParams(location.search).get('seed')||'machine-0201');
-</script></body></html>
+</script>
+</body></html>
