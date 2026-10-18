@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>元素管道：術式工房 v2.2.5 Web Playtest v4.5 Start 6G + Buffer Refill Clarity</title>
+<title>元素管道：術式工房 v2.2.5 Web Playtest v4.6 Machine Legality Clarity</title>
 <style>
 :root{--bg:#0e1117;--panel:#171b24;--panel2:#202635;--line:#344056;--text:#eef3ff;--muted:#9facbf;--accent:#7fb7ff;--good:#8be9a8;--warn:#ffd166;--bad:#ff7b7b;--chip:#273148}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,-apple-system,"Segoe UI","Noto Sans TC",sans-serif}
@@ -70,7 +70,7 @@ button,input,select,textarea{font:inherit}.top{position:sticky;top:0;z-index:20;
 </style>
 </head><body>
 <div class="top">
- <div class="brand">元素管道：術式工房 <span class="mini">v2.2.5 Web Playtest v4.5 Start 6G + Buffer Refill Clarity</span></div>
+ <div class="brand">元素管道：術式工房 <span class="mini">v2.2.5 Web Playtest v4.6 Machine Legality Clarity</span></div>
  <span id="turnPill" class="pill"></span><span id="stagePill" class="pill"></span><span id="stepPill" class="pill"></span><span id="initPill" class="pill"></span>
  <label>Seed <input id="seedInput" size="10" value="20261011"></label>
  <select id="modeSelect"><option value="H3AI">1 Human + 3 AI</option><option value="4AI">4 AI</option></select>
@@ -87,7 +87,7 @@ button,input,select,textarea{font:inherit}.top{position:sticky;top:0;z-index:20;
  <section class="section"><h2>目前持有 Patron</h2><div id="heldDealers" class="dealerHeldGrid"></div></section>
  <section class="section"><h2>Wheels</h2><div id="wheels" class="wheelGallery"></div></section>
  <section class="section"><h2>One-Time Market <span id="deckRemain" class="mini"></span></h2><div id="otMarket" class="market"></div></section>
- <section class="section"><h2>Machine Parts｜可 Play / 已使用</h2><div id="machineFocus" class="machineFocusGrid"></div></section>
+ <section class="section"><h2>Machine Parts｜全部開放中 / 狀態總覽</h2><div id="machineFocus" class="machineFocusGrid"></div></section>
  <section class="section"><h2>Long-Term</h2><div id="ltMarket" class="market"></div></section>
  <section class="section"><h2>Patron Market</h2><div id="dealerMarket" class="market"></div></section>
  <section class="section"><h2>Machine Board</h2><div id="machineBoard" class="machines"></div></section>
@@ -561,7 +561,7 @@ function bestTransitionScore(p){if(!hasPublicTransition(p))return -99;const a=tr
 async function doTransition(p){const opts=transitionOptions(p);if(!opts.length||!canTriggerFee(p))return false;const c=await choose(p,`${p.id} Public Transition`,[{label:'取消',cancel:true},...opts],o=>o.cancel?0:scoreTransitionOption(p,o));if(c.cancel)return false;const pay=await payRequirement(p,c.pay,{qualifying:false,allowEarthStock:false});if(!pay)return false;if(!await triggerFee(p,'Public Transition'))return false;p.hand[c.gain]++;tlog(`${p.id} Transition ${c.label}`);return true}
 
 async function startTurn(replaying=false){if(!replaying){S.resumeBase=makeResumeBase();S.choiceHistory=[];S.pendingChoice=null;S.replayChoices=null;S.replayCursor=0}refreshMachines();S.passOrder=[];for(const p of S.players){p.passedOut=false;p.currentSecret=null;p.productionThisTurn=0;p.comboTagged=0;p.qualifyingCount=0;p.frostLv9Active=false;p.frostLv9TurnStartUsed=false;p.flags=p.flags||{}}for(const x of S.longTerm.slots)x.usedThisTurn=false;S.timing.macroStep='PREPARING';S.timing.window='SECRET_SELECTION';for(const p of S.players){const opts=['Funding','Build','Production'].map(type=>({label:actionDisplay(type),type}));const c=await choose(p,`${p.id} Secret Selection (Maintenance / Build / Production)`,opts,o=>estimateActionValue(p,o.type));p.currentSecret=c.type}S.turnNumber++;S.timing.macroStep='TURN_START';tlog(`Turn ${S.turnNumber} reveal: ${S.players.map(p=>p.id+'='+p.currentSecret).join(', ')}`);for(const id of S.initiativeOrder){const p=pById(id);if(familyTech(p,'Frost',9)&&(p.hand.Frost||0)>0&&!p.frostLv9TurnStartUsed){const c=await choose(p,`${p.id} Frost Lv9 Turn Start：支付 1 Frost → Fee -4？`,[{label:'否',yes:false},{label:'是',yes:true}],o=>o.yes?Math.max(0,p.engineFee-feeMin(p))*.4:0);if(c.yes&&await payHandElement(p,'Frost',1,'Frost Lv9 Turn Start')){p.frostLv9TurnStartUsed=true;ensureWebPatchV03State();S.telemetry.frostPressure.turnStartUses++;await reduceFee(p,4,'Frost Lv9 Turn Start')}}}for(const type of ['Funding','Build','Production']){S.timing.macroStep=`SECRET_${type.toUpperCase()}`;for(const id of S.initiativeOrder){const p=pById(id);if(p.currentSecret===type)await executeStandardAction(p,type,'SECRET',{})}}await contractPhase()}
-async function contractPhase(){S.timing.macroStep='CONTRACT';S.timing.window='OPPORTUNITY';for(const slot of S.longTerm.slots)slot.presentAtPhaseStart=true;for(const m of S.machines)if(m.status==='ACTIVE')for(const pt of m.parts)if(!pt.filled){pt.presentAtPhaseStart=true;pt.usedThisPhase=false}while(S.players.some(p=>!p.passedOut)){for(const id of S.initiativeOrder){const p=pById(id);if(p.passedOut)continue;S.timing.activePlayerId=id;let transitionGuard=0;while(true){const acts=legalContractActions(p),transScore=bestTransitionScore(p),liqScore=bestLiquidationScore(p),showTrans=hasPublicTransition(p)&&(p.type==='HUMAN'||transScore>.75)&&transitionGuard<12,showLiq=liquidationOptions(p).length>0&&(p.type==='HUMAN'||liqScore>.75)&&transitionGuard<12;if(p.type==='AI'){const bestAct=Math.max(...acts.map(a=>scoreContractAction(p,a)));if(showTrans&&transScore>bestAct+.4){transitionGuard++;const ok=await doTransition(p);if(ok)continue}if(showLiq&&liqScore>bestAct+.4){transitionGuard++;const ok=await doLiquidation(p);if(ok)continue}}let c;if(p.type==='AI')c=await chooseContractAI(p,acts);else{const groups=[];for(const a of acts){if(a.kind==='PASS')continue;const key=a.kind==='OT'?`OT:${a.c.id}`:a.kind==='LT'?`LT:${a.slot.id}`:a.kind==='DEALER'?`DEALER:${a.dealer.id}`:`MACHINE:${a.m.id}:${a.part.id}`;let g=groups.find(x=>x.uiKey===key);if(!g){g={label:key,kind:'GROUP',uiKey:key,actions:[]};groups.push(g)}g.actions.push(a)}const ts=showTrans?transitionOptions(p):[],ls=showLiq?liquidationOptions(p):[];const opts=[...groups,{label:'Pass Out',kind:'PASS',uiButton:true,uiButtonLabel:'Pass Out'},...ts.map((o,i)=>({label:o.label,kind:'TRANS',o,transitionSig:`${JSON.stringify(o.pay)}>${o.gain}`,uiKey:transitionOptionKey(i)})),...ls.map((o,i)=>({label:o.label,kind:'LIQ',o,liquidationSig:`${o.sourceA}>${o.gain}`,uiKey:liquidationOptionKey(i)}))];const pick=await visualChoose(p,`${p.id} Contract opportunity`,opts,{kind:'CONTRACT',html:'<div class="uiHint"><b>Contract Phase：</b>可支付的 Contract / Patron Commission / Machine Play 已以綠框標示，直接點卡面。也可從右側使用 Public Transition 或 Element Liquidation 降格。</div>'});if(pick.kind==='TRANS'){transitionGuard++;const ok=await executeTransitionOption(p,pick.o);if(ok)continue}if(pick.kind==='LIQ'){transitionGuard++;const ok=await executeLiquidationOption(p,pick.o);if(ok)continue}if(pick.kind==='PASS')c={kind:'PASS',label:'Pass Out'};else if(pick.kind==='GROUP'){if(pick.actions.length===1)c=pick.actions[0];else{const idOpts=pick.actions.map((a,i)=>{const html=reqIcons(a.req||a.c?.req||{});return {label:html,a,uiButton:true,uiButtonLabel:html,uiKey:`REQID:${i}`}});const idc=await visualChoose(p,'選擇 Requirement Identity / 支付結構',idOpts,{kind:'GENERIC',html:'<div class="uiHint"><b>選擇 Requirement Identity / 支付結構</b><br>請選擇本次要宣告並支付的元素結構。</div>',aiScorer:o=>scoreContractAction(p,o.a)});c=idc.a}}}await resolveContractAction(p,c);break}if(S.gameOver)break}if(S.gameOver)break}await contractPhaseEnd()}
+async function contractPhase(){S.timing.macroStep='CONTRACT';S.timing.window='OPPORTUNITY';for(const slot of S.longTerm.slots)slot.presentAtPhaseStart=true;for(const m of S.machines)if(m.status==='ACTIVE')for(const pt of m.parts)if(!pt.filled){pt.presentAtPhaseStart=true;pt.usedThisPhase=false}while(S.players.some(p=>!p.passedOut)){for(const id of S.initiativeOrder){const p=pById(id);if(p.passedOut)continue;S.timing.activePlayerId=id;let transitionGuard=0;while(true){const acts=legalContractActions(p),transScore=bestTransitionScore(p),liqScore=bestLiquidationScore(p),showTrans=hasPublicTransition(p)&&(p.type==='HUMAN'||transScore>.75)&&transitionGuard<12,showLiq=liquidationOptions(p).length>0&&(p.type==='HUMAN'||liqScore>.75)&&transitionGuard<12;if(p.type==='AI'){const bestAct=Math.max(...acts.map(a=>scoreContractAction(p,a)));if(showTrans&&transScore>bestAct+.4){transitionGuard++;const ok=await doTransition(p);if(ok)continue}if(showLiq&&liqScore>bestAct+.4){transitionGuard++;const ok=await doLiquidation(p);if(ok)continue}}let c;if(p.type==='AI')c=await chooseContractAI(p,acts);else{const groups=[];for(const a of acts){if(a.kind==='PASS')continue;const key=a.kind==='OT'?`OT:${a.c.id}`:a.kind==='LT'?`LT:${a.slot.id}`:a.kind==='DEALER'?`DEALER:${a.dealer.id}`:`MACHINE:${a.m.id}:${a.part.id}`;let g=groups.find(x=>x.uiKey===key);if(!g){const machineFallback=a.kind==='MACHINE';g={label:key,kind:'GROUP',uiKey:key,actions:[],uiButton:machineFallback,uiButtonLabel:machineFallback?`Machine：${machineDisplayIdV46(a.m)}｜${a.part.kind}｜${reqIcons(a.req||{})}`:undefined};groups.push(g)}g.actions.push(a)}const ts=showTrans?transitionOptions(p):[],ls=showLiq?liquidationOptions(p):[];const opts=[...groups,{label:'Pass Out',kind:'PASS',uiButton:true,uiButtonLabel:'Pass Out'},...ts.map((o,i)=>({label:o.label,kind:'TRANS',o,transitionSig:`${JSON.stringify(o.pay)}>${o.gain}`,uiKey:transitionOptionKey(i)})),...ls.map((o,i)=>({label:o.label,kind:'LIQ',o,liquidationSig:`${o.sourceA}>${o.gain}`,uiKey:liquidationOptionKey(i)}))];const pick=await visualChoose(p,`${p.id} Contract opportunity`,opts,{kind:'CONTRACT',html:'<div class="uiHint"><b>Contract Phase：</b>可支付的 Contract / Patron Commission / Machine Play 已以綠框標示，直接點卡面。也可從右側使用 Public Transition 或 Element Liquidation 降格。</div>'});if(pick.kind==='TRANS'){transitionGuard++;const ok=await executeTransitionOption(p,pick.o);if(ok)continue}if(pick.kind==='LIQ'){transitionGuard++;const ok=await executeLiquidationOption(p,pick.o);if(ok)continue}if(pick.kind==='PASS')c={kind:'PASS',label:'Pass Out'};else if(pick.kind==='GROUP'){if(pick.actions.length===1)c=pick.actions[0];else{const idOpts=pick.actions.map((a,i)=>{const html=reqIcons(a.req||a.c?.req||{});return {label:html,a,uiButton:true,uiButtonLabel:html,uiKey:`REQID:${i}`}});const idc=await visualChoose(p,'選擇 Requirement Identity / 支付結構',idOpts,{kind:'GENERIC',html:'<div class="uiHint"><b>選擇 Requirement Identity / 支付結構</b><br>請選擇本次要宣告並支付的元素結構。</div>',aiScorer:o=>scoreContractAction(p,o.a)});c=idc.a}}}await resolveContractAction(p,c);break}if(S.gameOver)break}if(S.gameOver)break}await contractPhaseEnd()}
 async function contractPhaseEnd(){S.timing.macroStep='CONTRACT_END';const patch=!!S.config?.enableATransitionAgingPatchV02,cap=S.config?.agingCap??4;for(const slot of S.longTerm.slots){if(!slot.usedThisTurn){if(patch){if(slot.aging>=cap){slot.aging=cap;S.telemetry.aging.cappedIdlePhasesLT++}else{slot.aging++;if(slot.aging===cap)S.telemetry.aging.hitCapLT++}}else slot.aging++}}for(const m of S.machines){if(m.status==='ACTIVE')for(const pt of m.parts){if(!pt.filled&&!pt.usedThisPhase){if(patch){if(pt.aging>=cap){pt.aging=cap;S.telemetry.aging.cappedIdlePhasesMachine++}else{pt.aging++;if(pt.aging===cap)S.telemetry.aging.hitCapMachine++}}else pt.aging++}}}
  await turnEnd();}
 async function chooseTurnEndUpgrade(p,title,ups,source,aiScore=1.5){
@@ -961,7 +961,7 @@ async function confirmHumanContractTarget(p,a){
 contractPhase=async function(){
  S.timing.macroStep='CONTRACT';S.timing.window='OPPORTUNITY';for(const slot of S.longTerm.slots)slot.presentAtPhaseStart=true;for(const m of S.machines)if(m.status==='ACTIVE')for(const pt of m.parts)if(!pt.filled){pt.presentAtPhaseStart=true;pt.usedThisPhase=false}
  while(S.players.some(p=>!p.passedOut)){for(const id of S.initiativeOrder){const p=pById(id);if(p.passedOut)continue;S.timing.activePlayerId=id;let transitionGuard=0;while(true){const acts=legalContractActions(p),transScore=bestTransitionScore(p),liqScore=bestLiquidationScore(p),showTrans=hasPublicTransition(p)&&(p.type==='HUMAN'||transScore>.75)&&transitionGuard<12,showLiq=liquidationOptions(p).length>0&&(p.type==='HUMAN'||liqScore>.75)&&transitionGuard<12;if(p.type==='AI'){const bestAct=Math.max(...acts.map(a=>scoreContractAction(p,a)));if(showTrans&&transScore>bestAct+.4){transitionGuard++;const ok=await doTransition(p);if(ok)continue}if(showLiq&&liqScore>bestAct+.4){transitionGuard++;const ok=await doLiquidation(p);if(ok)continue}}
- let c;if(p.type==='AI')c=await chooseContractAI(p,acts);else{const groups=[];for(const a of acts){if(a.kind==='PASS')continue;const key=a.kind==='OT'?`OT:${a.c.id}`:a.kind==='LT'?`LT:${a.slot.id}`:a.kind==='DEALER'?`DEALER:${a.dealer.id}`:`MACHINE:${a.m.id}:${a.part.id}`;let g=groups.find(x=>x.uiKey===key);if(!g){g={label:key,kind:'GROUP',uiKey:key,actions:[]};groups.push(g)}g.actions.push(a)}const ts=showTrans?transitionOptions(p):[],ls=showLiq?liquidationOptions(p):[];const opts=[...groups,{label:'Pass Out',kind:'PASS',uiButton:true,uiButtonLabel:'Pass Out'},...ts.map((o,i)=>({label:o.label,kind:'TRANS',o,transitionSig:`${JSON.stringify(o.pay)}>${o.gain}`,uiKey:transitionOptionKey(i)})),...ls.map((o,i)=>({label:o.label,kind:'LIQ',o,liquidationSig:`${o.sourceA}>${o.gain}`,uiKey:liquidationOptionKey(i)}))];const pick=await visualChoose(p,`${p.id} Contract opportunity`,opts,{kind:'CONTRACT',html:'<div class="uiHint"><b>Contract Phase：</b>可支付的 Contract / Patron Commission / Machine Play 已以綠框標示，直接點卡面。選定後會先進入確認階段，尚未扣款；也可從右側使用 Public Transition 或 Element Liquidation 降格。</div>'});if(pick.kind==='TRANS'){transitionGuard++;const ok=await executeTransitionOption(p,pick.o);if(ok)continue}if(pick.kind==='LIQ'){transitionGuard++;const ok=await executeLiquidationOption(p,pick.o);if(ok)continue}if(pick.kind==='PASS')c={kind:'PASS',label:'Pass Out'};else if(pick.kind==='GROUP'){if(pick.actions.length===1)c=pick.actions[0];else{const idOpts=pick.actions.map((a,i)=>{const html=reqIcons(a.req||a.c?.req||{});return {label:html,a,uiButton:true,uiButtonLabel:html,uiKey:`REQID:${i}`}});const idc=await visualChoose(p,'選擇 Requirement Identity / 支付結構',idOpts,{kind:'GENERIC',html:'<div class="uiHint"><b>選擇 Requirement Identity / 支付結構</b><br>請選擇本次要宣告並支付的元素結構。</div>',aiScorer:o=>scoreContractAction(p,o.a)});c=idc.a}}
+ let c;if(p.type==='AI')c=await chooseContractAI(p,acts);else{const groups=[];for(const a of acts){if(a.kind==='PASS')continue;const key=a.kind==='OT'?`OT:${a.c.id}`:a.kind==='LT'?`LT:${a.slot.id}`:a.kind==='DEALER'?`DEALER:${a.dealer.id}`:`MACHINE:${a.m.id}:${a.part.id}`;let g=groups.find(x=>x.uiKey===key);if(!g){g={label:key,kind:'GROUP',uiKey:key,actions:[]};groups.push(g)}g.actions.push(a)}const ts=showTrans?transitionOptions(p):[],ls=showLiq?liquidationOptions(p):[];const opts=[...groups,{label:'Pass Out',kind:'PASS',uiButton:true,uiButtonLabel:'Pass Out'},...ts.map((o,i)=>({label:o.label,kind:'TRANS',o,transitionSig:`${JSON.stringify(o.pay)}>${o.gain}`,uiKey:transitionOptionKey(i)})),...ls.map((o,i)=>({label:o.label,kind:'LIQ',o,liquidationSig:`${o.sourceA}>${o.gain}`,uiKey:liquidationOptionKey(i)}))];const pick=await visualChoose(p,`${p.id} Contract opportunity`,opts,{kind:'CONTRACT',html:'<div class="uiHint"><b>Contract Phase：</b>可支付的 Contract / Patron Commission / Machine Play 已以綠框標示，直接點卡面。<br>Machine Part 另會在 Decision 顯示備援按鈕，避免卡面點擊失效或手機版難以點選。選定後會先進入確認階段，尚未扣款；也可從右側使用 Public Transition 或 Element Liquidation 降格。</div>'});if(pick.kind==='TRANS'){transitionGuard++;const ok=await executeTransitionOption(p,pick.o);if(ok)continue}if(pick.kind==='LIQ'){transitionGuard++;const ok=await executeLiquidationOption(p,pick.o);if(ok)continue}if(pick.kind==='PASS')c={kind:'PASS',label:'Pass Out'};else if(pick.kind==='GROUP'){if(pick.actions.length===1)c=pick.actions[0];else{const idOpts=pick.actions.map((a,i)=>{const html=reqIcons(a.req||a.c?.req||{});return {label:html,a,uiButton:true,uiButtonLabel:html,uiKey:`REQID:${i}`}});const idc=await visualChoose(p,'選擇 Requirement Identity / 支付結構',idOpts,{kind:'GENERIC',html:'<div class="uiHint"><b>選擇 Requirement Identity / 支付結構</b><br>請選擇本次要宣告並支付的元素結構。</div>',aiScorer:o=>scoreContractAction(p,o.a)});c=idc.a}}
  if(c?.kind!=='PASS'&&!(await confirmHumanContractTarget(p,c)))continue;
  }
  await resolveContractAction(p,c);break}if(S.gameOver)break}if(S.gameOver)break}
@@ -1346,4 +1346,95 @@ render=function(){
  if(n)n.innerHTML+='<br><b>v4.5 Playtest tuning</b>：新局基礎起始 Gold 改為 6G，依初始 Initiative 順位為 6/7/8/9G。產線回流核心不會自動補 Stock；Initial Stock=0，可由正常 element Pay/refill 或明文允許的 Restock 效果補入，Maintenance Restock 仍只限 Outer/Middle。';
 };
 
-</script></body></html>
+
+// v4.7: Machine Part legal GROUPs also render a Decision fallback button; direct card click remains supported.
+</script>
+<style>
+.machineFocusPart.machine-unavailable{opacity:.72;border-style:dashed;filter:saturate(.75)}
+.machineFocusPart .machineStatusReason{margin-top:4px;padding:4px 6px;border-radius:6px;background:rgba(255,255,255,.05)}
+.machineFocusPart.machine-payable .machineStatusReason{background:rgba(70,180,110,.12)}
+</style>
+<script>
+// ===== v4.6 UX diagnostic: Machine Part legality clarity (rules unchanged v2.2.5) =====
+function machineDisplayIdV46(m){return String(m?.id||'').replace('M-Funding-','M-Maintenance-')}
+function machinePartLegalityV46(p,m,pt){
+ if(pt.filled)return {ok:false,reason:`已使用：${playerDisplay(pt.filledBy)} @ T${pt.filledTurn}`};
+ if(m.status!=='ACTIVE')return {ok:false,reason:`Machine 目前為 ${m.status}，不可正常 Play`};
+ if(!canNormalFillPart(p,m,pt)){const r=activeReservation(m);return {ok:false,reason:`Core Reservation：僅 ${playerDisplay(r?.holderPlayerId||'其他玩家')} 可正常 Play`};}
+ if(!machinePartRewardLegal(p,pt))return {ok:false,reason:'目前無法支付此 Part 後續必須的 printed Fee / Action cost'};
+ const reqs=pt.req?.struct?structuralPaymentOption(p,pt.req.struct):(paymentDirectPossible(p,pt.req,false,true)?[pt.req]:[]);
+ if(!reqs.length)return {ok:false,reason:`目前沒有合法付款方案：需要 ${reqIcons(pt.req||{})}。可先做 Public Transition / Element Liquidation，再重新檢查。`};
+ return {ok:true,reason:`目前可支付：${reqIcons(reqs[0]||pt.req||{})}`};
+}
+function renderMachineFocusV46(){
+ if(!S)return;const mf=document.getElementById('machineFocus');if(!mf)return;
+ const hp=S.players.find(x=>x.type==='HUMAN')||S.players[0];const rows=[];
+ for(const m of S.machines){
+  if(m.status!=='ACTIVE'&&!m.parts.some(pt=>pt.filled))continue;
+  for(const pt of m.parts){
+   if(!pt.filled&&m.status!=='ACTIVE')continue;
+   const key='MACHINE:'+m.id+':'+pt.id, clickable=HUMAN_UI.kind==='CONTRACT'&&uiOptionIndexByKey(key)>=0;
+   const st=machinePartLegalityV46(hp,m,pt);
+   rows.push({m,pt,key,clickable,st});
+  }
+ }
+ mf.innerHTML=rows.length?rows.map(({m,pt,key,clickable,st})=>`<div class="machineFocusPart ${pt.filled?'filled':''} ${clickable?'contract-legal machine-payable':(!pt.filled?'machine-unavailable':'')}" ${clickable?`onclick="humanUIClick('${key}')"`:''}><b>${machineDisplayIdV46(m)}｜${pt.kind}</b> <span class="tag">${pt.filled?'FILLED':(st.ok?'PAYABLE':'NOT PAYABLE')}</span><div class="mini machineFamily">${elemIcon(m.family)} ${m.family} · owner ${m.ownerId?playerDisplay(m.ownerId):'—'} · ${m.status}${reservationText(m)?' · '+reservationText(m):''}</div><div class="reqIconLine">${iconizeText(pt.reqText)}</div><div class="ok">${pt.reward.action?pt.reward.action+' Action':`${pt.reward.vp||0}VP ${pt.reward.g||0}G`}</div><div class="mini">rent ${pt.rental.vp||0}VP ${pt.rental.g||0}G · aging ${pt.aging}${pt.filled?` · ${playerDisplay(pt.filledBy)}@T${pt.filledTurn}`:''}</div><div class="mini machineStatusReason">${st.reason}</div></div>`).join(''):'<div class="mini">目前沒有 ACTIVE / 已使用的 Machine Part。</div>';
+ const mb=document.getElementById('machineBoard');if(mb)mb.innerHTML=mb.innerHTML.replaceAll('M-Funding-','M-Maintenance-');
+}
+const _v46PrevRender=render;
+render=function(){_v46PrevRender();renderMachineFocusV46();const n=document.getElementById('interpretation');if(n&&!n.dataset.v46){n.dataset.v46='1';n.innerHTML+='<br><b>v4.6 UX</b>：Machine Parts 區現在同時顯示目前可支付與不可支付的 ACTIVE Part；不可支付時會直接標出 Requirement / Reservation / Fee 等原因。灰色 NOT PAYABLE 不是卡死，只代表當下尚無合法付款方案。';}const mini=document.querySelector('.brand .mini');if(mini)mini.textContent='v2.2.5 Web Playtest v4.6 Machine Legality Clarity';document.title='元素管道：術式工房 v2.2.5 Web Playtest v4.6 Machine Legality Clarity';if(S){S.version='v2.2.5-web-v4.7-machine-value-click-fix';S.schemaVersion='2.2.5-web-4.6';}};
+</script>
+
+
+<style>
+/* v4.8 Machine Parts overview */
+.machineFocusPart.machine-ready{outline:2px solid var(--good);box-shadow:0 0 0 2px rgba(139,233,168,.16);background:#21392f}
+.machineFocusPart.machine-ready .machineStatusReason{background:rgba(70,180,110,.14)}
+.machineFocusPart.machine-locked{opacity:.62;border-style:dashed}
+.machineFocusPart.machine-used{opacity:.60}
+.machineFocusPart.machine-unused{opacity:.88}
+.machineFocusPart.machine-reserved{opacity:.72;border-style:dashed}
+</style>
+<script>
+// ===== v4.8 UX: Machine Parts overview shows every currently-open Machine Part =====
+// "Open" = machine tier is in the current Stage, OR it has already been claimed prematurely.
+// Highlight = Human can actually Play this part now with current resources/state.
+function machineFocusStatusV48(p,m,pt,st){
+ if(pt.filled)return {label:'已使用',cls:'machine-used'};
+ if(m.status==='LOCKED')return {label:'已鎖定',cls:'machine-locked'};
+ if(m.status==='DORMANT')return {label:'未啟用',cls:'machine-locked'};
+ if(m.status==='UNCLAIMED')return {label:'未認領',cls:'machine-unused'};
+ const r=activeReservation(m);
+ if(pt.kind==='Core'&&r&&r.holderPlayerId!==p.id)return {label:'他人 Reservation',cls:'machine-reserved'};
+ if(st.ok)return {label:'可立即 Play',cls:'machine-ready'};
+ return {label:'未使用',cls:'machine-unused'};
+}
+renderMachineFocusV46=function(){
+ if(!S)return;const mf=document.getElementById('machineFocus');if(!mf)return;
+ const hp=S.players.find(x=>x.type==='HUMAN')||S.players[0];const rows=[];
+ for(const m of S.machines){
+  const currentlyOpen=(m.tier<=S.stage)||!!m.ownerId;
+  if(!currentlyOpen)continue;
+  for(const pt of m.parts){
+   const key='MACHINE:'+m.id+':'+pt.id;
+   const clickable=HUMAN_UI.kind==='CONTRACT'&&uiOptionIndexByKey(key)>=0;
+   const st=machinePartLegalityV46(hp,m,pt);
+   const vs=machineFocusStatusV48(hp,m,pt,st);
+   rows.push({m,pt,key,clickable,st,vs});
+  }
+ }
+ mf.innerHTML=rows.length?rows.map(({m,pt,key,clickable,st,vs})=>`<div class="machineFocusPart ${vs.cls} ${clickable?'contract-legal':''}" ${clickable?`onclick="humanUIClick('${key}')"`:''}><b>${machineDisplayIdV46(m)}｜${pt.kind}</b> <span class="tag">${vs.label}</span><div class="mini machineFamily">${elemIcon(m.family)} ${m.family} · owner ${m.ownerId?playerDisplay(m.ownerId):'—'} · ${m.status}${reservationText(m)?' · '+reservationText(m):''}</div><div class="reqIconLine">${iconizeText(pt.reqText)}</div><div class="ok">${pt.reward.action?pt.reward.action+' Action':`${pt.reward.vp||0}VP ${pt.reward.g||0}G`}</div><div class="mini">rent ${pt.rental.vp||0}VP ${pt.rental.g||0}G · aging ${pt.aging}${pt.filled?` · ${playerDisplay(pt.filledBy)}@T${pt.filledTurn}`:''}</div><div class="mini machineStatusReason">${st.reason}</div></div>`).join(''):'<div class="mini">目前沒有已開放的 Machine Part。</div>';
+ const mb=document.getElementById('machineBoard');if(mb)mb.innerHTML=mb.innerHTML.replaceAll('M-Funding-','M-Maintenance-');
+}
+const _v48PrevRender=render;
+render=function(){
+ _v48PrevRender();
+ const n=document.getElementById('interpretation');
+ if(n&&!n.dataset.v48){n.dataset.v48='1';n.innerHTML+='<br><b>v4.8 UX</b>：Machine Parts 區改為列出目前 Stage 已開放（以及已提前認領）的全部 Machine Parts，不再依付款能力過濾。綠色高亮只代表 Human 以當前資源與狀態可立即 Play；已使用、LOCKED、未使用與被他人 Reservation 的 Part 都仍會顯示，但不會高亮。';}
+ const mini=document.querySelector('.brand .mini');if(mini)mini.textContent='v2.2.5 Web Playtest v4.8 Machine Parts Overview';
+ document.title='元素管道：術式工房 v2.2.5 Web Playtest v4.8 Machine Parts Overview';
+ if(S){S.version='v2.2.5-web-v4.8-machine-parts-overview';S.schemaVersion='2.2.5-web-4.8';}
+};
+</script>
+
+</body></html>
