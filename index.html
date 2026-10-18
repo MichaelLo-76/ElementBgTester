@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>元素管道：術式工房 v2.2.5 Web Playtest v4.4 Multi-Layer Build + Rep Reassignment</title>
+<title>元素管道：術式工房 v2.2.5 Web Playtest v4.5 Start 6G + Buffer Refill Clarity</title>
 <style>
 :root{--bg:#0e1117;--panel:#171b24;--panel2:#202635;--line:#344056;--text:#eef3ff;--muted:#9facbf;--accent:#7fb7ff;--good:#8be9a8;--warn:#ffd166;--bad:#ff7b7b;--chip:#273148}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,-apple-system,"Segoe UI","Noto Sans TC",sans-serif}
@@ -70,7 +70,7 @@ button,input,select,textarea{font:inherit}.top{position:sticky;top:0;z-index:20;
 </style>
 </head><body>
 <div class="top">
- <div class="brand">元素管道：術式工房 <span class="mini">v2.2.5 Web Playtest v4.4 Multi-Layer Build + Rep Reassignment</span></div>
+ <div class="brand">元素管道：術式工房 <span class="mini">v2.2.5 Web Playtest v4.5 Start 6G + Buffer Refill Clarity</span></div>
  <span id="turnPill" class="pill"></span><span id="stagePill" class="pill"></span><span id="stepPill" class="pill"></span><span id="initPill" class="pill"></span>
  <label>Seed <input id="seedInput" size="10" value="20261011"></label>
  <select id="modeSelect"><option value="H3AI">1 Human + 3 AI</option><option value="4AI">4 AI</option></select>
@@ -1293,6 +1293,57 @@ const _v225PrevRender=render;
 render=function(){ensureV225State();_v225PrevRender();
  const n=document.getElementById('interpretation');if(n)n.innerHTML='<b>v2.2.5 Current</b>：Build Action 改為單一 Sector 的 Multi-Layer Build：Outer → Middle → Inner 各最多 1 張、每層可跳過且逐張付費；draw 只在 Action 開始一次，未用 Outer 候選 Action 結束回 bag。One-Time 完成時，每位玩家每 Turn 最多一次可在 +1 Guild Rep 發放前 Pay 2G，將該 1 Rep 改派到其他 Guild，再依實際 Guild 檢查 Machine Claim。v2.2.4 Maintenance 4 free + 4 paid、Era Bonus、Gold LT Rotation、Compound Lv2 Synthesis、付款前確認與 Secret 確認維持。';
  const tel=document.getElementById('telemetry'),b=S.telemetry.multiLayerBuild||{},r=S.telemetry.repReassignment||{};if(tel)tel.innerHTML+=`<div class="row"><span class="chip">ML Build ${b.actions||0}</span><span class="chip">Tiles ${b.tilesBuilt||0} (O${b.outer||0}/M${b.middle||0}/I${b.inner||0})</span><span class="chip">3-layer ${b.allThree||0}</span><span class="chip">Rep Redirect ${r.uses||0}/${r.opportunities||0}</span><span class="chip">Rep Redirect cost ${r.costPaid||0}G</span></div>`;
+};
+
+
+// ===== v4.5 playtest tuning: Start 6G + Flexible Buffer refill clarity =====
+// v2.2.5 Canonical keeps 產線回流核心 as a Flexible Buffer: Rate1, any-element Cap4 (Upgrade→8), Initial Stock0.
+// It does not auto-restock and Maintenance Restock remains Outer/Middle only. Normal Pay/refill and explicit legal Restock effects may fill it.
+function normalizeFlexibleBuffers(){
+ if(!S?.players)return;
+ for(const p of S.players){
+  for(const sec of p.wheel?.sectors||[]){
+   const t=sec.inner;
+   if(t?.name==='產線回流核心'){
+    t.kind='Inner';t.type='Universal';t.rate=1;t.anyCap=true;t.stock=t.stock||{};
+    if(typeof t.cap!=='number'||t.cap<=0)t.cap=t.upgraded?8:4;
+    if(t.upgraded&&t.cap<8)t.cap=8;
+    if(!t.upgraded&&t.cap>4)t.cap=4;
+    delete t.noNormalRefill;
+   }
+  }
+ }
+}
+
+const _v45PrevInnerEffectSummary=innerEffectSummary;
+innerEffectSummary=function(t,p){
+ if(t?.name==='產線回流核心')return 'Flexible Buffer：Rate 1；任意4元素 Cap（Upgrade→8）；Initial Stock 0。可接正常 Pay/refill 與明文合法 Restock（如 Water Lv3）；Maintenance Restock 仍只限 Outer/Middle，不可補 Inner。';
+ return _v45PrevInnerEffectSummary(t,p);
+};
+
+const _v45PrevNewGame=newGame;
+newGame=function(start=true){
+ _v45PrevNewGame(false);
+ // Playtest economy override requested after v2.2.5: base starting Gold 6, keeping +1G per later initial initiative seat.
+ for(const p of S.players||[]){const pos=S.initiativeOrder.indexOf(p.id);p.gold=6+Math.max(0,pos)}
+ S.config=S.config||{};S.config.startingGoldBase=6;S.config.startingGoldPlaytestOverride='v4.5';
+ S.version='v2.2.5-web-v4.5-start6-buffer-refill-clarity';
+ S.schemaVersion='2.2.5-web-4.5';
+ normalizeFlexibleBuffers();
+ tlog(`v4.5 playtest override: starting Gold = 6/7/8/9 by initial Initiative; Flexible Buffer accepts normal Pay/refill but not Maintenance Restock.`);
+ render();
+ if(start)advanceGame();
+};
+
+const _v45PrevResumeImportedState=resumeImportedState;
+resumeImportedState=async function(loaded){await _v45PrevResumeImportedState(loaded);normalizeFlexibleBuffers();S.config=S.config||{};S.config.startingGoldBase??=6;render()};
+
+const _v45PrevRender=render;
+render=function(){
+ normalizeFlexibleBuffers();
+ _v45PrevRender();
+ const n=document.getElementById('interpretation');
+ if(n)n.innerHTML+='<br><b>v4.5 Playtest tuning</b>：新局基礎起始 Gold 改為 6G，依初始 Initiative 順位為 6/7/8/9G。產線回流核心不會自動補 Stock；Initial Stock=0，可由正常 element Pay/refill 或明文允許的 Restock 效果補入，Maintenance Restock 仍只限 Outer/Middle。';
 };
 
 </script></body></html>
