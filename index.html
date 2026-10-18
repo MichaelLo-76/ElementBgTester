@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>元素管道：術式工房 v2.2.4 Web Playtest v4.3 Era + Maintenance Rebalance</title>
+<title>元素管道：術式工房 v2.2.5 Web Playtest v4.4 Multi-Layer Build + Rep Reassignment</title>
 <style>
 :root{--bg:#0e1117;--panel:#171b24;--panel2:#202635;--line:#344056;--text:#eef3ff;--muted:#9facbf;--accent:#7fb7ff;--good:#8be9a8;--warn:#ffd166;--bad:#ff7b7b;--chip:#273148}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,-apple-system,"Segoe UI","Noto Sans TC",sans-serif}
@@ -70,7 +70,7 @@ button,input,select,textarea{font:inherit}.top{position:sticky;top:0;z-index:20;
 </style>
 </head><body>
 <div class="top">
- <div class="brand">元素管道：術式工房 <span class="mini">v2.2.4 Web Playtest v4.3 Era + Maintenance Rebalance</span></div>
+ <div class="brand">元素管道：術式工房 <span class="mini">v2.2.5 Web Playtest v4.4 Multi-Layer Build + Rep Reassignment</span></div>
  <span id="turnPill" class="pill"></span><span id="stagePill" class="pill"></span><span id="stepPill" class="pill"></span><span id="initPill" class="pill"></span>
  <label>Seed <input id="seedInput" size="10" value="20261011"></label>
  <select id="modeSelect"><option value="H3AI">1 Human + 3 AI</option><option value="4AI">4 AI</option></select>
@@ -79,7 +79,7 @@ button,input,select,textarea{font:inherit}.top{position:sticky;top:0;z-index:20;
  <button onclick="downloadLog()">Export Log</button><button onclick="runSmoke(20)">4AI Smoke×20</button>
 </div>
 <div class="layout"><main>
- <div id="interpretation" class="section notice"><b>v2.2.4 Current</b>：本頁以 v2.2.3 Era Bonus Rebalance 與 v2.2.4 Maintenance Restock Rebalance 為最新增量規則；其餘維持 v2.2.2 / v2.2.1 已鎖定架構。Maintenance = Reduce Fee 2，之後每次完整 Maintenance Action 可 Restock 0–4 個免費元素，並可再以每個 1G 額外 Restock 最多 4 個；既有明文 Restock cap modifier 仍保留。Era Bonus 每倍率改為 T1：12G、T2：3VP+6G、T3：6VP；觸發時序與倍率門檻不變。Compound Tech Lv2 Production Synthesis、Gold Long-Term 4-slot rotation、Contract/Part 支付前確認與 Secret Action 確認皆保留。v2.2.3 與更舊的進行中存檔不直接當作 v2.2.4 繼續遊玩。</div>
+ <div id="interpretation" class="section notice"><b>v2.2.5 Current</b>：Build Action 改為單一 Sector 的 Multi-Layer Build：Outer → Middle → Inner 各最多 1 張、每層可跳過且逐張付費；draw 只在 Action 開始一次，未用 Outer 候選 Action 結束回 bag。One-Time 完成時，每位玩家每 Turn 最多一次可在 +1 Guild Rep 發放前 Pay 2G，將該 1 Rep 改派到其他 Guild，再依實際 Guild 檢查 Machine Claim。v2.2.4 Maintenance 4 free + 4 paid、Era Bonus、Gold LT Rotation、Compound Lv2 Synthesis、付款前確認與 Secret 確認維持。</div>
  <div id="mobileControlsMount" aria-label="Mobile decision controls"></div>
  <section class="section"><h2>Players</h2><div id="players" class="grid4"></div></section>
  <section class="section"><h2>Era Bonuses <span class="mini">公開｜Era End 全員一次性結算；目前倍率僅為預覽</span></h2><div id="eraBonuses" class="eraBonusGrid"></div></section>
@@ -1119,4 +1119,180 @@ function syncResponsiveControls(){
 let responsiveControlRAF=0;
 window.addEventListener('resize',()=>{cancelAnimationFrame(responsiveControlRAF);responsiveControlRAF=requestAnimationFrame(syncResponsiveControls)});
 window.addEventListener('load',()=>{syncResponsiveControls();if(!location.search.includes('noauto=1'))newGame();});
+
+// ===== v2.2.5 Multi-Layer Build + Guild Rep Reassignment =====
+function ensureV225State(){
+ if(!S)return;
+ S.rulesVersion='v2.2.5';
+ S.schemaVersion='2.2.5-web-4.4';
+ S.version='v2.2.5-web-v4.4-multilayer-build-rep-reassignment';
+ S.config=S.config||{};
+ S.config.multiLayerBuildPatch='v2.2.4-to-v2.2.5-v1.0';
+ S.config.repReassignmentPatch='v2.2.4-to-v2.2.5-v1.0';
+ S.config.repReassignmentCost=2;
+ S.config.repReassignmentPerTurn=1;
+ S.telemetry=S.telemetry||{};
+ S.telemetry.multiLayerBuild=S.telemetry.multiLayerBuild||{actions:0,tilesBuilt:0,outer:0,middle:0,inner:0,allThree:0,empty:0,nominalCost:0,bySource:{},byTier:{},bySector:{}};
+ S.telemetry.multiLayerBuild.bySource=S.telemetry.multiLayerBuild.bySource||{};
+ S.telemetry.multiLayerBuild.byTier=S.telemetry.multiLayerBuild.byTier||{};
+ S.telemetry.multiLayerBuild.bySector=S.telemetry.multiLayerBuild.bySector||{};
+ S.telemetry.repReassignment=S.telemetry.repReassignment||{opportunities:0,uses:0,costPaid:0,byPrintedGuild:{},byActualGuild:{},byPlayer:{},claimChecks:0};
+ S.telemetry.repReassignment.byPrintedGuild=S.telemetry.repReassignment.byPrintedGuild||{};
+ S.telemetry.repReassignment.byActualGuild=S.telemetry.repReassignment.byActualGuild||{};
+ S.telemetry.repReassignment.byPlayer=S.telemetry.repReassignment.byPlayer||{};
+ S.buildRecords=S.buildRecords||[];
+ for(const p of S.players||[]){p.flags=p.flags||{};p.flags.repReassignmentUsedThisTurn=!!p.flags.repReassignmentUsedThisTurn}
+}
+
+// Reassert v2.2.5 whenever legacy compatibility normalizers run.
+const _v225PrevEnsureV224=ensureV224State;
+ensureV224State=function(){_v225PrevEnsureV224();ensureV225State()};
+
+function buildCostForLayer(layer,discount){return Math.max(0,({outer:2,middle:4,inner:6})[layer]-discount)}
+function buildLayerLabel(layer){return layer==='outer'?'Outer':layer==='middle'?'Middle':'Inner'}
+function returnUnusedBuildDraws(drawn,usedElem){let used=false,returned=[];for(const e of drawn){if(usedElem&&!used&&e===usedElem){used=true;continue}returnOuter(e);returned.push(e)}return returned}
+function buildSectorPotential(p,si,drawn,discount){
+ let v=0;
+ const oc=buildCostForLayer('outer',discount),mc=buildCostForLayer('middle',discount),ic=buildCostForLayer('inner',discount);
+ if(canAffordGoldCost(p,oc)&&drawn.length){for(const sl of legalOuterSlots(p).filter(x=>x.si===si))for(const e of [...new Set(drawn)])v=Math.max(v,scoreBuildOption(p,{mode:'outer',e,si,oi:sl.oi},discount))}
+ let mv=0;for(const x of legalMiddleBuilds(p).filter(x=>x.si===si))mv=Math.max(mv,scoreBuildOption(p,{mode:'middle',x},discount));if(canAffordGoldCost(p,mc))v+=Math.max(0,mv);
+ let iv=0;for(const x of legalInnerBuilds(p).filter(x=>x.si===si))iv=Math.max(iv,scoreBuildOption(p,{mode:'inner',x},discount));if(canAffordGoldCost(p,ic))v+=Math.max(0,iv);
+ return v
+}
+function chooseAiBuildSector(p,drawn,discount){
+ const opts=SECTORS.map((name,si)=>({label:name,si}));
+ return choose(p,`${p.id} Multi-Layer Build：選擇單一 Sector`,opts,o=>buildSectorPotential(p,o.si,drawn,discount))
+}
+async function chooseBuildSectorHuman(p,drawn,discount,guardRef){
+ while(true){
+  const opts=SECTORS.map((name,si)=>({label:`${name} Sector`,si,uiButton:true,uiButtonLabel:`${elemIcon(SECTOR_ELEM[name])} ${name} Sector`}));
+  opts.push({label:'Pass Build',pass:true,uiButton:true,uiButtonLabel:'Pass Build'});
+  if(ability(p,'B4'))for(const x of legalUpgradeTiles(p)){const cost=tileBuildPrice(x.t);if(canAffordGoldCost(p,cost))opts.push({label:`B4 Upgrade ${x.label} (${cost}G)`,b4:true,x,cost,uiButton:true,uiButtonLabel:`B4 Upgrade ${x.label} · ${cost}G`})}
+  if(guardRef.n<20&&hasPublicTransition(p))for(const [i,o] of transitionOptions(p).entries())opts.push({label:o.label,kind:'TRANS',o,transitionSig:`${JSON.stringify(o.pay)}>${o.gain}`,uiKey:transitionOptionKey(i)});
+  if(guardRef.n<20)for(const [i,o] of liquidationOptions(p).entries())opts.push({label:o.label,kind:'LIQ',o,liquidationSig:`${o.sourceA}>${o.gain}`,uiKey:liquidationOptionKey(i)});
+  const html=`<div class="uiHint"><b>Multi-Layer Build：先選定 1 個 Sector</b><div class="drawTray">${drawn.map(e=>`<div class="drawTile">${elemIcon(e,'lg')}</div>`).join('')||'<span class="mini">Bag empty</span>'}</div>本次之後只能在同一 Sector 依序建 Outer → Middle → Inner，各最多 1 張且可跳過。每張分別支付成本；未使用 Outer 候選於 Action 結束全部回 bag。選 Sector 前仍可使用合法 Public Transition / Element Liquidation。</div>`;
+  const c=await visualChoose(p,`${p.id} Multi-Layer Build sector`,opts,{kind:'BUILD_TARGET',html});
+  if(c.kind==='TRANS'){guardRef.n++;await executeTransitionOption(p,c.o);continue}
+  if(c.kind==='LIQ'){guardRef.n++;await executeLiquidationOption(p,c.o);continue}
+  return c
+ }
+}
+async function buildOuterLayer(p,si,drawn,discount,record){
+ const cost=buildCostForLayer('outer',discount),slots=legalOuterSlots(p).filter(x=>x.si===si);
+ if(!drawn.length||!slots.length||!canAffordGoldCost(p,cost))return false;
+ let c;
+ if(p.type==='AI'){
+  const opts=[{label:'Skip Outer',skip:true},...slots.flatMap(sl=>[...new Set(drawn)].map(e=>({label:`${SECTORS[si]} O${sl.oi+1} ${e}`,sl,e})))];
+  c=await choose(p,`${p.id} Multi-Layer Build Outer`,opts,o=>o.skip?0:scoreBuildOption(p,{mode:'outer',e:o.e,si,oi:o.sl.oi},discount));
+ }else{
+  const opts=[{label:'Skip Outer',skip:true,uiButton:true,uiButtonLabel:'跳過 Outer'},...slots.map(sl=>({label:`Outer ${sl.oi+1}`,sl,uiKey:`BUILD:outer:${si}:${sl.oi}`}))];
+  const t=await visualChoose(p,`${p.id} Multi-Layer Build｜Outer`,opts,{kind:'BUILD_TARGET',html:`<div class="uiHint"><b>${SECTORS[si]}｜Outer（最多 1 張）</b><br>綠框為合法空位；也可以跳過。成本 ${cost}G。</div>`});
+  if(t.skip)c=t;else{const choices=[...new Set(drawn)].map(e=>({label:`${elemIcon(e)} ${e} · ${cost}G`,e,uiButton:true,uiButtonLabel:`${elemIcon(e)} ${e} · ${cost}G`}));const e=await visualChoose(p,`${p.id} 選擇 Outer 候選`,choices,{kind:'GENERIC',html:`<div class="uiHint"><b>${SECTORS[si]} O${t.sl.oi+1}</b>：選擇本次 draw 的 1 張 Outer。</div>`});c={sl:t.sl,e:e.e}}
+ }
+ if(!c||c.skip)return false;
+ if(!await payGoldCost(p,cost,'Build Outer'))return false;
+ p.wheel.sectors[si].outers[c.sl.oi]=makeOuter(c.e,false);record.builtLayers.outer={slot:c.sl.oi,element:c.e,cost};record.costs.outer=cost;record.usedOuterElement=c.e;tlog(`${p.id} Multi-Layer Build: Outer ${c.e} → ${SECTORS[si]} O${c.sl.oi+1} (${cost}G)`);return true
+}
+async function buildMiddleLayer(p,si,discount,record){
+ const cost=buildCostForLayer('middle',discount);if(!canAffordGoldCost(p,cost))return false;
+ const legal=legalMiddleBuilds(p).filter(x=>x.si===si);if(!legal.length)return false;
+ let c;
+ if(p.type==='AI'){
+  const opts=[{label:'Skip Middle',skip:true},...legal.map(x=>({label:x.label,x}))];c=await choose(p,`${p.id} Multi-Layer Build Middle`,opts,o=>o.skip?0:scoreBuildOption(p,{mode:'middle',x:o.x},discount));
+ }else{
+  const bySlot=[...new Set(legal.map(x=>x.mi))];const opts=[{label:'Skip Middle',skip:true,uiButton:true,uiButtonLabel:'跳過 Middle'},...bySlot.map(mi=>({label:`Middle ${mi+1}`,mi,uiKey:`BUILD:middle:${si}:${mi}`}))];const t=await visualChoose(p,`${p.id} Multi-Layer Build｜Middle`,opts,{kind:'BUILD_TARGET',html:`<div class="uiHint"><b>${SECTORS[si]}｜Middle（最多 1 張）</b><br>合法性已依剛完成的 Outer 後盤面重新計算。成本 ${cost}G。</div>`});if(t.skip)c=t;else{const choices=legal.filter(x=>x.mi===t.mi).map(x=>({label:`${x.label} (${cost}G)`,x,uiButton:true,uiButtonLabel:`${x.label} · ${cost}G`}));const z=await visualChoose(p,`${p.id} 選擇 Middle processing`,choices,{kind:'GENERIC',html:`<div class="uiHint"><b>${SECTORS[si]} Middle ${t.mi+1}</b>：選擇合法 processing。</div>`});c={x:z.x}}
+ }
+ if(!c||c.skip)return false;if(!await payGoldCost(p,cost,'Build Middle'))return false;p.wheel.sectors[si].middles[c.x.mi]=makeMiddle(c.x);record.builtLayers.middle={slot:c.x.mi,mode:c.x.mode,label:c.x.label,cost};record.costs.middle=cost;tlog(`${p.id} Multi-Layer Build: ${c.x.label} (${cost}G)`);return true
+}
+async function buildInnerLayer(p,si,discount,record){
+ const cost=buildCostForLayer('inner',discount);if(!canAffordGoldCost(p,cost))return false;
+ const legal=legalInnerBuilds(p).filter(x=>x.si===si);if(!legal.length)return false;
+ let c;
+ if(p.type==='AI'){const opts=[{label:'Skip Inner',skip:true},...legal.map(x=>({label:x.label,x}))];c=await choose(p,`${p.id} Multi-Layer Build Inner`,opts,o=>o.skip?0:scoreBuildOption(p,{mode:'inner',x:o.x},discount))}
+ else{const opts=[{label:'Skip Inner',skip:true,uiButton:true,uiButtonLabel:'跳過 Inner'},{label:`${SECTORS[si]} Inner`,pick:true,uiKey:`BUILD:inner:${si}:0`}];const t=await visualChoose(p,`${p.id} Multi-Layer Build｜Inner`,opts,{kind:'BUILD_TARGET',html:`<div class="uiHint"><b>${SECTORS[si]}｜Inner（最多 1 張）</b><br>合法性已依前面實際建造結果重新計算。成本 ${cost}G。</div>`});if(t.skip)c=t;else{const choices=legal.map(x=>({label:`${x.label} (${cost}G)`,x,uiButton:true,uiButtonLabel:`${x.label} · ${cost}G`}));const z=await visualChoose(p,`${p.id} 選擇 Inner`,choices,{kind:'GENERIC',html:`<div class="uiHint"><b>${SECTORS[si]} Inner</b>：選擇合法 Inner。</div>`});c={x:z.x}}}
+ if(!c||c.skip)return false;if(!await payGoldCost(p,cost,'Build Inner'))return false;p.wheel.sectors[si].inner=createInner(c.x.kind,c.x.val,p);record.builtLayers.inner={kind:c.x.kind,val:c.x.val,label:c.x.label,cost};record.costs.inner=cost;tlog(`${p.id} Multi-Layer Build: ${c.x.label} (${cost}G)`);return true
+}
+function commitBuildRecord(p,record){
+ ensureV225State();record.returned=returnUnusedBuildDraws(record.drawCandidates,record.usedOuterElement||null);delete record.usedOuterElement;record.turn=S.turnNumber;record.player=p.id;record.source=S.timing?.actionSource||'UNKNOWN';record.tier=S.stage;record.tilesBuilt=['outer','middle','inner'].filter(k=>record.builtLayers[k]).length;record.nominalCost=Object.values(record.costs).reduce((a,b)=>a+(b||0),0);S.buildRecords.push(record);if(S.buildRecords.length>200)S.buildRecords.shift();const t=S.telemetry.multiLayerBuild;t.actions++;t.tilesBuilt+=record.tilesBuilt;t.outer+=record.builtLayers.outer?1:0;t.middle+=record.builtLayers.middle?1:0;t.inner+=record.builtLayers.inner?1:0;if(record.tilesBuilt===3)t.allThree++;if(record.tilesBuilt===0)t.empty++;t.nominalCost+=record.nominalCost;t.bySource[record.source]=(t.bySource[record.source]||0)+1;t.byTier['T'+S.stage]=(t.byTier['T'+S.stage]||0)+1;if(record.buildSector!=null)t.bySector[SECTORS[record.buildSector]]=(t.bySector[SECTORS[record.buildSector]]||0)+1;tlog(`${p.id} Multi-Layer Build summary: sector=${record.buildSector==null?'PASS':SECTORS[record.buildSector]}, layers=${['outer','middle','inner'].filter(k=>record.builtLayers[k]).join('+')||'none'}, nominalCost=${record.nominalCost}G, returned=[${record.returned.join(',')}]`)
+}
+
+buildAction=async function(p,mods={}){
+ ensureV225State();const discount=ability(p,'B2')?2:0;const drawN=2+(ability(p,'B1')?1:0)+(mods.drawPlus||0)+(p.wheel.sectors.some(s=>s.inner?.name==='工房標準化核心')?1:0),drawn=[];for(let i=0;i<drawN;i++){const e=drawOuter();if(e)drawn.push(e)}
+ const record={buildSector:null,drawCandidates:[...drawn],returned:[],builtLayers:{outer:null,middle:null,inner:null},costs:{outer:0,middle:0,inner:0},b4Upgrade:null};
+ // Preserve B4 as its existing single alternate Build option; v2.2.5 does not multiply it by layer.
+ if(p.type==='AI'&&ability(p,'B4')){const ups=legalUpgradeTiles(p).filter(x=>canAffordGoldCost(p,tileBuildPrice(x.t)));const bestUp=ups.map(x=>({x,cost:tileBuildPrice(x.t),score:2.8})).sort((a,b)=>b.score-a.score)[0];const bestBuild=Math.max(...SECTORS.map((_,si)=>buildSectorPotential(p,si,drawn,discount)),0);if(bestUp&&bestUp.score>bestBuild){if(await payGoldCost(p,bestUp.cost,'B4 Redevelop')){await upgradeTile(p,bestUp.x,'B4');record.b4Upgrade={label:bestUp.x.label,cost:bestUp.cost}}commitBuildRecord(p,record);return}}
+ let sectorChoice;
+ if(p.type==='AI')sectorChoice=await chooseAiBuildSector(p,drawn,discount);else sectorChoice=await chooseBuildSectorHuman(p,drawn,discount,{n:0});
+ if(sectorChoice?.pass){commitBuildRecord(p,record);return}
+ if(sectorChoice?.b4){if(await payGoldCost(p,sectorChoice.cost,'B4 Redevelop')){await upgradeTile(p,sectorChoice.x,'B4');record.b4Upgrade={label:sectorChoice.x.label,cost:sectorChoice.cost}}commitBuildRecord(p,record);return}
+ const si=sectorChoice?.si;if(!Number.isInteger(si)){commitBuildRecord(p,record);return}record.buildSector=si;
+ await buildOuterLayer(p,si,drawn,discount,record);
+ await buildMiddleLayer(p,si,discount,record);
+ await buildInnerLayer(p,si,discount,record);
+ commitBuildRecord(p,record)
+};
+
+// Secret-selection Build evaluation now values the best same-Sector layered opportunity rather than one Tile only.
+estimateBuildActionValue=function(p){
+ const discount=ability(p,'B2')?2:0,bagTotal=sum(S.outerBag),budget=liquidGoldValue(p);let best=0;
+ for(let si=0;si<4;si++){
+  let v=0,spent=0;const oc=buildCostForLayer('outer',discount),mc=buildCostForLayer('middle',discount),ic=buildCostForLayer('inner',discount);
+  if(bagTotal>0&&legalOuterSlots(p).some(x=>x.si===si)&&budget>=oc){let ev=0;for(const e of BASES){const prob=(S.outerBag[e]||0)/bagTotal;if(!prob)continue;let b=-Infinity;for(const sl of legalOuterSlots(p).filter(x=>x.si===si))b=Math.max(b,scoreBuildOption(p,{mode:'outer',e,si,oi:sl.oi},discount));if(Number.isFinite(b))ev+=prob*Math.max(0,b)}v+=ev;spent+=oc}
+  if(budget-spent>=mc){let m=0;for(const x of legalMiddleBuilds(p).filter(x=>x.si===si))m=Math.max(m,scoreBuildOption(p,{mode:'middle',x},discount));if(m>0){v+=m;spent+=mc}}
+  if(budget-spent>=ic){let inn=0;for(const x of legalInnerBuilds(p).filter(x=>x.si===si))inn=Math.max(inn,scoreBuildOption(p,{mode:'inner',x},discount));if(inn>0)v+=inn}
+  best=Math.max(best,v)
+ }
+ const builtOuter=sum(p.wheel.sectors.map(s=>s.outers.filter(Boolean).length)),builtMiddle=sum(p.wheel.sectors.map(s=>s.middles.filter(Boolean).length)),builtInner=sum(p.wheel.sectors.map(s=>s.inner?1:0)),maturity=(builtOuter-4)+builtMiddle*1.5+builtInner*2,development=Math.max(0,0.75-maturity*.05);
+ return {total:Math.max(.05,best+development),components:{bestLayered:best,development}}
+};
+
+function repReassignmentAiScore(p,printed,target){
+ const before=p.reputation[target]||0,after=before+1;let s=0;
+ for(const [tier,th] of [[1,2],[2,4],[3,7]]){const m=machineFor(target,tier);if(!m.ownerId&&before<th&&after>=th)s+=tier===1?5:tier===2?4:3}
+ const pending=currentPendingEraTier?.();if(pending&&S.eraBonusCards?.[pending]){const id=S.eraBonusCards[pending],meta=ERA_BONUS_META[id];if(meta?.axis==='REP'){const old=scoreEraBonus(id,p),cp=clone(p);cp.reputation=clone(p.reputation);cp.reputation[target]=after;s+=(scoreEraBonus(id,cp)-old)*eraRewardVpePerM(pending)*eraDistanceDiscount(pending)}}
+ // A small breadth incentive and a penalty for spending the 2G cost.
+ const vals=TRADERS.map(t=>p.reputation[t]||0),min=Math.min(...vals);if(before===min)s+=.8;s-=1.0;return s
+}
+async function chooseOneTimeRepGuild(p,c){
+ ensureV225State();const printed=c.trader,tel=S.telemetry.repReassignment;tel.opportunities++;
+ if(p.flags.repReassignmentUsedThisTurn||!canAffordGoldCost(p,2))return {guild:printed,reassigned:false,cost:0};
+ const alts=TRADERS.filter(t=>t!==printed),opts=[{label:`維持 ${guildDisplay(printed)} Guild +1 Rep`,guild:printed,reassigned:false,uiButton:true,uiButtonLabel:`維持 ${guildDisplay(printed)} Guild +1 Rep`},...alts.map(t=>({label:`Pay 2G → ${guildDisplay(t)} Guild +1 Rep`,guild:t,reassigned:true,uiButton:true,uiButtonLabel:`Pay 2G → ${guildDisplay(t)} Guild +1 Rep`}))];
+ const c0=await choose(p,`${p.id} One-Time Reputation｜${c.id} printed ${guildDisplay(printed)} Guild`,opts,o=>o.reassigned?repReassignmentAiScore(p,printed,o.guild):0);
+ if(!c0.reassigned)return {guild:printed,reassigned:false,cost:0};
+ if(!await payGoldCost(p,2,'One-Time Rep Reassignment'))return {guild:printed,reassigned:false,cost:0};
+ p.flags.repReassignmentUsedThisTurn=true;return {guild:c0.guild,reassigned:true,cost:2}
+}
+
+completeOneTime=async function(p,c){
+ const pay=await payRequirement(p,c.req,{qualifying:true});if(!pay)return;
+ tlog(`${p.id} completes ${c.id}`,{declaredRequirement:c.req,actualPayment:pay});
+ const r=parseRewardText(c.rewardText,p);gainReward(p,r);if(r.feeDown)await reduceFee(p,r.feeDown,c.id);if(c.tp)await awardTP(p,c.tp);
+ S.telemetry.contracts.OneTime++;
+ // Completion/Combo/Fire-Lv6-style immediate effects resolve before the pending One-Time Rep is routed.
+ await afterContractResolution(p,{qualifying:true,comboTag:c.comboTag,comboReward:null,payment:pay});
+ const repChoice=await chooseOneTimeRepGuild(p,c),actual=repChoice.guild;p.reputation[actual]=(p.reputation[actual]||0)+1;
+ const rt=S.telemetry.repReassignment;rt.byPrintedGuild[c.trader]=(rt.byPrintedGuild[c.trader]||0)+1;rt.byActualGuild[actual]=(rt.byActualGuild[actual]||0)+1;rt.claimChecks++;if(repChoice.reassigned){rt.uses++;rt.costPaid+=2;rt.byPlayer[p.id]=(rt.byPlayer[p.id]||0)+1}
+ tlog(`${p.id} One-Time Rep: printed=${guildDisplay(c.trader)}, actual=${guildDisplay(actual)}, reassignmentPaidGold=${repChoice.cost}, usedThisTurn=${p.flags.repReassignmentUsedThisTurn}`,{printedRepGuild:c.trader,actualRepGuild:actual,reassignmentPaidGold:repChoice.cost,reassignmentUsedThisTurn:p.flags.repReassignmentUsedThisTurn});
+ checkMachineClaim(p,actual);
+ S.oneTime.market=S.oneTime.market.filter(x=>x.id!==c.id);refillOneTime()
+};
+
+// Reset per-player reassignment allowance at each Turn boundary before Secret Selection.
+const _v225PrevStartTurn=startTurn;
+startTurn=async function(replaying=false){ensureV225State();for(const p of S.players||[]){p.flags=p.flags||{};p.flags.repReassignmentUsedThisTurn=false}return _v225PrevStartTurn(replaying)};
+
+const _v225PrevNewGame=newGame;
+newGame=function(start=true){_v225PrevNewGame(false);ensureV225State();tlog('v2.2.5 patch active: Multi-Layer Build (one Sector, Outer→Middle→Inner) + once/Turn Pay2G One-Time Rep Reassignment');render();if(start)advanceGame()};
+
+const _v225PrevAssert=assertV208ImportCompatible;
+assertV208ImportCompatible=function(loaded){const rv=loaded?.rulesVersion||'';if(rv!=='v2.2.5')throw new Error(`此存檔規則版本為 ${rv||'未知/舊版'}。v2.2.5 改變 Build Action 的可選施工序列並新增每 Turn 一次 Rep Reassignment 決策；為避免舊 choice history / 中途 Build 狀態被錯誤重播，請使用 v2.2.5 新局或 v2.2.5 存檔續玩。`);if(!loaded.goldLongTerm?.marketSlots||!Array.isArray(loaded.goldLongTerm.drawPile))throw new Error('v2.2.5 存檔缺少 Gold Long-Term rotating market state。');if(!loaded.eraBonusCards&&!loaded.eraBonusesByTier)throw new Error('v2.2.5 存檔缺少 Era Bonus 配置。');return true};
+const _v225PrevResume=resumeImportedState;
+resumeImportedState=async function(loaded){await _v225PrevResume(loaded);ensureV225State();render()};
+
+const _v225PrevRender=render;
+render=function(){ensureV225State();_v225PrevRender();
+ const n=document.getElementById('interpretation');if(n)n.innerHTML='<b>v2.2.5 Current</b>：Build Action 改為單一 Sector 的 Multi-Layer Build：Outer → Middle → Inner 各最多 1 張、每層可跳過且逐張付費；draw 只在 Action 開始一次，未用 Outer 候選 Action 結束回 bag。One-Time 完成時，每位玩家每 Turn 最多一次可在 +1 Guild Rep 發放前 Pay 2G，將該 1 Rep 改派到其他 Guild，再依實際 Guild 檢查 Machine Claim。v2.2.4 Maintenance 4 free + 4 paid、Era Bonus、Gold LT Rotation、Compound Lv2 Synthesis、付款前確認與 Secret 確認維持。';
+ const tel=document.getElementById('telemetry'),b=S.telemetry.multiLayerBuild||{},r=S.telemetry.repReassignment||{};if(tel)tel.innerHTML+=`<div class="row"><span class="chip">ML Build ${b.actions||0}</span><span class="chip">Tiles ${b.tilesBuilt||0} (O${b.outer||0}/M${b.middle||0}/I${b.inner||0})</span><span class="chip">3-layer ${b.allThree||0}</span><span class="chip">Rep Redirect ${r.uses||0}/${r.opportunities||0}</span><span class="chip">Rep Redirect cost ${r.costPaid||0}G</span></div>`;
+};
+
 </script></body></html>
