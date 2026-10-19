@@ -1437,4 +1437,475 @@ render=function(){
 };
 </script>
 
+
+<script>
+// ===== v2.2.6 / Web v4.9 Contract Rebalance =====
+// Source of truth: v2.2.6 Canonical + Worker Patch v1.0.
+// Keeps v4.8 Machine Parts overview UX.
+
+// --- stable family parent ordering for v2.2.6 Machine Value templates ---
+const V226_PARENT_ORDER={
+ Steam:['W','F'], Magma:['F','E'], Frost:['W','Wind'], Sandstorm:['E','Wind']
+};
+
+// --- One-Time 64-card canonical replacement ---
+const V226_OT_ROWS=[
+ // id,tier,guild,req,reward,tp,note,comboTag
+ ['T1-01',1,'Build','2W','2VP','Water','',false],
+ ['T1-02',1,'Production','2F','1VP+2G','Fire','',false],
+ ['T1-03',1,'Funding','2E','2VP','Earth','',false],
+ ['T1-04',1,'Era','2Wind','1VP+2G','Wind','',true],
+ ['T1-05',1,'Production','W F','2VP+2G','','',false],
+ ['T1-06',1,'Funding','F E','1VP+4G','','',false],
+ ['T1-07',1,'Era','E Wind','2VP+2G','','',true],
+ ['T1-08',1,'Build','Wind W','1VP+4G','','',true],
+ ['T1-09',1,'Funding','Steam W','2VP+3G','Water','',false],
+ ['T1-10',1,'Era','Magma F','2VP+2G','Fire','HIGH:+1VP',false],
+ ['T1-11',1,'Build','Frost E','2VP+2G','Earth','LOW:+2G',false],
+ ['T1-12',1,'Production','Sandstorm Wind','2VP+3G','Wind','',true],
+ ['T1-13',1,'Era','2W E','3VP+3G','','',false],
+ ['T1-14',1,'Build','2F Wind','2VP+5G','','',false],
+ ['T1-15',1,'Production','2E W','3VP+3G','','',false],
+ ['T1-16',1,'Funding','2Wind F','2VP+5G','','',false],
+ ['T1-17',1,'Build','Steam W F','3VP+6G','','',false],
+ ['T1-18',1,'Production','Magma F E','3VP+5G','','HIGH:+1VP',false],
+ ['T1-19',1,'Funding','Frost E Wind','3VP+5G','','LOW:+2G',false],
+ ['T1-20',1,'Era','Sandstorm Wind W','3VP+6G','','',true],
+
+ ['T2-01',2,'Build','2W 2F','4VP+4G','','',false],
+ ['T2-02',2,'Production','2F 2E','4VP+4G','','',false],
+ ['T2-03',2,'Funding','2E 2Wind','4VP+4G','','',true],
+ ['T2-04',2,'Era','2Wind 2W','4VP+4G','','',true],
+ ['T2-05',2,'Production','Steam 2W F','5VP+3G','Water','',false],
+ ['T2-06',2,'Funding','Magma 2F E','5VP+2G','Fire','HIGH:+1VP',false],
+ ['T2-07',2,'Era','Frost 2E Wind','5VP+2G','Earth','LOW:+2G',false],
+ ['T2-08',2,'Build','Sandstorm 2Wind W','5VP+3G','Wind','',true],
+ ['T2-09',2,'Funding','Steam W 2E','5VP+5G','','',false],
+ ['T2-10',2,'Era','Magma F 2Wind','5VP+4G','','HIGH:+2G',false],
+ ['T2-11',2,'Build','Frost E 2W','5VP+4G','','LOW:+2G',false],
+ ['T2-12',2,'Production','Sandstorm Wind 2F','5VP+5G','','',true],
+ ['T2-13',2,'Era','Steam W F E','5VP+5G','','',false],
+ ['T2-14',2,'Build','Magma F E Wind','5VP+5G','','',false],
+ ['T2-15',2,'Production','Frost W E Wind','5VP+5G','','',false],
+ ['T2-16',2,'Funding','Sandstorm W F Wind','5VP+5G','','',true],
+ ['T2-17',2,'Build','Steam 2W 2F','7VP+4G','','',false],
+ ['T2-18',2,'Production','Magma 2F 2E','7VP+3G','','HIGH:+1VP',false],
+ ['T2-19',2,'Funding','Frost 2W 2Wind','7VP+3G','','LOW:+2G',false],
+ ['T2-20',2,'Era','Sandstorm 2E 2Wind','7VP+4G','','',true],
+
+ ['T3-01',3,'Build','Steam 2W 2F','8VP+2G','','',false],
+ ['T3-02',3,'Production','Magma 2F 2E','7VP+2G','','HIGH:+2VP',false],
+ ['T3-03',3,'Funding','Frost 2W 2Wind','7VP+2G','','LOW:+4G',false],
+ ['T3-04',3,'Era','Sandstorm 2E 2Wind','8VP+2G','','',true],
+ ['T3-05',3,'Production','2Steam 2W E','8VP+3G','Water','',false],
+ ['T3-06',3,'Funding','2Magma 2F Wind','8VP+3G','Fire','',false],
+ ['T3-07',3,'Era','2Frost 2E W','8VP+3G','Earth','',false],
+ ['T3-08',3,'Build','2Sandstorm 2Wind F','8VP+3G','Wind','',true],
+ ['T3-09',3,'Funding','2Steam 2W 2F','11VP+2G','','',false],
+ ['T3-10',3,'Era','2Magma 2F 2E','10VP+2G','','HIGH:+4G',false],
+ ['T3-11',3,'Build','2Frost 2E 2Wind','10VP+2G','','LOW:+2VP',false],
+ ['T3-12',3,'Production','2Sandstorm 2Wind 2W','11VP+2G','','',true],
+ ['T3-13',3,'Era','2Steam F E 2Wind','11VP+2G','','',true],
+ ['T3-14',3,'Build','2Magma W F E Wind','11VP+2G','','',true],
+ ['T3-15',3,'Production','2Frost W F E Wind','11VP+2G','','',false],
+ ['T3-16',3,'Funding','2Sandstorm W F E Wind','11VP+2G','','',true],
+ ['T3-17',3,'Build','2Steam 3W 2F','12VP+3G','','',false],
+ ['T3-18',3,'Production','2Magma 3F 2E','12VP+3G','','',false],
+ ['T3-19',3,'Funding','2Frost 3W 2Wind','12VP+3G','','',false],
+ ['T3-20',3,'Era','2Sandstorm 3E 2Wind','12VP+3G','','',true],
+ ['T3-21',3,'Production','3Steam 2W 2F','14VP+2G','','',false],
+ ['T3-22',3,'Funding','3Magma 2F 2E','13VP+2G','','HIGH:+2VP',false],
+ ['T3-23',3,'Era','3Frost 2E 2Wind','13VP+2G','','LOW:+4G',false],
+ ['T3-24',3,'Build','3Sandstorm 2Wind 2W','14VP+2G','','',true]
+];
+
+function v226Req(s){
+ const out={}; for(const raw of String(s).split(/\s+/).filter(Boolean)){
+  const m=raw.match(/^(\d+)?(Steam|Magma|Frost|Sandstorm|Wind|W|F|E)$/);
+  if(!m)throw new Error('v2.2.6 bad requirement token '+raw);
+  const n=+(m[1]||1),e=m[2]; out[e]=(out[e]||0)+n;
+ } return out;
+}
+function v226OneTimeCards(){
+ return V226_OT_ROWS.map(([id,tier,trader,reqText,rewardText,tp,note,comboTag])=>({
+  id,tier,trader,req:v226Req(reqText),reqText,rewardText,tp,comboTag,comboReward:null,
+  bonus:note||'',baseRewardText:rewardText
+ }));
+}
+OT_ALL.splice(0,OT_ALL.length,...v226OneTimeCards());
+
+// --- Patron / Commission canonical replacement ---
+const V226_PATRON={
+ Steam:{
+  1:[['W F','1VP+1G+TP',''],['Steam W','1VP+3G+TP','']],
+  2:[['W F','1VP+1G+TP',''],['Steam W','1VP+4G+TP',''],['Steam F','2VP+3G','']],
+  3:[['W F','1VP+1G+TP',''],['Steam W','2VP+4G',''],['Steam F','1VP+3G+TP',''],['Steam W F','3VP+4G','']],
+  4:[['W F','1VP+1G+TP',''],['Steam W','2VP+4G',''],['Steam W 2F','3VP+4G+TP',''],['2Steam 2W 2F','7VP+6G','']]
+ },
+ Magma:{
+  1:[['F E','1VP+1G+TP',''],['Magma F','1VP+3G+TP','HIGH:+1G']],
+  2:[['F E','1VP+1G+TP',''],['Magma F','1VP+4G+TP',''],['Magma E','2VP+3G','HIGH:+1G']],
+  3:[['F E','1VP+1G+TP',''],['Magma F','2VP+4G',''],['Magma E','1VP+3G+TP','HIGH:+1G'],['Magma F E','3VP+4G','']],
+  4:[['F E','1VP+1G+TP',''],['Magma F','2VP+4G',''],['Magma F 2E','3VP+3G+TP','HIGH:+1VP+1G'],['2Magma 2F 2E','7VP+6G','']]
+ },
+ Frost:{
+  1:[['W Wind','1VP+1G+TP',''],['Frost W','1VP+3G+TP','LOW:+1G']],
+  2:[['W Wind','1VP+1G+TP',''],['Frost W','1VP+4G+TP',''],['Frost Wind','2VP+3G','LOW:+1G']],
+  3:[['W Wind','1VP+1G+TP',''],['Frost W','2VP+4G',''],['Frost Wind','1VP+3G+TP','LOW:+1G'],['Frost W Wind','3VP+4G','']],
+  4:[['W Wind','1VP+1G+TP',''],['Frost W','2VP+4G',''],['Frost W 2Wind','3VP+3G+TP','LOW:+1VP+1G'],['2Frost 2W 2Wind','7VP+6G','']]
+ },
+ Sandstorm:{
+  1:[['E Wind','2G+TP','COMBO:+1VP'],['Sandstorm E','1VP+3G+TP','COMBO:+1G']],
+  2:[['E Wind','2G+TP','COMBO:+1VP'],['Sandstorm E','1VP+4G+TP','TAG'],['Sandstorm Wind','2VP+3G','COMBO:+1G']],
+  3:[['E Wind','2G+TP','COMBO:+1VP'],['Sandstorm E','2VP+4G','TAG'],['Sandstorm Wind','1VP+3G+TP','COMBO:+1G'],['Sandstorm E Wind','3VP+4G','TAG']],
+  4:[['E Wind','2G+TP','COMBO:+1VP'],['Sandstorm E','2VP+4G','TAG'],['Sandstorm E 2Wind','2VP+5G+TP','COMBO:+1VP+1G'],['2Sandstorm 2E 2Wind','7VP+6G','TAG']]
+ }
+};
+for(const f of FAMILIES)DEALER_DATA[f]=V226_PATRON[f];
+
+dealerCard=function(family,rank){
+ const steps=DEALER_DATA[family][rank].map((a,i)=>{
+  const [reqText,rewardText,cond='']=a;
+  const comboTag=family==='Sandstorm';
+  const comboReward=cond.startsWith('COMBO:')?cond.slice(6):null;
+  return {id:`${family}-R${rank}-C${i+1}`,req:v226Req(reqText),reqText,rewardText,
+   hasTP:rewardText.includes('TP'),cond,comboTag,comboReward};
+ });
+ return {id:`${family}-R${rank}`,family,rank,steps};
+};
+makeDealerDeck=function(){let a=[];for(const f of FAMILIES)for(let r=1;r<=4;r++)a.push(dealerCard(f,r));return a};
+initialDealer=function(){return {id:'Initial',initial:true,step:0,steps:[
+ {reqType:'2B',reqText:'任意 2 Base',rewardText:'5G'},
+ {reqType:'1A2B',reqText:'任意 1 Compound + 任意 2 Base',rewardText:'6G+2 Wildcard TP'}
+]}};
+
+// --- Machine Value templates v2.2.6 ---
+valuePart=function(f,tier,idx){
+ const [b1,b2]=V226_PARENT_ORDER[f];let req,reward,rental;
+ if(tier===1){req={[f]:1,[b1]:1};reward={vp:2,g:5};rental={g:2}}
+ else if(tier===2){req={[f]:1,[b1]:1,[b2]:2};reward={vp:4,g:7};rental={g:3}}
+ else if(idx===1){req={[f]:2,[b1]:2,[b2]:1};reward={vp:11};rental={vp:2,g:2}}
+ else{req={[f]:2,[b1]:2,[b2]:3};reward={vp:13};rental={vp:3,g:2}}
+ return {id:`value-${f}-T${tier}-${idx}`,kind:'Value',req,
+  reqText:Object.entries(req).map(([k,v])=>`${k}×${v}`).join('+'),
+  reward,rental,filled:false,filledBy:null,filledTurn:null,aging:0,usedThisPhase:false,presentAtPhaseStart:false};
+};
+
+// --- v2.2.6 Reward condition parser ---
+const _v226BaseParseRewardText=parseRewardText;
+parseRewardText=function(txt,p){
+ const r=_v226BaseParseRewardText(String(txt||'').split(';')[0],p);
+ const parts=String(txt||'').split(';').slice(1).map(x=>x.trim());
+ for(const x of parts){
+  const active=x.startsWith('High:')?isHigh(p):x.startsWith('Low:')?isZero(p):false;
+  if(!active)continue;
+  const pay=x.split(':')[1]||'';
+  const vp=pay.match(/\+(\d+)VP/),g=pay.match(/\+(\d+)G/);
+  if(vp)r.vp+=+vp[1]; if(g)r.g+=+g[1];
+ }
+ return r;
+};
+function v226RewardTextWithBonus(c){return c.bonus?`${c.rewardText}; ${c.bonus.replace('HIGH','High').replace('LOW','Low')}`:c.rewardText}
+function v226RewardBreakdown(c,p){
+ const base=parseRewardText(c.rewardText,p), full=parseRewardText(v226RewardTextWithBonus(c),p);
+ return {base,bonus:{vp:Math.max(0,full.vp-base.vp),g:Math.max(0,full.g-base.g)},full,
+  conditionState:c.bonus?(c.bonus.startsWith('HIGH')?isHigh(p):isZero(p)):null};
+}
+
+// --- Initial Patron + formal Patron completion resolution ---
+completeDealerStep=async function(p,a){
+ const d=p.dealer,st=a.step,pay=await payRequirement(p,a.req,{qualifying:!d.initial});if(!pay)return;
+ if(d.initial){
+  const stepIndex=p.dealerStep;
+  const r=parseRewardText(st.rewardText,p);gainReward(p,r);
+  if(stepIndex===1){await awardTP(p,'Wildcard');await awardTP(p,'Wildcard')}
+  S.telemetry.contracts.Dealer++;p.dealerStep++;
+  tlog(`${p.id} completes Initial Patron I${p.dealerStep}`,{card_id:'Initial',step:`I${p.dealerStep}`,base_reward:st.rewardText,actualPayment:pay});
+  await afterContractResolution(p,{qualifying:false,comboTag:false,payment:pay});
+  if(p.dealerStep>=d.steps.length){p.dealer=null;p.dealerStep=0;await chooseNewDealer(p)}
+  return;
+ }
+ const base=parseRewardText(st.rewardText,p);gainReward(p,base);
+ if(st.hasTP)await familyTP(p,d.family);
+ let condBonus={vp:0,g:0},conditionState=null;
+ if(st.cond?.startsWith('HIGH:')||st.cond?.startsWith('LOW:')){
+  conditionState=st.cond.startsWith('HIGH:')?isHigh(p):isZero(p);
+  if(conditionState){
+   const q=st.cond.split(':')[1]||'',vp=q.match(/\+?(\d+)VP/),g=q.match(/\+?(\d+)G/);
+   if(vp)condBonus.vp=+vp[1];if(g)condBonus.g=+g[1];gainReward(p,condBonus);
+  }
+ }
+ let comboDone=false,comboBonus={vp:0,g:0};
+ if(st.comboReward&&p.comboTagged>0){
+  const vp=st.comboReward.match(/\+?(\d+)VP/),g=st.comboReward.match(/\+?(\d+)G/);
+  if(vp)comboBonus.vp=+vp[1];if(g)comboBonus.g=+g[1];gainReward(p,comboBonus);
+  await resolveComboTrigger(p,pay,{qualifying:true});comboDone=true;
+ }
+ S.telemetry.contracts.Dealer++;p.dealerStep++;
+ tlog(`${p.id} completes ${d.id} C${p.dealerStep}`,{card_id:d.id,step:`C${p.dealerStep}`,base_reward:st.rewardText,
+  condition_state:conditionState,bonus_reward:condBonus,combo_reward:comboBonus,tp:st.hasTP?1:0,actualPayment:pay});
+ await afterContractResolution(p,{qualifying:true,comboTag:st.comboTag,comboReward:st.comboReward,payment:pay,alreadyCombo:comboDone});
+ if(p.dealerStep>=d.steps.length){
+  const trader=Object.keys(S.traderFamily).find(t=>S.traderFamily[t]===d.family),
+   code={Build:'B',Production:'P',Funding:'M',Era:'E'}[trader]+abilityRankCode(trader,d.rank);
+  if(!p.abilities.includes(code))p.abilities.push(code);
+  tlog(`${p.id} completes Patron ${d.id} → gains ${code}`);p.dealer=null;p.dealerStep=0;await chooseNewDealer(p);
+ }
+};
+
+// One-Time: base reward + conditional bonus kept distinct; no automatic Combo Reward.
+completeOneTime=async function(p,c){
+ const pay=await payRequirement(p,c.req,{qualifying:true});if(!pay)return;
+ const b=v226RewardBreakdown(c,p);
+ gainReward(p,b.base);gainReward(p,b.bonus);
+ if(c.tp)await awardTP(p,c.tp);
+ tlog(`${p.id} completes ${c.id}`,{card_id:c.id,resolved_cost:rReqValue(c.req),declaredRequirement:c.req,actualPayment:pay,
+  base_reward:b.base,condition_state:b.conditionState,bonus_reward:b.bonus,tp:c.tp||null,comboTag:!!c.comboTag});
+ S.telemetry.contracts.OneTime++;
+ // v2.2.5 Rep reassignment wrapper hooks completeOneTime; it is applied by the existing post-completion wrapper below.
+ await afterContractResolution(p,{qualifying:true,comboTag:c.comboTag,comboReward:null,payment:pay});
+ // Direct fallback when no reassignment wrapper intercepts: printed Guild +1.
+ if(!p.flags?.v226RepHandled){p.reputation[c.trader]++;checkMachineClaim(p,c.trader)}
+ else delete p.flags.v226RepHandled;
+ S.oneTime.market=S.oneTime.market.filter(x=>x.id!==c.id);refillOneTime();
+};
+
+// v2.2.5 Rep Reassignment stays unchanged; rebuild completion around the v2.2.6 card data.
+if(typeof chooseOneTimeRepGuild==='function'){
+ completeOneTime=async function(p,c){
+  const pay=await payRequirement(p,c.req,{qualifying:true});if(!pay)return;
+  const b=v226RewardBreakdown(c,p);gainReward(p,b.base);gainReward(p,b.bonus);if(c.tp)await awardTP(p,c.tp);
+  tlog(`${p.id} completes ${c.id}`,{card_id:c.id,resolved_cost:rReqValue(c.req),declaredRequirement:c.req,actualPayment:pay,
+   base_reward:b.base,condition_state:b.conditionState,bonus_reward:b.bonus,tp:c.tp||null,comboTag:!!c.comboTag});
+  S.telemetry.contracts.OneTime++;
+  await afterContractResolution(p,{qualifying:true,comboTag:c.comboTag,comboReward:null,payment:pay});
+  const repChoice=await chooseOneTimeRepGuild(p,c),actual=repChoice.guild;
+  p.reputation[actual]=(p.reputation[actual]||0)+1;
+  const rt=S.telemetry.repReassignment;
+  if(rt){rt.byPrintedGuild[c.trader]=(rt.byPrintedGuild[c.trader]||0)+1;rt.byActualGuild[actual]=(rt.byActualGuild[actual]||0)+1;rt.claimChecks++;if(repChoice.reassigned){rt.uses++;rt.costPaid+=2;rt.byPlayer[p.id]=(rt.byPlayer[p.id]||0)+1}}
+  tlog(`${p.id} One-Time Rep: printed=${guildDisplay(c.trader)}, actual=${guildDisplay(actual)}, reassignmentPaidGold=${repChoice.cost||0}, usedThisTurn=${!!p.flags?.repReassignmentUsedThisTurn}`,
+   {printedRepGuild:c.trader,actualRepGuild:actual,reassignmentPaidGold:repChoice.cost||0,reassignmentUsedThisTurn:!!p.flags?.repReassignmentUsedThisTurn});
+  checkMachineClaim(p,actual);
+  S.oneTime.market=S.oneTime.market.filter(x=>x.id!==c.id);refillOneTime();
+ };
+}
+
+// --- version / state / save guard ---
+function v226NormalizeState(){
+ if(!S)return;
+ S.rulesVersion='v2.2.6';S.schemaVersion='2.2.6-web-4.9';S.version='v2.2.6-web-v4.9-contract-rebalance';
+ S.config=S.config||{};S.config.workerPatch='v2.2.5-to-v2.2.6-v1.0';S.config.startingGoldBase=6;
+}
+const _v226PrevNewGame=newGame;
+newGame=function(start=true){
+ _v226PrevNewGame(false);
+ // Rebuild all v2.2.6 mutable content because older wrappers created data from legacy constructors.
+ S.oneTime.deck=[];S.oneTime.market=[];
+ const t1=shuffle(OT_ALL.filter(c=>c.tier===1)),t2=shuffle(OT_ALL.filter(c=>c.tier===2)),t3=shuffle(OT_ALL.filter(c=>c.tier===3));
+ S.oneTime.deck=[...t1,...t2,...t3];for(let i=0;i<4;i++)S.oneTime.market.push(S.oneTime.deck.shift());
+ S.dealer.deck=shuffle(makeDealerDeck());S.dealer.market=[];for(let i=0;i<4;i++)S.dealer.market.push(S.dealer.deck.shift());
+ for(const p of S.players){p.dealer=initialDealer();p.dealerStep=0;const pos=S.initiativeOrder.indexOf(p.id);p.gold=6+Math.max(0,pos)}
+ S.machines=[];for(const t of TRADERS)for(let tier=1;tier<=3;tier++)S.machines.push(initMachine(t,tier,S.traderFamily[t]));
+ v226NormalizeState();
+ tlog('v2.2.6 patch active: Contract Rebalance — Initial Patron 2-step / Machine Value templates / Patron 16 progressions / One-Time 64 replaced.');
+ render();if(start)advanceGame();
+};
+assertV208ImportCompatible=function(loaded){
+ const rv=loaded?.rulesVersion||'';
+ if(rv!=='v2.2.6')throw new Error(`此存檔規則版本為 ${rv||'未知/舊版'}。v2.2.6 已重設 Initial Patron、正式 Patron progression、Machine Value Parts 與 64 張 One-Time；為避免已完成 step / reward / card state 錯位，請使用 v2.2.6 新局或 v2.2.6 存檔續玩。`);
+ if(!loaded.goldLongTerm?.marketSlots||!Array.isArray(loaded.goldLongTerm.drawPile))throw new Error('v2.2.6 存檔缺少 Gold Long-Term rotating market state。');
+ if(!loaded.eraBonusCards&&!loaded.eraBonusesByTier)throw new Error('v2.2.6 存檔缺少 Era Bonus 配置。');return true;
+};
+const _v226PrevRender=render;
+render=function(){
+ v226NormalizeState();_v226PrevRender();v226NormalizeState();
+ const mini=document.querySelector('.brand .mini');if(mini)mini.textContent='v2.2.6 Web Playtest v4.9 Contract Rebalance';
+ document.title='元素管道：術式工房 v2.2.6 Web Playtest v4.9 Contract Rebalance';
+ const n=document.getElementById('interpretation');
+ if(n&&!n.dataset.v226){n.dataset.v226='1';n.innerHTML+='<br><b>v2.2.6</b>：起始 Gold 6/7/8/9 正式化；Initial Patron 改為 I1/I2；Machine Value、16 張正式 Patron progression、64 張 One-Time 全面改用 Contract Rebalance 新卡表。v4.8 Machine Parts 全覽與高亮 UX 保留。';}
+};
+</script>
+
+
+<script>
+// ===== v4.9.1 presentation / AI consistency for v2.2.6 card data =====
+const _v226PrevScoreContractAction=scoreContractAction;
+scoreContractAction=function(p,a){
+ if(a?.kind==='OT'){
+  const b=v226RewardBreakdown(a.c,p),claim=(p.reputation[a.c.trader]||0)<2?1.4:.6,clock=S.stage===3?1.4:S.stage===2?.7:.25;
+  return b.full.vp+b.full.g*.5+(a.c.tp?1:0)+eraOneTimeStrategicValue(p,a.c)+2.4+claim+clock-rReqValue(a.c.req);
+ }
+ const base=_v226PrevScoreContractAction(p,a);
+ if(a?.kind==='DEALER'&&!a.dealer?.initial){
+  let extra=0,st=a.step;
+  if(st?.cond?.startsWith('HIGH:')&&isHigh(p)||st?.cond?.startsWith('LOW:')&&isZero(p)){
+   const q=st.cond.split(':')[1]||'',vp=q.match(/\+?(\d+)VP/),g=q.match(/\+?(\d+)G/);
+   if(vp)extra+=+vp[1];if(g)extra+=(+g[1])*.5;
+  }
+  if(st?.comboReward&&p.comboTagged>0){
+   const vp=st.comboReward.match(/\+?(\d+)VP/),g=st.comboReward.match(/\+?(\d+)G/);
+   if(vp)extra+=+vp[1];if(g)extra+=(+g[1])*.5;
+  }
+  return base+extra;
+ }
+ return base;
+};
+
+const _v226UiPrevRender=render;
+render=function(){
+ _v226UiPrevRender();
+ const box=document.getElementById('otMarket');
+ if(box){
+  [...box.children].forEach((el,i)=>{
+   const c=S.oneTime.market[i];if(!c?.bonus)return;
+   if(el.querySelector('.v226Conditional'))return;
+   const d=document.createElement('div');d.className='mini v226Conditional';
+   const human=c.bonus.startsWith('HIGH')?'High Pressure (Fee ≥5)':c.bonus.startsWith('LOW')?'Pressure Free (Fee ≤0)':'Condition';
+   d.innerHTML=`<b>${human}</b>：${iconizeText(c.bonus.split(':')[1]||'')}`;
+   el.appendChild(d);
+  });
+ }
+};
+</script>
+
+
+<script>
+// ===== v2.2.7 / Web v5.0 — Starting Draft =====
+// Worker Patch v2.2.6 → v2.2.7. Setup-only replacement; all v2.2.6 runtime systems stay intact.
+const STARTING_DRAFT_POOL = [
+  ...['Build','Production','Funding','Era'].map(g=>({instanceId:`SD-REP-${g}`,type:'GUILD_REP',fixedGuild:g,gold:2,effect:`${guildDisplay(g)} Guild +1 Rep；+2G`})),
+  ...[['W','Water'],['F','Fire'],['E','Earth'],['Wind','Wind']].flatMap(([e,n])=>[1,2].map(k=>({instanceId:`SD-TP-${e}-${k}`,type:'BASE_TP',fixedBase:e,gold:3,effect:`${n} +1 TP；+3G`}))),
+  {instanceId:'SD-GOLD-1',type:'GOLD',gold:6,effect:'+6G'},
+  {instanceId:'SD-UPGRADE-1',type:'ANCHOR_UPGRADE',gold:4,effect:'免費 Upgrade 1 個合法 Anchor；+4G'},
+  {instanceId:'SD-UPGRADE-2',type:'ANCHOR_UPGRADE',gold:4,effect:'免費 Upgrade 1 個合法 Anchor；+4G'},
+  {instanceId:'SD-OUTER-1',type:'FREE_OUTER',gold:2,effect:'從 Outer Bag 抽 1 Tile 免費建造；+2G'},
+  {instanceId:'SD-OUTER-2',type:'FREE_OUTER',gold:2,effect:'從 Outer Bag 抽 1 Tile 免費建造；+2G'},
+  {instanceId:'SD-BASE-1',type:'BASE_ELEMENTS',gold:1,effect:'從 Supply Gain 任意 2 Base 至 Hand；+1G'},
+  {instanceId:'SD-BASE-2',type:'BASE_ELEMENTS',gold:1,effect:'從 Supply Gain 任意 2 Base 至 Hand；+1G'}
+];
+function startingDraftCardLabel(c){
+  if(c.type==='GUILD_REP')return `${guildDisplay(c.fixedGuild)} Guild Rep +1 · +2G`;
+  if(c.type==='BASE_TP')return `${elemIcon(c.fixedBase)} ${c.fixedBase==='W'?'Water':c.fixedBase==='F'?'Fire':c.fixedBase==='E'?'Earth':'Wind'} TP +1 · +3G`;
+  if(c.type==='GOLD')return `Gold · +6G`;
+  if(c.type==='ANCHOR_UPGRADE')return `Anchor Upgrade · 免費升級 · +4G`;
+  if(c.type==='FREE_OUTER')return `Free Outer · 抽1免費建造 · +2G`;
+  return `Base Elements · Gain 任意2B · +1G`;
+}
+function startingDraftCardHtml(c){return `<div class="draftPickCard"><b>${startingDraftCardLabel(c)}</b><div class="mini">${c.instanceId}</div></div>`}
+function ensureV227DraftState(){
+ if(!S)return;S.rulesVersion='v2.2.7';S.schemaVersion='2.2.7-web-5.0';S.version='v2.2.7-web-v5.0-starting-draft';
+ S.config=S.config||{};S.config.workerPatch='v2.2.6-to-v2.2.7-v1.0';S.config.startingGoldBase=0;S.config.startingDraft=true;
+ if(!S.startingDraft)S.startingDraft={phase:'setup_public',complete:false,revealDone:false,publicInfoReady:true,discarded:[],unDealt:[],effectResolutionLog:[]};
+ S.draftPoolRemaining=S.draftPoolRemaining||[];S.privateHand3=S.privateHand3||{};S.pick1=S.pick1||{};S.passedPair=S.passedPair||{};S.pick2=S.pick2||{};S.effectResolutionLog=S.effectResolutionLog||S.startingDraft.effectResolutionLog||[];
+ S.startingDraft.effectResolutionLog=S.effectResolutionLog;
+}
+function draftEraBias(p,c){
+ let v=0;const cards=S.eraBonusCards||S.eraBonusesByTier||{};const arr=Array.isArray(cards)?cards:Object.values(cards||{});
+ for(const b of arr){const id=b?.id||b?.bonusId||'';if(c.type==='GUILD_REP'&&String(id).includes('REP'))v+=.45;if(c.type==='BASE_TP'&&String(id).includes('TECH'))v+=.35;if((c.type==='FREE_OUTER'||c.type==='ANCHOR_UPGRADE')&&String(id).includes('SECTOR'))v+=.3}
+ return v;
+}
+function draftCardScore(p,c){
+ let v=(c.gold||0)*.5+draftEraBias(p,c);
+ if(c.type==='GUILD_REP'){v+=1.35;const cur=p.reputation[c.fixedGuild]||0;if(cur===1)v+=1.3;}
+ else if(c.type==='BASE_TP'){const tr={W:'water',F:'fire',E:'earth',Wind:'wind'}[c.fixedBase];v+=1+(p.tech[tr]===1?.35:0);}
+ else if(c.type==='GOLD')v+=.25;
+ else if(c.type==='ANCHOR_UPGRADE')v+=1.65;
+ else if(c.type==='FREE_OUTER')v+=2.0;
+ else if(c.type==='BASE_ELEMENTS'){v+=2.15;const i1=p.dealer?.initial&&p.dealerStep===0?1:0;v+=i1*.7;}
+ return v;
+}
+function draftPickScoreRound1(p,c,hand){const remain=hand.filter(x=>x.instanceId!==c.instanceId);const gift=remain.length?Math.max(...remain.map(x=>draftCardScore(p,x))):0;return draftCardScore(p,c)-gift*.18}
+function logDraftEffect(entry){S.effectResolutionLog.push(entry);S.startingDraft.effectResolutionLog=S.effectResolutionLog;tlog(`Starting Draft: ${entry.player||''} ${entry.msg||entry.type}`,{startingDraft:entry})}
+function draftPassMap(ids){const out={};for(let i=0;i<ids.length;i++)out[ids[(i+1)%ids.length]]=ids[i];return out}
+function draftPublicSummary(){return `<div class="uiHint"><b>Starting Draft｜公開資訊已鎖定</b><br>初始 Initiative：${S.initiativeOrder.map((id,i)=>`${playerDisplay(id)} (+${i}G)`).join(' → ')}<br>Guild↔Family：${Object.entries(S.traderFamily).map(([g,f])=>`${guildDisplay(g)}=${f}`).join(' · ')}<br><span class="mini">三張 Era Bonus、Machine、One-Time、Patron Market 均已在盤面公開。起始沒有固定 6G；你最後的 Gold 只來自兩張 Draft 卡與順位補償。</span></div>`}
+async function draftChooseCard(p,title,cards,round){
+ const opts=cards.map(c=>({label:startingDraftCardLabel(c),card:c,uiButton:true,uiButtonLabel:startingDraftCardHtml(c)}));
+ if(p.type==='AI')return choose(p,title,opts,o=>round===1?draftPickScoreRound1(p,o.card,cards):draftCardScore(p,o.card));
+ return visualChoose(p,title,opts,{kind:'GENERIC',html:draftPublicSummary()+`<div class="uiHint"><b>${round===1?'第一輪：三選一並鎖定':'第二輪：收到的兩張二選一'}</b><br>其他玩家的選牌在所有人第二輪完成前都不會公開。</div>`});
+}
+async function chooseStartingBaseElements(p,card){
+ const opts=[];for(let i=0;i<BASES.length;i++)for(let j=i;j<BASES.length;j++){const a=BASES[i],b=BASES[j];opts.push({label:`Gain ${a} + ${b}`,a,b,uiButton:true,uiButtonLabel:`${elemIcon(a)} ${a} + ${elemIcon(b)} ${b}`})}
+ const c=await choose(p,`${p.id} Starting Draft｜Base Elements：選擇 2 Base`,opts,o=>immediateDemand(p,o.a)+immediateDemand(p,o.b));
+ p.hand[c.a]=(p.hand[c.a]||0)+1;p.hand[c.b]=(p.hand[c.b]||0)+1;logDraftEffect({player:p.id,type:'BASE_ELEMENTS',card:card.instanceId,elements:[c.a,c.b],msg:`Gain ${c.a}+${c.b} to Hand`});
+}
+async function resolveStartingDraftGrant(p,c){
+ p.gold+=(c.gold||0);if(c.gold)logDraftEffect({player:p.id,type:'GOLD',card:c.instanceId,gold:c.gold,msg:`${c.instanceId} Gain ${c.gold}G`});
+ if(c.type==='GUILD_REP'){p.reputation[c.fixedGuild]=(p.reputation[c.fixedGuild]||0)+1;checkMachineClaim(p,c.fixedGuild);logDraftEffect({player:p.id,type:'GUILD_REP',card:c.instanceId,guild:c.fixedGuild,rep:1,msg:`${guildDisplay(c.fixedGuild)} Rep +1`});}
+ else if(c.type==='BASE_TP'){const tr={W:'water',F:'fire',E:'earth',Wind:'wind'}[c.fixedBase];addTP(p,tr,1,'Starting Draft');logDraftEffect({player:p.id,type:'BASE_TP',card:c.instanceId,base:c.fixedBase,tp:1,msg:`${c.fixedBase} TP +1`});}
+ else if(c.type==='BASE_ELEMENTS')await chooseStartingBaseElements(p,c);
+}
+async function resolveStartingAnchorUpgrade(p,c){
+ const legal=legalUpgradeTiles(p).filter(x=>x.k==='outer'&&x.t?.anchor);
+ if(!legal.length){logDraftEffect({player:p.id,type:'ANCHOR_UPGRADE',card:c.instanceId,skipped:true,msg:'no legal Anchor'});return}
+ const opts=legal.map(x=>({label:x.label,x,uiButton:true,uiButtonLabel:`${elemIcon(x.t.element)} ${x.label}`}));
+ const z=await choose(p,`${p.id} Starting Draft｜免費 Upgrade 1 Anchor`,opts,o=>immediateDemand(p,o.x.t.element));
+ if(z){await upgradeTile(p,z.x,'Starting Draft Anchor Upgrade');logDraftEffect({player:p.id,type:'ANCHOR_UPGRADE',card:c.instanceId,sector:z.x.si,slot:z.x.i,msg:`upgrade ${z.x.label}`});}
+}
+async function resolveStartingFreeOuter(p,c){
+ const e=drawOuter();if(!e){logDraftEffect({player:p.id,type:'FREE_OUTER',card:c.instanceId,draw:null,skipped:true,msg:'Outer Bag empty'});return}
+ const slots=legalOuterSlots(p);if(!slots.length){returnOuter(e);logDraftEffect({player:p.id,type:'FREE_OUTER',card:c.instanceId,draw:e,skipped:true,msg:`draw ${e}; no legal slot`});return}
+ const opts=slots.map(sl=>({label:`${SECTORS[sl.si]} O${sl.oi+1}`,sl,uiKey:`BUILD:outer:${sl.si}:${sl.oi}`}));
+ let z;if(p.type==='HUMAN')z=await visualChoose(p,`${p.id} Starting Draft｜Free Outer：${e}`,opts,{kind:'BUILD_TARGET',html:`<div class="uiHint"><b>抽到 ${elemIcon(e,'lg')} ${e}</b>｜免費建造 1 個 Outer；這不是完整 Build Action，不會附帶 Middle / Inner。</div>`});else z=await choose(p,`${p.id} Starting Draft｜Free Outer ${e}`,opts,o=>scoreBuildOption(p,{mode:'outer',e,si:o.sl.si,oi:o.sl.oi},0));
+ p.wheel.sectors[z.sl.si].outers[z.sl.oi]=makeOuter(e,false);logDraftEffect({player:p.id,type:'FREE_OUTER',card:c.instanceId,draw:e,sector:z.sl.si,slot:z.sl.oi,msg:`build ${e} at ${SECTORS[z.sl.si]} O${z.sl.oi+1}`});
+}
+async function initializeStartingDraft(){
+ ensureV227DraftState();if(S.startingDraft.complete)return;
+ const ids=[...S.initiativeOrder];S.timing.macroStep='SETUP_DRAFT';S.timing.window='STARTING_DRAFT';S.timing.activePlayerId=null;S.startingDraft.phase='deal';render();
+ if(!S.startingDraft.dealt){
+  const pool=shuffle(STARTING_DRAFT_POOL.map(x=>({...x})));S.privateHand3={};for(const id of ids)S.privateHand3[id]=[pool.shift(),pool.shift(),pool.shift()];S.draftPoolRemaining=pool;S.startingDraft.unDealt=pool.map(x=>x.instanceId);S.startingDraft.dealt=true;tlog(`Starting Draft deal: ${ids.length} players ×3; undealt=${pool.length}`);
+ }
+ S.startingDraft.phase='pick1';
+ for(const id of ids){if(S.pick1[id])continue;const p=pById(id),hand=S.privateHand3[id],z=await draftChooseCard(p,`${p.id} Starting Draft｜Pick 1`,hand,1);S.pick1[id]=z.card.instanceId;}
+ // Only after all pick1 are submitted may pairs pass.
+ S.startingDraft.phase='pass';const sourceFor=draftPassMap(ids);S.passedPair={};
+ for(const recv of ids){const src=sourceFor[recv],pair=S.privateHand3[src].filter(c=>c.instanceId!==S.pick1[src]);S.passedPair[recv]=pair.map(c=>c.instanceId)}
+ S.startingDraft.phase='pick2';
+ for(const id of ids){if(S.pick2[id])continue;const p=pById(id),cards=S.passedPair[id].map(cid=>STARTING_DRAFT_POOL.find(c=>c.instanceId===cid));const z=await draftChooseCard(p,`${p.id} Starting Draft｜Pick 2`,cards,2);S.pick2[id]=z.card.instanceId;}
+ S.startingDraft.phase='reveal';S.revealDone=true;S.startingDraft.revealDone=true;S.startingDraft.selected={};S.startingDraft.discarded=[];
+ for(const id of ids){S.startingDraft.selected[id]=[S.pick1[id],S.pick2[id]];const other=S.passedPair[id].find(x=>x!==S.pick2[id]);if(other)S.startingDraft.discarded.push(other)}
+ render();tlog(`Starting Draft reveal: ${ids.map(id=>`${id}=[${S.startingDraft.selected[id].join(',')}]`).join(' ')}`);
+ // Grants: card Gold / Elements / TP / Rep in initial Initiative order, then initiative compensation.
+ S.startingDraft.phase='grants';
+ for(let pos=0;pos<ids.length;pos++){
+  const p=pById(ids[pos]),cards=S.startingDraft.selected[p.id].map(cid=>STARTING_DRAFT_POOL.find(c=>c.instanceId===cid));
+  // Canonical grant order: printed Gold → Base Elements → Base TP → Guild Rep → initiative compensation.
+  for(const c of cards)if(c.gold){p.gold+=c.gold;logDraftEffect({player:p.id,type:'GOLD',card:c.instanceId,gold:c.gold,msg:`${c.instanceId} Gain ${c.gold}G`})}
+  for(const c of cards)if(c.type==='BASE_ELEMENTS')await chooseStartingBaseElements(p,c);
+  for(const c of cards)if(c.type==='BASE_TP'){const tr={W:'water',F:'fire',E:'earth',Wind:'wind'}[c.fixedBase];addTP(p,tr,1,'Starting Draft');logDraftEffect({player:p.id,type:'BASE_TP',card:c.instanceId,base:c.fixedBase,tp:1,msg:`${c.fixedBase} TP +1`})}
+  for(const c of cards)if(c.type==='GUILD_REP'){p.reputation[c.fixedGuild]=(p.reputation[c.fixedGuild]||0)+1;checkMachineClaim(p,c.fixedGuild);logDraftEffect({player:p.id,type:'GUILD_REP',card:c.instanceId,guild:c.fixedGuild,rep:1,msg:`${guildDisplay(c.fixedGuild)} Rep +1`})}
+  p.gold+=pos;logDraftEffect({player:p.id,type:'INITIATIVE_COMP',gold:pos,msg:`initiative compensation +${pos}G`});
+ }
+ // All Anchor Upgrades first, then all Free Outers, both in initial Initiative order.
+ S.startingDraft.phase='anchor_upgrades';for(const id of ids){const p=pById(id);for(const cid of S.startingDraft.selected[id]){const c=STARTING_DRAFT_POOL.find(x=>x.instanceId===cid);if(c.type==='ANCHOR_UPGRADE')await resolveStartingAnchorUpgrade(p,c)}}
+ S.startingDraft.phase='free_outer';for(const id of ids){const p=pById(id);for(const cid of S.startingDraft.selected[id]){const c=STARTING_DRAFT_POOL.find(x=>x.instanceId===cid);if(c.type==='FREE_OUTER')await resolveStartingFreeOuter(p,c)}}
+ S.startingDraft.phase='complete';S.startingDraft.complete=true;S.timing.macroStep='SETUP_POINTER';S.timing.window='POINTER_SETUP';tlog('Starting Draft complete → Pointer choice');render();
+}
+// Starting Draft is inserted before the existing one-time Pointer setup.
+const _v227PrevInitializePointerSelections=initializePointerSelections;
+initializePointerSelections=async function(){ensureV227DraftState();if(!S.startingDraft.complete)await initializeStartingDraft();return _v227PrevInitializePointerSelections();};
+
+// Replace v2.2.6 fixed 6G initialization with 0G + Draft + initiative compensation.
+const _v227PrevNewGame=newGame;
+newGame=function(start=true){
+ _v227PrevNewGame(false);ensureV227DraftState();
+ for(const p of S.players){p.gold=0;p.pointerSetupDone=false;}S.pointerSetupComplete=false;S.pointerSetupChoices={};
+ S.startingDraft={phase:'setup_public',complete:false,revealDone:false,publicInfoReady:true,discarded:[],unDealt:[],effectResolutionLog:[]};S.draftPoolRemaining=[];S.privateHand3={};S.pick1={};S.passedPair={};S.pick2={};S.revealDone=false;S.effectResolutionLog=S.startingDraft.effectResolutionLog;
+ ensureV227DraftState();tlog('v2.2.7 patch active: Starting Draft replaces fixed 6G; 19-card pool / 3→1 pass / 2→1 / simultaneous reveal / grants→upgrades→free outers→pointer.');render();if(start)advanceGame();
+};
+
+// v2.2.7 saves only; old mid-setup/midgame state is not silently migrated.
+assertV208ImportCompatible=function(loaded){
+ const rv=loaded?.rulesVersion||'';if(rv!=='v2.2.7')throw new Error(`此存檔規則版本為 ${rv||'未知/舊版'}。v2.2.7 以 Starting Draft 取代固定 6G Setup；為避免起始資源、Rep/TP、免費建造與 Pointer timing 錯位，請使用 v2.2.7 新局或 v2.2.7 存檔續玩。`);
+ if(!loaded.startingDraft||!('revealDone' in loaded.startingDraft))throw new Error('v2.2.7 存檔缺少 Starting Draft state。');if(!loaded.goldLongTerm?.marketSlots||!Array.isArray(loaded.goldLongTerm.drawPile))throw new Error('v2.2.7 存檔缺少 Gold Long-Term rotating market state。');if(!loaded.eraBonusCards&&!loaded.eraBonusesByTier)throw new Error('v2.2.7 存檔缺少 Era Bonus 配置。');return true;
+};
+
+// Draft overview is intentionally visible even after setup for auditing/replay.
+const _v227PrevRender=render;
+render=function(){ensureV227DraftState();_v227PrevRender();ensureV227DraftState();
+ const mini=document.querySelector('.brand .mini');if(mini)mini.textContent='v2.2.7 Web Playtest v5.0 Starting Draft';document.title='元素管道：術式工房 v2.2.7 Web Playtest v5.0 Starting Draft';
+ let panel=document.getElementById('startingDraftPanel');if(!panel){panel=document.createElement('div');panel.id='startingDraftPanel';panel.className='panel';const anchor=document.getElementById('players');if(anchor?.parentNode)anchor.parentNode.insertBefore(panel,anchor);}
+ if(panel){const d=S.startingDraft,publicLine=`<div class="mini">初始 Initiative：${S.initiativeOrder.map((id,i)=>`${playerDisplay(id)} +${i}G`).join(' → ')} ｜ 固定基礎 Gold：0G</div>`;let body='';if(!d.revealDone){const hp=S.players.find(x=>x.type==='HUMAN');if(hp){const h3=S.privateHand3?.[hp.id]||[];const recv=(S.passedPair?.[hp.id]||[]).map(cid=>STARTING_DRAFT_POOL.find(c=>c.instanceId===cid)).filter(Boolean);body=`<div class="mini">${d.phase==='pick2'?'收到的第二輪候選':'你的第一輪候選'}：${(d.phase==='pick2'?recv:h3).map(startingDraftCardLabel).join(' ｜ ')||'等待發牌'}</div>`}else body='<div class="mini">AI Draft 選牌保持秘密，第二輪完成後同時公開。</div>';}else body=S.initiativeOrder.map(id=>`<div class="mini"><b>${playerDisplay(id)}</b>：${(d.selected?.[id]||[]).map(cid=>startingDraftCardLabel(STARTING_DRAFT_POOL.find(c=>c.instanceId===cid))).join(' ＋ ')}</div>`).join('');panel.innerHTML=`<h3>Starting Draft｜${d.complete?'已完成':d.phase}</h3>${publicLine}<div class="mini">傳牌方向依初始 Initiative 環狀；起始 Gold 僅來自 Draft 卡與順位補償。</div>${body}`;}
+ const n=document.getElementById('interpretation');if(n&&!n.dataset.v227){n.dataset.v227='1';n.innerHTML+='<br><b>v2.2.7</b>：固定起始 6G 已移除，改用 19 張 Starting Draft；每人三選一、環傳兩張、再二選一，全部完成後同時公開。Draft 的 Gold/元素/TP/Rep → Anchor Upgrade → Free Outer 全部結算後，才選 Setup Pointer。';}
+};
+</script>
 </body></html>
