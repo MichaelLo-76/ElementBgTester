@@ -2167,5 +2167,235 @@ render=function(){v228EnsureSetupShape();_v228PrevRender();v228EnsureSetupShape(
 // Ensure initial controls advertise the new default even before the first run is created.
 window.addEventListener('load',()=>{const std=document.querySelector('input[name="startingSetupModeUI"][value="STANDARD"]');if(std&&!document.querySelector('input[name="startingSetupModeUI"]:checked'))std.checked=true;v228ModeControlStatus()});
 
+
+// ===== v2.2.9 Economy / LT Era Cycling / Tile Replacement / AI Telemetry overlay =====
+const V229_RULES_VERSION='v2.2.9';
+const V229_SCHEMA_VERSION='2.2.9-web-5.3';
+const V229_WEB_VERSION='v2.2.9-web-v5.3-economy-transition-replacement';
+const V229_WORKER_PATCH='v2.2.8-to-v2.2.9-economy-ai-telemetry-v1.0';
+const V229_AI_POLICY='v229-existing-heuristic-instrumented-1';
+
+Object.assign(GOLD_LT_CARDS,{
+ 'LT3-M01':{id:'LT3-M01',tier:3,kind:'MIXED',struct:'4sameB',req:'4 個相同 Base',reward:{g:4,vp:4},comboTag:false,comboRewardVP:0},
+ 'LT3-M02':{id:'LT3-M02',tier:3,kind:'MIXED',struct:'2same2same',req:'兩組不同 Base，各 2 個',reward:{g:4,vp:4},comboTag:false,comboRewardVP:0},
+ 'LT3-M03':{id:'LT3-M03',tier:3,kind:'MIXED',struct:'1A2B',req:'任意 1 Compound + 任意 2 Base',reward:{g:4,vp:4},comboTag:true,comboRewardVP:3},
+ 'LT3-M04':{id:'LT3-M04',tier:3,kind:'MIXED',struct:'2A1B',req:'任意 2 Compound + 任意 1 Base',reward:{g:5,vp:5},comboTag:false,comboRewardVP:0}
+});
+for(const id of ['LT1-G01','LT1-G02','LT1-G03','LT1-G04','LT1-G05','LT1-G06'])GOLD_LT_CARDS[id].kind='GOLD';
+for(const id of ['LT2-G01','LT2-G02','LT2-G03','LT2-G04'])GOLD_LT_CARDS[id].kind='GOLD';
+
+const _v229PrevHydrateGoldLTSlot=hydrateGoldLTSlot;
+hydrateGoldLTSlot=function(gs){
+ const c=GOLD_LT_CARDS[gs?.cardId];
+ if(!c)return _v229PrevHydrateGoldLTSlot(gs);
+ gs.id=c.id;gs.stage=c.tier;gs.era=c.tier;gs.kind=c.kind||'GOLD';gs.struct=c.struct;gs.req=c.req;gs.reward=clone(c.reward||{});gs.comboTag=!!c.comboTag;gs.comboReward=c.comboReward||0;gs.comboRewardVP=c.comboRewardVP||0;gs.goldRotating=true;gs.agingCurrency=c.tier===3?'VP':'G';return gs;
+};
+
+function v229SetVersion(){
+ if(!S)return;S.rulesVersion=V229_RULES_VERSION;S.schemaVersion=V229_SCHEMA_VERSION;S.version=V229_WEB_VERSION;S.config=S.config||{};S.config.workerPatch=V229_WORKER_PATCH;S.config.economyPatchVersion='v2.2.9';S.config.tileReplacement=true;S.config.ltEraCycling=true;S.config.aiDecisionTelemetry=true;
+}
+function v229CardIdsForEra(era){return era===1?['LT1-G01','LT1-G02','LT1-G03','LT1-G04','LT1-G05','LT1-G06']:era===2?['LT2-G01','LT2-G02','LT2-G03','LT2-G04']:['LT3-M01','LT3-M02','LT3-M03','LT3-M04']}
+function v229EnsureTelemetry(){
+ S.aiDecisionTelemetry=S.aiDecisionTelemetry||[];S.turnEconomySnapshots=S.turnEconomySnapshots||[];S.removedTileRecords=S.removedTileRecords||[];S.removedLtCardIds=S.removedLtCardIds||[];
+ S.telemetry=S.telemetry||{};S.telemetry.v229=S.telemetry.v229||{lt:{completed:0,retired:0,refilled:0,agingGold:0,agingVP:0,baseGold:0,baseVP:0,comboGold:0,comboVP:0,legacyCompleted:0,t3MixedCompleted:0,transitions:{}},replacement:{actions:0,replacements:0,dependentRemoved:0,stocksDiscarded:0,byLayer:{outer:0,middle:0,inner:0}},breadth:{resolutions:0,gold:0,feeReduction:0}};
+}
+function v229SyncLTEraState(){
+ if(!S.goldLongTerm)return;
+ S.ltEraState=S.ltEraState||{currentEra:S.stage||1,eraDecks:{1:[],2:[],3:[]},market:[],removedIds:[]};
+ S.ltEraState.currentEra=S.ltEraState.currentEra||S.stage||1;S.ltEraState.eraDecks=S.ltEraState.eraDecks||{1:[],2:[],3:[]};
+ for(const e of [1,2,3])S.ltEraState.eraDecks[e]=S.ltEraState.eraDecks[e]||[];
+ S.ltEraState.market=S.goldLongTerm.marketSlots;
+ S.ltEraState.removedIds=S.removedLtCardIds;
+ S.goldLongTerm.drawPile=[...(S.ltEraState.eraDecks[S.ltEraState.currentEra]||[])];
+}
+function v229EnsureState(){
+ if(!S)return;v229SetVersion();v229EnsureTelemetry();
+ if(S.goldLongTerm){for(const x of S.goldLongTerm.marketSlots||[])hydrateGoldLTSlot(x);v229SyncLTEraState();}
+}
+const _v229PrevV228SetVersion=v228SetVersion;
+v228SetVersion=function(){if(S?.config?.economyPatchVersion==='v2.2.9'){v229SetVersion();return}_v229PrevV228SetVersion()};
+
+function v229InitLTEraState(){
+ const market=S.goldLongTerm?.marketSlots||[];for(const x of market)hydrateGoldLTSlot(x);
+ const t1Shown=new Set(market.map(x=>x.cardId));const t1Remaining=v229CardIdsForEra(1).filter(id=>!t1Shown.has(id));
+ // Keep the already-seeded T1 order from v2.2.8 where possible.
+ const oldPile=(S.goldLongTerm?.drawPile||[]).filter(id=>GOLD_LT_CARDS[id]?.tier===1);
+ const orderedT1=[...oldPile,...t1Remaining.filter(id=>!oldPile.includes(id))];
+ S.removedLtCardIds=[];
+ S.ltEraState={currentEra:1,eraDecks:{1:orderedT1,2:shuffle(v229CardIdsForEra(2)),3:shuffle(v229CardIdsForEra(3))},market,removedIds:S.removedLtCardIds,transitionTurn:{T2:null,T3:null}};
+ S.goldLongTerm.tier2Injected=false;v229SyncLTEraState();
+ tlog(`v2.2.9 LT Era state: T1 market=${market.map(x=>x.cardId).join(',')} deck=${orderedT1.join(',')}`);
+}
+function v229ActivateLTEra(era){
+ v229EnsureState();const prev=S.ltEraState.currentEra;if(era<=prev)return;
+ // Any old-era cards not currently displayed permanently leave the available pools.
+ for(let e=1;e<era;e++){
+  const old=[...(S.ltEraState.eraDecks[e]||[])];for(const id of old)if(!S.removedLtCardIds.includes(id))S.removedLtCardIds.push(id);S.ltEraState.eraDecks[e]=[];
+ }
+ S.ltEraState.currentEra=era;S.ltEraState.transitionTurn['T'+era]=S.turnNumber;S.telemetry.v229.lt.transitions['T'+era]=S.turnNumber;v229SyncLTEraState();
+ tlog(`v2.2.9 LT Era transition → T${era}; old undisplayed retired; displayed legacy cards remain`,{eventType:'LTEraTransition',era,turn:S.turnNumber,removedLtCardIds:[...S.removedLtCardIds]});
+}
+
+// Replace the v2.2.2 T2 injection with v2.2.9 era-exclusive LT decks; VP LT remains separate.
+activateT2LongTerms=function(){
+ if(!S.longTerm.slots.some(x=>x.stage===2&&x.reward?.vp)){
+  const vp=shuffle(T2_LT_STRUCT).slice(0,4);for(const r of vp)S.longTerm.slots.push({id:r[0]+'-VP',kind:'LT',stage:2,struct:r[1],req:r[2],reward:{vp:+r[3]},aging:0,usedThisTurn:false,presentAtPhaseStart:false});
+  tlog('T2 VP Long-Term: separate provisional VP slots preserved');
+ }
+ v229ActivateLTEra(2);
+};
+const _v229PrevStageTransition=stageTransitionIfNeeded;
+stageTransitionIfNeeded=function(card){const before=S.stage;_v229PrevStageTransition(card);if(S.stage===3&&before<3)v229ActivateLTEra(3);v229SetVersion()};
+
+rotateGoldLongTerms=function(){
+ v229EnsureState();const cur=S.ltEraState.currentEra,slots=S.goldLongTerm.marketSlots||[],used=slots.filter(x=>x.usedThisTurn).sort((a,b)=>a.slotId.localeCompare(b.slotId));if(!used.length)return [];
+ const inserted=[];
+ for(const slot of used){hydrateGoldLTSlot(slot);const oldId=slot.cardId,oldEra=slot.stage||GOLD_LT_CARDS[oldId]?.tier||1;
+  if(oldEra<cur){if(!S.removedLtCardIds.includes(oldId))S.removedLtCardIds.push(oldId);S.telemetry.v229.lt.retired++;}
+  else S.ltEraState.eraDecks[cur].push(oldId);
+  slot.cardId=null;slot.id=null;slot.aging=0;slot.usedThisTurn=false;slot.reward={};slot.comboTag=false;slot.comboReward=0;slot.comboRewardVP=0;
+ }
+ for(const slot of slots.filter(x=>!x.cardId).sort((a,b)=>a.slotId.localeCompare(b.slotId))){const deck=S.ltEraState.eraDecks[cur];if(deck.length){slot.cardId=deck.shift();hydrateGoldLTSlot(slot);slot.aging=0;slot.usedThisTurn=false;inserted.push(slot.cardId);S.telemetry.v229.lt.refilled++;}}
+ S.telemetry.goldLongTerm.rotations++;v229SyncLTEraState();tlog(`v2.2.9 LT rotation T${cur}: inserted=${inserted.join('|')||'none'} removed=${S.removedLtCardIds.length}`);return inserted;
+};
+ageGoldLongTerms=function(){
+ v229EnsureState();const cap=S.config?.agingCap??4;for(const gs of S.goldLongTerm?.marketSlots||[]){if(!gs.cardId||gs.usedThisTurn)continue;hydrateGoldLTSlot(gs);const before=gs.aging||0;gs.aging=Math.min(cap,before+1);if(gs.aging!==before){S.telemetry.goldLongTerm.agingTicks++;tlog(`agingTick(${gs.cardId},${before},${gs.aging}${gs.stage===3?'VP':'G'})`)}}
+};
+
+currentLTOptions=function(p){
+ v229EnsureState();let out=[];for(const gs0 of S.goldLongTerm?.marketSlots||[]){if(!gs0.cardId)continue;const gs=hydrateGoldLTSlot(gs0);if(gs.usedThisTurn)continue;for(const req of structuralPaymentOption(p,gs.struct))out.push({slot:gs,req})}
+ // Preserve the separate VP LT slots from the pre-existing implementation.
+ for(const x of S.longTerm.slots||[]){if(x.goldRotating||x.usedThisTurn)continue;for(const req of structuralPaymentOption(p,x.struct))out.push({slot:x,req})}
+ return out;
+};
+
+completeLongTerm=async function(p,slot,req){
+ if(!slot?.goldRotating)return _v222OldCompleteLongTerm(p,slot,req);
+ v229EnsureState();const pay=await payRequirement(p,req,{qualifying:false});if(!pay)return;
+ hydrateGoldLTSlot(slot);const priorTagged=p.comboTagged>0,aging=slot.aging||0,isT3=slot.stage===3,isLegacy=(slot.stage||1)<S.ltEraState.currentEra;
+ let agingGold=0,agingVP=0,comboGold=0,comboVP=0;if(isT3){agingVP=aging;p.vp+=agingVP;S.telemetry.v229.lt.agingVP+=agingVP}else{agingGold=aging;p.gold+=agingGold;S.telemetry.v229.lt.agingGold+=agingGold;S.telemetry.agingCashout+=agingGold}slot.aging=0;
+ const g=slot.reward?.g||0,vp=slot.reward?.vp||0;p.gold+=g;p.vp+=vp;S.telemetry.v229.lt.baseGold+=g;S.telemetry.v229.lt.baseVP+=vp;
+ if(slot.comboTag)p.comboTagged++;
+ if(priorTagged&&slot.comboReward){comboGold=slot.comboReward;p.gold+=comboGold;S.telemetry.goldLongTerm.comboPaid+=comboGold;S.telemetry.v229.lt.comboGold+=comboGold;await resolveComboTrigger(p,pay,{qualifying:false,goldLongTerm:true})}
+ if(priorTagged&&slot.comboRewardVP){comboVP=slot.comboRewardVP;p.vp+=comboVP;S.telemetry.v229.lt.comboVP+=comboVP;await resolveComboTrigger(p,pay,{qualifying:false,goldLongTerm:true})}
+ slot.usedThisTurn=true;S.telemetry.contracts.LongTerm++;S.telemetry.goldLongTerm.completed++;S.telemetry.goldLongTerm.byCard[slot.cardId]=(S.telemetry.goldLongTerm.byCard[slot.cardId]||0)+1;S.telemetry.v229.lt.completed++;if(isLegacy)S.telemetry.v229.lt.legacyCompleted++;if(isT3)S.telemetry.v229.lt.t3MixedCompleted++;
+ tlog(`ltCompleted(${slot.cardId}, printedT${slot.stage}, currentT${S.ltEraState.currentEra}, agingG=${agingGold}, agingVP=${agingVP}, baseG=${g}, baseVP=${vp}, comboG=${comboGold}, comboVP=${comboVP})`,{eventType:'LongTermCompleted',cardId:slot.cardId,printedEra:slot.stage,currentEra:S.ltEraState.currentEra,isLegacy,requirementPaid:pay,baseGold:g,baseVP:vp,agingGold,agingVP,comboGold,comboVP,retiredFlag:isLegacy});
+ await afterContractResolution(p,{qualifying:false,comboTag:slot.comboTag,comboReward:slot.comboReward||slot.comboRewardVP,payment:pay,alreadyCombo:comboGold>0||comboVP>0});
+};
+const _v229PrevScoreContractAction=scoreContractAction;
+scoreContractAction=function(p,a){let v=_v229PrevScoreContractAction(p,a);if(a?.kind==='LT'&&a.slot?.goldRotating){hydrateGoldLTSlot(a.slot);v+=(a.slot.reward?.vp||0)+(a.slot.aging||0)*(a.slot.stage===3?1:.5)+(a.slot.comboRewardVP&&p.comboTagged>0?a.slot.comboRewardVP:0)}return v};
+
+// ---- Build Tile Replacement / Rebuild ----
+function v229TileStockDigest(t){return clone(t?.stock||{})}
+function v229TileDescriptor(t){if(!t)return null;return {kind:t.kind,mode:t.mode||null,element:t.element||null,family:t.family||null,type:t.type||null,name:t.name||null,upgraded:!!t.upgraded,stock:v229TileStockDigest(t)}}
+function v229StockCountObj(o){return Object.values(o||{}).reduce((a,b)=>a+(+b||0),0)}
+function v229MiddleValid(p,si,mi,t){
+ if(!t)return true;const [a,b]=middlePairElems(p,si,mi),rel=relationPair(a,b);if(!rel)return false;
+ if(t.mode==='Standard'){const wanted=[...new Set([a,b])].sort().join('|'),actual=[...(t.allowed||[])].sort().join('|');return wanted===actual}
+ if(t.mode==='BEnhance')return rel==='same'&&t.element===a;
+ if(t.mode==='AProduction'){const f=FAMILY_BY_PAIR[[a,b].sort().join(',')];return rel==='neighbor'&&t.family===f}
+ if(t.mode==='Breadth')return rel==='opposite';return false;
+}
+function v229InnerValid(p,si,t){if(!t)return true;if(t.type==='B'&&p.tech[BKEY[t.element]]<4)return false;if(t.type==='A'&&!familyTech(p,t.family,4))return false;return innerTopologySatisfied(p,si,t)}
+function v229RecordRemovedTile(p,si,layer,slot,t,reason,sourceActionId,parentRecord){
+ const rec={sourceActionId,player:p.id,turn:S.turnNumber,sector:SECTORS[si],layer,slot,oldTile:v229TileDescriptor(t),newTile:null,costGold:0,removedDependentTiles:[],discardedStocks:v229TileStockDigest(t),oldUpgrade:!!t?.upgraded,newInitialStock:null,preValidity:true,postValidity:false,reason};
+ S.removedTileRecords.push(rec);if(S.removedTileRecords.length>1000)S.removedTileRecords.shift();if(parentRecord)parentRecord.removedDependentTiles.push({layer,slot,tile:v229TileDescriptor(t),reason});S.telemetry.v229.replacement.dependentRemoved++;S.telemetry.v229.replacement.stocksDiscarded+=v229StockCountObj(t?.stock);return rec;
+}
+function v229CascadeValidate(p,si,sourceActionId,parentRecord){
+ const sec=p.wheel.sectors[si],removed=[];
+ if(sec.inner&&!v229InnerValid(p,si,sec.inner)){const old=sec.inner;v229RecordRemovedTile(p,si,'inner',0,old,'DEPENDENCY_INVALIDATED',sourceActionId,parentRecord);sec.inner=null;removed.push('Inner')}
+ for(let mi=0;mi<2;mi++)if(sec.middles[mi]&&!v229MiddleValid(p,si,mi,sec.middles[mi])){const old=sec.middles[mi];v229RecordRemovedTile(p,si,'middle',mi,old,'DEPENDENCY_INVALIDATED',sourceActionId,parentRecord);sec.middles[mi]=null;removed.push(`M${mi+1}`)}
+ if(sec.inner&&!v229InnerValid(p,si,sec.inner)){const old=sec.inner;v229RecordRemovedTile(p,si,'inner',0,old,'DEPENDENCY_INVALIDATED_AFTER_MIDDLE',sourceActionId,parentRecord);sec.inner=null;removed.push('Inner')}
+ if(removed.length)tlog(`${p.id} Replacement cascade @ ${SECTORS[si]}: removed ${removed.join(', ')}`);return removed;
+}
+function v229LegalOuterOps(p,si,drawn){const sec=p.wheel.sectors[si],out=[];for(let oi=0;oi<4;oi++){const old=sec.outers[oi];if(old?.anchor)continue;if(old||!old)for(const e of [...new Set(drawn)])out.push({si,oi,e,replace:!!old,old})}return out}
+function v229LegalMiddleCandidatesAt(p,si,mi){const sec=p.wheel.sectors[si],old=sec.middles[mi];sec.middles[mi]=null;const out=legalMiddleBuilds(p).filter(x=>x.si===si&&x.mi===mi);sec.middles[mi]=old;return out}
+function v229LegalInnerCandidatesAt(p,si){const sec=p.wheel.sectors[si],old=sec.inner;sec.inner=null;const out=legalInnerBuilds(p).filter(x=>x.si===si);sec.inner=old;return out}
+function v229BuildSectorPotential(p,si,drawn,discount){
+ let v=0;const budget=liquidGoldValue(p),oc=buildCostForLayer('outer',discount),mc=buildCostForLayer('middle',discount),ic=buildCostForLayer('inner',discount);if(drawn.length&&budget>=oc){let b=0;for(const o of v229LegalOuterOps(p,si,drawn))b=Math.max(b,scoreBuildOption(p,{mode:'outer',e:o.e,si,oi:o.oi},discount)-(o.replace?.2:0));v+=Math.max(0,b)}
+ if(budget>=mc){let b=0;for(let mi=0;mi<2;mi++)for(const x of v229LegalMiddleCandidatesAt(p,si,mi))b=Math.max(b,scoreBuildOption(p,{mode:'middle',x},discount)-(p.wheel.sectors[si].middles[mi]?.mode===x.mode?.2:0));v+=Math.max(0,b)}
+ if(budget>=ic){let b=0;for(const x of v229LegalInnerCandidatesAt(p,si))b=Math.max(b,scoreBuildOption(p,{mode:'inner',x},discount)-(p.wheel.sectors[si].inner?.name===x.label?.2:0));v+=Math.max(0,b)}return v;
+}
+chooseAiBuildSector=function(p,drawn,discount){const opts=SECTORS.map((name,si)=>({label:name,si}));return choose(p,`${p.id} Multi-Layer Build：選擇單一 Sector`,opts,o=>v229BuildSectorPotential(p,o.si,drawn,discount))};
+function v229ReplacementRecordBase(p,si,layer,slot,oldTile,newTile,cost,sourceActionId){return {sourceActionId,player:p.id,turn:S.turnNumber,sector:SECTORS[si],layer,slot,oldTile:v229TileDescriptor(oldTile),newTile:v229TileDescriptor(newTile),costGold:cost,removedDependentTiles:[],discardedStocks:v229TileStockDigest(oldTile),oldUpgrade:!!oldTile?.upgraded,newInitialStock:v229TileStockDigest(newTile),preValidity:true,postValidity:true,reason:'REPLACE'}}
+function v229CommitReplacementRecord(rec){S.removedTileRecords.push(rec);if(S.removedTileRecords.length>1000)S.removedTileRecords.shift();S.telemetry.v229.replacement.replacements++;S.telemetry.v229.replacement.byLayer[rec.layer]=(S.telemetry.v229.replacement.byLayer[rec.layer]||0)+1;S.telemetry.v229.replacement.stocksDiscarded+=v229StockCountObj(rec.discardedStocks)}
+async function v229OuterLayer(p,si,drawn,discount,record,sourceActionId){
+ const cost=buildCostForLayer('outer',discount);if(!drawn.length||!canAffordGoldCost(p,cost))return false;const ops=v229LegalOuterOps(p,si,drawn);if(!ops.length)return false;let c;
+ if(p.type==='AI'){const opts=[{label:'Skip Outer',skip:true},...ops.map(o=>({label:`${o.replace?'Replace':'Insert'} O${o.oi+1} ${o.e}`,o}))];c=await choose(p,`${p.id} Build Outer INSERT / REPLACE / SKIP`,opts,z=>z.skip?0:scoreBuildOption(p,{mode:'outer',e:z.o.e,si,oi:z.o.oi},discount)-(z.o.replace?.25:0));}
+ else{const opts=[{label:'Skip Outer',skip:true,uiButton:true,uiButtonLabel:'跳過 Outer'},...ops.map((o,i)=>({label:`${o.replace?'替換':'新建'} O${o.oi+1} ${o.e}`,o,uiButton:true,uiButtonLabel:`${o.replace?'REPLACE':'INSERT'} O${o.oi+1} ${elemIcon(o.e)} · ${cost}G`}))];c=await visualChoose(p,`${p.id} Multi-Layer Build｜Outer`,opts,{kind:'GENERIC',html:`<div class="uiHint"><b>${SECTORS[si]}｜Outer INSERT / REPLACE / SKIP</b><br>Anchor 永不可替換。替換後立即檢查 Middle / Inner 合法性。成本 ${cost}G。</div>`});}
+ if(!c||c.skip)return false;const o=c.o;if(!await payGoldCost(p,cost,o.replace?'Replace Outer':'Build Outer'))return false;const old=p.wheel.sectors[si].outers[o.oi],neu=makeOuter(o.e,false);p.wheel.sectors[si].outers[o.oi]=neu;record.usedOuterElement=o.e;record.costs.outer=cost;record.builtLayers.outer={slot:o.oi,element:o.e,cost,operation:old?'REPLACE':'INSERT'};
+ if(old){const rr=v229ReplacementRecordBase(p,si,'outer',o.oi,old,neu,cost,sourceActionId);v229CascadeValidate(p,si,sourceActionId,rr);rr.postValidity=true;v229CommitReplacementRecord(rr)}
+ syncWaterInnerMastery(p);tlog(`${p.id} ${old?'REPLACE':'INSERT'} Outer ${o.e} @ ${SECTORS[si]} O${o.oi+1} (${cost}G)`);return true;
+}
+async function v229MiddleLayer(p,si,discount,record,sourceActionId){
+ const cost=buildCostForLayer('middle',discount);if(!canAffordGoldCost(p,cost))return false;let ops=[];for(let mi=0;mi<2;mi++)for(const x of v229LegalMiddleCandidatesAt(p,si,mi))ops.push({x,mi,replace:!!p.wheel.sectors[si].middles[mi]});if(!ops.length)return false;let c;
+ if(p.type==='AI'){const opts=[{label:'Skip Middle',skip:true},...ops.map(o=>({label:`${o.replace?'Replace':'Insert'} ${o.x.label}`,o}))];c=await choose(p,`${p.id} Build Middle INSERT / REPLACE / SKIP`,opts,z=>z.skip?0:scoreBuildOption(p,{mode:'middle',x:z.o.x},discount)-(z.o.replace?.25:0));}
+ else{const opts=[{label:'Skip Middle',skip:true,uiButton:true,uiButtonLabel:'跳過 Middle'},...ops.map(o=>({label:`${o.replace?'REPLACE':'INSERT'} ${o.x.label}`,o,uiButton:true,uiButtonLabel:`${o.replace?'REPLACE':'INSERT'} M${o.mi+1} · ${o.x.mode} · ${cost}G`}))];c=await visualChoose(p,`${p.id} Multi-Layer Build｜Middle`,opts,{kind:'GENERIC',html:`<div class="uiHint"><b>${SECTORS[si]}｜Middle INSERT / REPLACE / SKIP</b><br>替換後立即重檢 Inner；連鎖撤除不消耗後續 Inner 操作額度。成本 ${cost}G。</div>`});}
+ if(!c||c.skip)return false;const o=c.o;if(!await payGoldCost(p,cost,o.replace?'Replace Middle':'Build Middle'))return false;const old=p.wheel.sectors[si].middles[o.mi],neu=makeMiddle(o.x);p.wheel.sectors[si].middles[o.mi]=neu;record.costs.middle=cost;record.builtLayers.middle={slot:o.mi,mode:o.x.mode,label:o.x.label,cost,operation:old?'REPLACE':'INSERT'};
+ if(old){const rr=v229ReplacementRecordBase(p,si,'middle',o.mi,old,neu,cost,sourceActionId);v229CascadeValidate(p,si,sourceActionId,rr);rr.postValidity=true;v229CommitReplacementRecord(rr)}
+ syncWaterInnerMastery(p);tlog(`${p.id} ${old?'REPLACE':'INSERT'} Middle ${o.x.mode} @ ${SECTORS[si]} M${o.mi+1} (${cost}G)`);return true;
+}
+async function v229InnerLayer(p,si,discount,record,sourceActionId){
+ const cost=buildCostForLayer('inner',discount);if(!canAffordGoldCost(p,cost))return false;const old0=p.wheel.sectors[si].inner,legal=v229LegalInnerCandidatesAt(p,si);if(!legal.length)return false;let c;
+ if(p.type==='AI'){const opts=[{label:'Skip Inner',skip:true},...legal.map(x=>({label:`${old0?'Replace':'Insert'} ${x.label}`,x}))];c=await choose(p,`${p.id} Build Inner INSERT / REPLACE / SKIP`,opts,z=>z.skip?0:scoreBuildOption(p,{mode:'inner',x:z.x},discount)-(old0?.25:0));}
+ else{const opts=[{label:'Skip Inner',skip:true,uiButton:true,uiButtonLabel:'跳過 Inner'},...legal.map(x=>({label:`${old0?'REPLACE':'INSERT'} ${x.label}`,x,uiButton:true,uiButtonLabel:`${old0?'REPLACE':'INSERT'} ${x.label} · ${cost}G`}))];c=await visualChoose(p,`${p.id} Multi-Layer Build｜Inner`,opts,{kind:'GENERIC',html:`<div class="uiHint"><b>${SECTORS[si]}｜Inner INSERT / REPLACE / SKIP</b><br>新 Inner 必須在落牌當下滿足 Tech / topology gate。成本 ${cost}G。</div>`});}
+ if(!c||c.skip)return false;if(!await payGoldCost(p,cost,old0?'Replace Inner':'Build Inner'))return false;const old=p.wheel.sectors[si].inner,neu=createInner(c.x.kind,c.x.val,p);p.wheel.sectors[si].inner=neu;record.costs.inner=cost;record.builtLayers.inner={kind:c.x.kind,val:c.x.val,label:c.x.label,cost,operation:old?'REPLACE':'INSERT'};
+ if(old){const rr=v229ReplacementRecordBase(p,si,'inner',0,old,neu,cost,sourceActionId);v229CommitReplacementRecord(rr)}syncWaterInnerMastery(p);tlog(`${p.id} ${old?'REPLACE':'INSERT'} Inner ${c.x.label} @ ${SECTORS[si]} (${cost}G)`);return true;
+}
+buildAction=async function(p,mods={}){
+ v229EnsureState();S.telemetry.v229.replacement.actions++;const sourceActionId=`B-${S.turnNumber}-${p.id}-${S.telemetry.v229.replacement.actions}`;const discount=ability(p,'B2')?2:0,drawN=2+(ability(p,'B1')?1:0)+(mods.drawPlus||0)+(p.wheel.sectors.some(s=>s.inner?.name==='工房標準化核心')?1:0),drawn=[];for(let i=0;i<drawN;i++){const e=drawOuter();if(e)drawn.push(e)}
+ const record={sourceActionId,buildSector:null,drawCandidates:[...drawn],returned:[],builtLayers:{outer:null,middle:null,inner:null},costs:{outer:0,middle:0,inner:0},b4Upgrade:null,replaceCount:0,lostTiles:0};
+ if(p.type==='AI'&&ability(p,'B4')){const ups=legalUpgradeTiles(p).filter(x=>canAffordGoldCost(p,tileBuildPrice(x.t))),bestUp=ups.map(x=>({x,cost:tileBuildPrice(x.t),score:2.8})).sort((a,b)=>b.score-a.score)[0],bestBuild=Math.max(...SECTORS.map((_,si)=>v229BuildSectorPotential(p,si,drawn,discount)),0);if(bestUp&&bestUp.score>bestBuild){if(await payGoldCost(p,bestUp.cost,'B4 Redevelop')){await upgradeTile(p,bestUp.x,'B4');record.b4Upgrade={label:bestUp.x.label,cost:bestUp.cost}}commitBuildRecord(p,record);return}}
+ let sectorChoice;if(p.type==='AI')sectorChoice=await chooseAiBuildSector(p,drawn,discount);else sectorChoice=await chooseBuildSectorHuman(p,drawn,discount,{n:0});if(sectorChoice?.pass){commitBuildRecord(p,record);return}if(sectorChoice?.b4){if(await payGoldCost(p,sectorChoice.cost,'B4 Redevelop')){await upgradeTile(p,sectorChoice.x,'B4');record.b4Upgrade={label:sectorChoice.x.label,cost:sectorChoice.cost}}commitBuildRecord(p,record);return}
+ const si=sectorChoice?.si;if(!Number.isInteger(si)){commitBuildRecord(p,record);return}record.buildSector=si;const beforeR=S.telemetry.v229.replacement.replacements,beforeD=S.telemetry.v229.replacement.dependentRemoved;await v229OuterLayer(p,si,drawn,discount,record,sourceActionId);await v229MiddleLayer(p,si,discount,record,sourceActionId);await v229InnerLayer(p,si,discount,record,sourceActionId);record.replaceCount=S.telemetry.v229.replacement.replacements-beforeR;record.lostTiles=S.telemetry.v229.replacement.dependentRemoved-beforeD;commitBuildRecord(p,record);
+};
+estimateBuildActionValue=function(p){const discount=ability(p,'B2')?2:0,bagTotal=sum(S.outerBag);let best=0;if(bagTotal>0){for(let si=0;si<4;si++)best=Math.max(best,v229BuildSectorPotential(p,si,BASES.filter(e=>(S.outerBag[e]||0)>0),discount))}return {total:Math.max(.05,best),components:{bestLayeredReplacement:best,development:0}}};
+
+// ---- Breadth Enhance rebalance ----
+sectorProduction=async function(p,ctx){
+ let rev=false;if(canTriggerFee(p)){const a=estimateSectorOutput(p,false),b=estimateSectorOutput(p,true),c=await choose(p,`${p.id} Sector Production：方向 ${p.wheel.direction===1?'CW':'CCW'}，是否 Reverse？`,[{label:`沿向 → ${SECTORS[a.si]}`,rev:false,score:a.best},{label:`Reverse(+Fee) → ${SECTORS[b.si]}`,rev:true,score:b.best}],o=>o.score-(o.rev?feeCostEstimate(p):0));rev=c.rev;if(rev&&!await triggerFee(p,'Reverse'))rev=false}if(rev)p.wheel.direction*=-1;const si=p.wheel.direction===1?(p.wheel.boundary+1)%4:p.wheel.boundary;if(p.wheel.direction===1)p.wheel.boundary=si;else p.wheel.boundary=(p.wheel.boundary-1+4)%4;const sec=p.wheel.sectors[si];p.productionThisTurn++;ctx.eventsCompleted++;tlog(`${p.id} produces ${SECTORS[si]} sector`);let produced=[],outerBs=[];for(let oi=0;oi<4;oi++){const t=sec.outers[oi];if(t){const outs=await produceTile(p,t,ctx);produced.push(...outs);outerBs.push(...outs.filter(e=>BASES.includes(e)))}}for(const t of sec.middles.filter(Boolean)){if(t.mode==='Breadth'){p.gold+=4;S.telemetry.v229.breadth.resolutions++;S.telemetry.v229.breadth.gold+=4;await reduceFee(p,1,'Breadth Enhance');S.telemetry.v229.breadth.feeReduction++;continue}if(t.mode==='BEnhance'){produced.push(...await resolveBEnhanceProcessing(p,t,ctx));continue}produced.push(...await produceTile(p,t,ctx))}if(sec.inner){const t=sec.inner;if(t.type==='Universal'&&t.name==='產線回流核心')produced.push(...await produceTile(p,t,ctx));if(t.type==='B'&&t.element==='W')produced.push(...await produceTile(p,t,ctx));if(t.family==='Frost')produced.push(...await produceHalfInner(p,t,ctx,'Frost'));if(t.family==='Sandstorm')produced.push(...await produceHalfInner(p,t,ctx,'Sandstorm'))}const synth=await resolveCompoundLv2Synthesis(p,produced,outerBs);produced=synth.produced;outerBs=synth.outerBs;await resolveProductionInnerEffects(p,si,ctx,produced,outerBs);await resolveFrostMasteryStorage(p,si);if(ability(p,'P1')){p.gold++;tlog(`${p.id} P1 Gain1G after Sector Production`)}if(familyTech(p,'Magma',5)&&isHigh(p)){const c=await choose(p,`${p.id} Magma Lv5 after Sector Production`,[{label:'Gain4G',m:'g'},{label:'Gain2VP',m:'vp'}],o=>2);if(c.m==='g')p.gold+=4;else p.vp+=2}await productionRiders(p,outerBs);return produced;
+};
+const _v229PrevEstimateSectorOutput=estimateSectorOutput;
+estimateSectorOutput=function(p,reverse){const z=_v229PrevEstimateSectorOutput(p,reverse);const b=p.wheel.boundary,dir=reverse?-p.wheel.direction:p.wheel.direction,si=dir===1?(b+1)%4:b,s=p.wheel.sectors[si];const breadth=(s.middles||[]).filter(t=>t?.mode==='Breadth').length;z.best+=(breadth*.25);return z};
+const _v229PrevScoreBuildOption=scoreBuildOption;
+scoreBuildOption=function(p,o,d){let v=_v229PrevScoreBuildOption(p,o,d);if(o?.mode==='middle'&&o.x?.mode==='Breadth')v+=.5;return v};
+
+// ---- AI decision + economy telemetry ----
+function v229SectorDigest(p){return p.wheel.sectors.map((s,si)=>({sector:SECTORS[si],outer:s.outers.map(t=>t?{e:t.element,stock:stockCount(t),cap:t.cap,up:!!t.upgraded}:null),middle:s.middles.map(t=>t?{mode:t.mode,stock:stockCount(t),cap:t.cap,up:!!t.upgraded}:null),inner:s.inner?{name:s.inner.name,stock:stockCount(s.inner),cap:s.inner.cap,up:!!s.inner.upgraded}:null}))}
+function v229RemainingOTByTier(){const out={T1:0,T2:0,T3:0};for(const c of [...S.oneTime.deck,...S.oneTime.market])out['T'+c.tier]=(out['T'+c.tier]||0)+1;return out}
+function v229BuildAffordability(p){const d=ability(p,'B2')?2:0,budget=liquidGoldValue(p);return budget>=Math.min(buildCostForLayer('outer',d),buildCostForLayer('middle',d),buildCostForLayer('inner',d))}
+function v229RecordSecretDecision(p,chosen){
+ v229EnsureState();const actions=['Funding','Build','Production'],rows=actions.map(type=>{const b=estimateActionBreakdown(p,type),aff=type==='Build'?v229BuildAffordability(p):true;return {action:type==='Funding'?'Maintenance':type,candidateIsLegal:true,candidateIsAffordable:aff,rawFeatures:clone(b.components||{}),featureWeights:null,weightedContributions:null,totalScore:b.total,ranking:0,selected:type===chosen,rejectionReason:type===chosen?null:(!aff?'UNAFFORDABLE':'LOWER_ESTIMATED_VALUE')}});[...rows].sort((a,b)=>b.totalScore-a.totalScore).forEach((x,i)=>x.ranking=i+1);
+ const rec={gameId:S.runId||S.seed,seed:S.seed,rulesVersion:S.rulesVersion,startingSetupMode:S.startingSetupMode,aiPolicyVersion:V229_AI_POLICY,playerId:p.id,turn:S.turnNumber+1,era:S.stage,source:'SECRET',goldBefore:p.gold,engineFeeBefore:p.engineFee,hand:clone(p.hand),sectorStateDigest:v229SectorDigest(p),currentVP:p.vp,remainingOneTimeByTier:v229RemainingOTByTier(),formulaId:'estimateActionBreakdown-v229-instrumented',weightSetId:null,weightVersion:null,normalizationVersion:'none',evaluationHorizonTurns:null,scoreUnits:'heuristic-vpe-like',modelFeatureSupport:{explicitFeatureWeights:false,ruleTrace:false,rawBreakdown:true},candidateScores:rows,chosenAction:chosen==='Funding'?'Maintenance':chosen};S.aiDecisionTelemetry.push(rec);return rec;
+}
+const _v229PrevChooseSecretWithConfirm=chooseSecretWithConfirm;
+chooseSecretWithConfirm=async function(p){v229EconomySnapshot('SECRET_DECISION_BEFORE',p);const c=await _v229PrevChooseSecretWithConfirm(p);if(p.type==='AI')v229RecordSecretDecision(p,c.type);return c};
+function v229CountTiles(p){return sum(p.wheel.sectors.map(s=>s.outers.filter(Boolean).length+s.middles.filter(Boolean).length+(s.inner?1:0)))}
+function v229EconomySnapshot(point,p=null){if(!S)return;v229EnsureTelemetry();const ps=p?[p]:S.players;for(const q of ps)S.turnEconomySnapshots.push({turn:S.turnNumber,era:S.stage,point,playerId:q.id,gold:q.gold,vp:q.vp,engineFee:q.engineFee,hand:clone(q.hand),tiles:v229CountTiles(q),startingSetupMode:S.startingSetupMode,oneTimeRemaining:v229RemainingOTByTier()});if(S.turnEconomySnapshots.length>12000)S.turnEconomySnapshots.splice(0,S.turnEconomySnapshots.length-12000)}
+const _v229PrevExecuteStandardAction=executeStandardAction;
+executeStandardAction=async function(p,type,source='SECRET',mods={}){const before={gold:p.gold,vp:p.vp,tiles:v229CountTiles(p),rep:S.telemetry.v229?.replacement?.replacements||0,lost:S.telemetry.v229?.replacement?.dependentRemoved||0};await _v229PrevExecuteStandardAction(p,type,source,mods);v229EconomySnapshot(`${source}_${type}_AFTER`,p);if(source==='SECRET'&&p.type==='AI'){const rec=[...S.aiDecisionTelemetry].reverse().find(x=>x.playerId===p.id&&x.source==='SECRET'&&!x.actualResolved);if(rec){rec.actualResolved=true;rec.sourceAction=type==='Funding'?'Maintenance':type;rec.actualGoldDelta=p.gold-before.gold;rec.actualVPDelta=p.vp-before.vp;rec.tileBuilds=Math.max(0,v229CountTiles(p)-before.tiles);rec.replaceCount=(S.telemetry.v229.replacement.replacements||0)-before.rep;rec.lostTiles=(S.telemetry.v229.replacement.dependentRemoved||0)-before.lost;rec.actualGoldEarnedBySource=null;rec.actualGoldSpentBySource=null;rec.compoundsProduced=null;rec.contractsCompletedByKind=null}}};
+const _v229PrevContractPhaseEnd=contractPhaseEnd;
+contractPhaseEnd=async function(){v229EconomySnapshot('CONTRACT_PHASE_END');return _v229PrevContractPhaseEnd()};
+const _v229PrevTurnEnd=turnEnd;
+turnEnd=async function(){const r=await _v229PrevTurnEnd();v229EconomySnapshot('TURN_END');return r};
+
+// ---- Version / setup / serialization ----
+const _v229PrevNewGame=newGame;
+newGame=function(start=true){_v229PrevNewGame(false);v229SetVersion();v229EnsureTelemetry();v229InitLTEraState();tlog('v2.2.9 patch active: LT Era cycling + T3 Mixed LT + Tile Replacement + Breadth Enhance 4G + AI/economy telemetry');render();if(start)advanceGame()};
+assertV208ImportCompatible=function(loaded){const rv=loaded?.rulesVersion||'';if(rv!==V229_RULES_VERSION)throw new Error(`此存檔規則版本為 ${rv||'未知/舊版'}。v2.2.9 重構 LT Era 牌池與 Tile Replacement state；為避免混版續玩，請用 v2.2.9 新局或 v2.2.9 存檔。v2.2.8 舊局請保留作比較資料，不直接續玩。`);if(!V228_SETUP_MODES.includes(loaded.startingSetupMode))throw new Error('v2.2.9 存檔缺少合法 startingSetupMode。');if(!loaded.ltEraState||!loaded.goldLongTerm?.marketSlots)throw new Error('v2.2.9 存檔缺少 ltEraState / LT market。');return true};
+const _v229PrevResumeImportedState=resumeImportedState;
+resumeImportedState=async function(loaded){await _v229PrevResumeImportedState(loaded);v229SetVersion();v229EnsureTelemetry();v229SyncLTEraState();render()};
+const _v229PrevDownloadState=downloadState;
+downloadState=function(){v229EnsureState();downloadBlob(`element_pipeline_${S.seed}_T${S.turnNumber}_v229.json`,JSON.stringify(S,null,2))};
+downloadLog=function(){v229EnsureState();downloadBlob(`element_pipeline_${S.seed}_log_v229.json`,JSON.stringify({rulesVersion:S.rulesVersion,schemaVersion:S.schemaVersion,startingSetupMode:S.startingSetupMode,seed:S.seed,runId:S.runId,playerCount:S.players?.length||S.playerCount,setupSummary:S.setupSummary,ltEraState:S.ltEraState,removedLtCardIds:S.removedLtCardIds,removedTileRecords:S.removedTileRecords,aiDecisionTelemetry:S.aiDecisionTelemetry,turnEconomySnapshots:S.turnEconomySnapshots,events:S.logs,ai:S.aiLog,telemetry:S.telemetry},null,2))};
+
+const _v229PrevRender=render;
+render=function(){v229SetVersion();v229EnsureTelemetry();_v229PrevRender();v229SetVersion();v229SyncLTEraState();
+ const mini=document.querySelector('.brand .mini');if(mini)mini.textContent='v2.2.9 Web Playtest v5.3 Economy / Replacement';document.title='元素管道：術式工房 v2.2.9 Web Playtest v5.3';
+ const n=document.getElementById('interpretation');if(n){n.dataset.v229='1';n.innerHTML='<b>v2.2.9 Current</b>：Build Action 每層現在可 INSERT / REPLACE / SKIP；Anchor 不可替換，Outer/Middle 替換後立即撤除失去合法性的上層 Tile。Gold/Mixed LT 四格市場改為 Era 專屬循環：跨 Era 舊展示卡可留場，但完成後永久退場；T3 新增 4 張 Mixed LT，Aging 改為 +1VP。Breadth Enhance 每次合法解析改為 +4G / Reduce Fee1。Setup Standard / Advanced 與其他 v2.2.8 規則維持。';}
+ const box=document.getElementById('ltMarket');if(box){const cur=S.ltEraState?.currentEra||S.stage||1;const gold=(S.goldLongTerm?.marketSlots||[]).map(gs0=>{if(!gs0.cardId)return `<div class="card"><h4>Empty LT Slot</h4><div class="mini">等待 T${cur} 當前 Era LT 返回循環牌堆</div></div>`;const gs=hydrateGoldLTSlot(gs0),key=`LT:${gs.id}`,leg=HUMAN_UI.kind==='CONTRACT'&&uiOptionIndexByKey(key)>=0,agingUnit=gs.stage===3?'VP':'G',kind=gs.stage===3?'Mixed LT':'Gold LT',legacy=gs.stage<cur?' · LEGACY':'';return `<div class="card ${leg?'contract-legal':''}" ${leg?`onclick="humanUIClick('${key}')"`:''}><h4>${gs.cardId} <span class="tag">${kind} · T${gs.stage}${legacy}</span>${gs.comboTag?'<span class="tag combo">Combo</span>':''}${gs.usedThisTurn?'<span class="tag">USED</span>':''}</h4><div class="reqIconLine">${iconizeText(gs.req)}</div><div class="ok">${gs.reward.g||0}G ${gs.reward.vp||0}VP${gs.comboReward?` · Combo +${gs.comboReward}G`:''}${gs.comboRewardVP?` · Combo +${gs.comboRewardVP}VP`:''}</div><div class="mini">Slot ${gs.slotId} · Aging ${gs.aging}${agingUnit} · ${gs.usedThisTurn?'本 Turn 已完成；輪替時處理':'本 Turn 可完成'}</div></div>`}).join('');const vp=(S.longTerm.slots||[]).map(x=>{const key=`LT:${x.id}`,leg=HUMAN_UI.kind==='CONTRACT'&&uiOptionIndexByKey(key)>=0;return `<div class="card ${leg?'contract-legal':''}" ${leg?`onclick="humanUIClick('${key}')"`:''}><h4>${x.id} ${x.usedThisTurn?'✓':''} <span class="tag">VP LT · T${x.stage}</span></h4><div class="reqIconLine">${iconizeText(x.req)}</div><div class="ok">${x.reward.vp||0}VP ${x.reward.g||0}G</div><div class="mini">Aging ${x.aging}G</div></div>`}).join('');box.innerHTML=gold+vp;const h=box.closest('section')?.querySelector('h2');if(h)h.innerHTML=`Long-Term <span class="mini">Era T${cur} · current deck ${(S.ltEraState?.eraDecks?.[cur]||[]).length} · removed ${(S.removedLtCardIds||[]).length}</span>`}
+ const tel=document.getElementById('telemetry');if(tel){const t=S.telemetry.v229;tel.innerHTML+=`<div class="row"><span class="chip">v2.2.9 LT ${t.lt.completed}</span><span class="chip">LT retired ${t.lt.retired}</span><span class="chip">Replace ${t.replacement.replacements}</span><span class="chip">Cascade lost ${t.replacement.dependentRemoved}</span><span class="chip">Breadth ${t.breadth.resolutions} / ${t.breadth.gold}G</span><span class="chip">AI decisions ${S.aiDecisionTelemetry.length}</span></div>`}
+};
+
 </script>
 </body></html>
