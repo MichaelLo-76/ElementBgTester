@@ -66,14 +66,19 @@ button,input,select,textarea{font:inherit}.top{position:sticky;top:0;z-index:20;
 @media(max-width:620px){.sectorTree{grid-template-columns:repeat(4,minmax(0,1fr));gap:2px}.sectorSlot.outerSlot{grid-column:span 1}.sectorSlot.middleSlot{grid-column:span 2}.sectorSlot.innerSlot{grid-column:span 4}}
 
 /* v3.3 v2.0.8 Era/Capacity status */
-.eraBonusCard.awarded{border-color:#4f8b69;background:#172820}.eraBonusCard .eraReward{margin-top:6px;font-weight:700}.eraBonusCard .eraStatus{margin-top:5px}.pointerSetupChoice{display:inline-flex;align-items:center;gap:5px}.sourceBadge{font-weight:700}
+.eraBonusCard.awarded{border-color:#4f8b69;background:#172820}.eraBonusCard .eraReward{margin-top:6px;font-weight:700}.eraBonusCard .eraStatus{margin-top:5px}.pointerSetupChoice{display:inline-flex;align-items:center;gap:5px}.sourceBadge{font-weight:700}.setupModeControl{display:inline-flex;gap:7px;align-items:center;padding:3px 7px;border:1px solid #49536b;border-radius:8px;background:#151b28}.setupModeControl label{white-space:nowrap;font-size:12px}.setupModeStatus{font-size:11px;opacity:.85;margin-left:4px}
 </style>
 </head><body>
 <div class="top">
  <div class="brand">元素管道：術式工房 <span class="mini">v2.2.5 Web Playtest v4.6 Machine Legality Clarity</span></div>
  <span id="turnPill" class="pill"></span><span id="stagePill" class="pill"></span><span id="stepPill" class="pill"></span><span id="initPill" class="pill"></span>
  <label>Seed <input id="seedInput" size="10" value="20261011"></label>
- <select id="modeSelect"><option value="H3AI">1 Human + 3 AI</option><option value="4AI">4 AI</option></select>
+ <select id="modeSelect"><option value="H3AI">Human + AI</option><option value="4AI">All AI</option></select>
+ <label>Players <select id="playerCountSelect"><option value="4" selected>4P</option><option value="3">3P</option></select></label>
+ <span id="setupModeControl" class="setupModeControl" title="切換只會影響下一次 New / Restart，不會改變目前進行中的遊戲">
+   <label><input type="radio" name="startingSetupModeUI" value="STANDARD" checked> 初階 Standard（固定起始 6G）</label>
+   <label><input type="radio" name="startingSetupModeUI" value="ADVANCED_DRAFT"> 進階 Advanced（Starting Draft）</label>
+ </span>
  <button onclick="newGame()">New / Restart</button><button id="advanceBtn" onclick="advanceGame()">Debug Advance</button><button id="autoBtn" onclick="toggleAuto()">Auto ▶</button>
  <button onclick="downloadState()">Export JSON</button><button onclick="document.getElementById('importFile').click()">Import JSON</button><input class="hidden" id="importFile" type="file" accept="application/json" onchange="importStateFile(event)">
  <button onclick="downloadLog()">Export Log</button><button onclick="runSmoke(20)">4AI Smoke×20</button>
@@ -1348,6 +1353,78 @@ render=function(){
 
 
 // v4.7: Machine Part legal GROUPs also render a Decision fallback button; direct card click remains supported.
+
+
+// ===== v2.2.7 / Web v5.1 — Water Inner Mastery capacity fix =====
+// Canonical: Water Inner Lv8 gives its sector's other Water-capable Tiles +1 Water Capacity.
+// v5.0 incorrectly used tileAccepts() while the target tile was full, so full Water Outers never received the bonus.
+function _v51WaterMasteryEligible(p,t){
+ if(!p||!t||t.kind==='Inner'||!t.cap)return false;
+ if(t.element==='W')return true;
+ if(t.capByElement&&((t.capByElement.W||0)>0))return true;
+ if(t.allowed?.includes('W'))return true;
+ // Water Lv6 makes Water legal in any Base-element Capacity; Lv8 necessarily includes Lv6.
+ if(p.tech?.water>=6&&t.bElementCap)return true;
+ return false;
+}
+function _v51ApplyWaterMasteryBonus(p,t){
+ if(!_v51WaterMasteryEligible(p,t)||t._waterInnerMasteryCapApplied)return false;
+ t._waterInnerMasteryCapApplied=true;
+ t.cap=(t.cap||0)+1;
+ // For element-profile tiles, record the extra slot specifically as Water capacity.
+ if(t.capByElement)t.capByElement.W=(t.capByElement.W||0)+1;
+ return true;
+}
+function _v51RemoveWaterMasteryBonus(t){
+ if(!t?._waterInnerMasteryCapApplied)return false;
+ t._waterInnerMasteryCapApplied=false;
+ t.cap=Math.max(0,(t.cap||0)-1);
+ if(t.capByElement&&t.capByElement.W!=null){
+  t.capByElement.W=Math.max(0,t.capByElement.W-1);
+  if(t.capByElement.W===0&&!t.allowed?.includes('W')&&t.element!=='W')delete t.capByElement.W;
+ }
+ return true;
+}
+function syncWaterInnerMastery(p){
+ if(!p?.wheel?.sectors)return;
+ for(const s of p.wheel.sectors){
+  const inn=s.inner;
+  if(!(inn?.type==='B'&&inn.element==='W'&&p.tech?.water>=8))continue;
+  inn.masteryApplied=true;
+  inn.rate=2;
+  for(const t of [...s.outers,...s.middles].filter(Boolean))_v51ApplyWaterMasteryBonus(p,t);
+ }
+}
+const _v51PrevRefreshMasteries=refreshMasteries;
+refreshMasteries=function(p){
+ _v51PrevRefreshMasteries(p);
+ syncWaterInnerMastery(p);
+};
+const _v51PrevTileAccepts=tileAccepts;
+tileAccepts=function(p,t,e){
+ if(p)syncWaterInnerMastery(p);
+ return _v51PrevTileAccepts(p,t,e);
+};
+// Upgrade should double the printed/base face, then add the mastery +1; it must not double the mastery bonus itself.
+const _v51PrevUpgradeTile=upgradeTile;
+upgradeTile=async function(p,x,source='Upgrade'){
+ const hadBonus=!!x?.t?._waterInnerMasteryCapApplied;
+ if(hadBonus)_v51RemoveWaterMasteryBonus(x.t);
+ const ok=await _v51PrevUpgradeTile(p,x,source);
+ syncWaterInnerMastery(p);
+ if(ok&&hadBonus)tlog(`${p.id} Water Inner Mastery reapplied after Upgrade → +1 Water Capacity`,{source,waterInnerMastery:true});
+ return ok;
+};
+const _v51PrevRender=render;
+render=function(){
+ if(S?.players)for(const p of S.players)syncWaterInnerMastery(p);
+ _v51PrevRender();
+ const mini=document.querySelector('.brand .mini');if(mini)mini.textContent='v2.2.7 Web Playtest v5.1 Water Inner Mastery Fix';
+ document.title='元素管道：術式工房 v2.2.7 Web Playtest v5.1 Water Inner Mastery Fix';
+ if(S){S.version='v2.2.7-web-v5.1-water-inner-mastery-fix';S.schemaVersion='2.2.7-web-5.1';}
+ const n=document.getElementById('interpretation');if(n&&!n.dataset.v51water){n.dataset.v51water='1';n.innerHTML+='<br><b>v5.1 fix</b>：Water Inner Mastery 現在正確讓同 sector 其他 Water-capable Outer / Middle 獲得 +1 Water Capacity；即使 Tile 當下已滿也會生效，且 Upgrade 不會把這個 +1 錯誤倍增。';}
+};
+
 </script>
 <style>
 .machineFocusPart.machine-unavailable{opacity:.72;border-style:dashed;filter:saturate(.75)}
@@ -1907,5 +1984,188 @@ render=function(){ensureV227DraftState();_v227PrevRender();ensureV227DraftState(
  if(panel){const d=S.startingDraft,publicLine=`<div class="mini">初始 Initiative：${S.initiativeOrder.map((id,i)=>`${playerDisplay(id)} +${i}G`).join(' → ')} ｜ 固定基礎 Gold：0G</div>`;let body='';if(!d.revealDone){const hp=S.players.find(x=>x.type==='HUMAN');if(hp){const h3=S.privateHand3?.[hp.id]||[];const recv=(S.passedPair?.[hp.id]||[]).map(cid=>STARTING_DRAFT_POOL.find(c=>c.instanceId===cid)).filter(Boolean);body=`<div class="mini">${d.phase==='pick2'?'收到的第二輪候選':'你的第一輪候選'}：${(d.phase==='pick2'?recv:h3).map(startingDraftCardLabel).join(' ｜ ')||'等待發牌'}</div>`}else body='<div class="mini">AI Draft 選牌保持秘密，第二輪完成後同時公開。</div>';}else body=S.initiativeOrder.map(id=>`<div class="mini"><b>${playerDisplay(id)}</b>：${(d.selected?.[id]||[]).map(cid=>startingDraftCardLabel(STARTING_DRAFT_POOL.find(c=>c.instanceId===cid))).join(' ＋ ')}</div>`).join('');panel.innerHTML=`<h3>Starting Draft｜${d.complete?'已完成':d.phase}</h3>${publicLine}<div class="mini">傳牌方向依初始 Initiative 環狀；起始 Gold 僅來自 Draft 卡與順位補償。</div>${body}`;}
  const n=document.getElementById('interpretation');if(n&&!n.dataset.v227){n.dataset.v227='1';n.innerHTML+='<br><b>v2.2.7</b>：固定起始 6G 已移除，改用 19 張 Starting Draft；每人三選一、環傳兩張、再二選一，全部完成後同時公開。Draft 的 Gold/元素/TP/Rep → Anchor Upgrade → Free Outer 全部結算後，才選 Setup Pointer。';}
 };
+
+// ===== v2.2.8 Setup Mode Selection + telemetry overlay =====
+const V228_SETUP_MODES=['STANDARD','ADVANCED_DRAFT'];
+const V228_LEGACY_MODE='LEGACY_UNSPECIFIED';
+let V228_RUN_SEQ=0;
+function v228SelectedSetupMode(){const x=document.querySelector('input[name="startingSetupModeUI"]:checked');return x?.value||'STANDARD'}
+function v228SelectedPlayerCount(){const x=+(document.getElementById('playerCountSelect')?.value||4);return x===3?3:4}
+function v228NewRunId(seed){V228_RUN_SEQ++;return `v228-${seed}-${Date.now()}-${V228_RUN_SEQ}`}
+function v228ModeLabel(mode){return mode==='STANDARD'?'初階 Standard（固定起始 6G）':mode==='ADVANCED_DRAFT'?'進階 Advanced（Starting Draft）':'Legacy / mode unspecified'}
+function v228SetupEvent(msg,data={}){tlog(msg,{eventType:data.eventType||'SetupEvent',turn:0,startingSetupMode:S.startingSetupMode,rulesVersion:S.rulesVersion,runId:S.runId,...data})}
+function v228SetVersion(){if(!S)return; if(S.startingSetupMode===V228_LEGACY_MODE)return;S.rulesVersion='v2.2.8';S.schemaVersion='2.2.8-web-5.2';S.version='v2.2.8-web-v5.2-setup-modes';S.config=S.config||{};S.config.workerPatch='v2.2.7-to-v2.2.8-v1.0';S.config.setupModes=true}
+function v228EnsureSetupShape(){
+ if(!S)return;
+ if(!S.startingSetupMode)S.startingSetupMode=V228_LEGACY_MODE;
+ S.setupModeLocked=S.setupModeLocked!==false;
+ S.initialInitiativeOrder=S.initialInitiativeOrder||[...(S.initiativeOrder||[])];
+ S.setupSummary=S.setupSummary||{mode:S.startingSetupMode,initialInitiativeOrder:[...S.initialInitiativeOrder],startingGoldByPlayer:{},draftSelectionsByPlayer:S.startingSetupMode==='ADVANCED_DRAFT'?{}:null};
+ S.setupSummary.mode=S.startingSetupMode;S.setupSummary.initialInitiativeOrder=[...S.initialInitiativeOrder];
+ if(S.startingSetupMode==='STANDARD'){
+   S.startingDraft=S.startingDraft||{phase:'not_applicable',complete:true,revealDone:false,notApplicable:true,effectResolutionLog:[]};
+   S.startingDraft.phase='not_applicable';S.startingDraft.complete=true;S.startingDraft.notApplicable=true;
+   S.draftPoolRemaining=[];S.privateHand3={};S.pick1={};S.passedPair={};S.pick2={};S.revealDone=false;S.effectResolutionLog=[];
+   S.setupSummary.draftSelectionsByPlayer=null;
+ }
+ v228SetVersion();
+}
+const _v228PrevEnsureV227DraftState=ensureV227DraftState;
+ensureV227DraftState=function(){
+ if(!S)return;
+ if(S.startingSetupMode==='STANDARD'){v228EnsureSetupShape();return}
+ _v228PrevEnsureV227DraftState();
+ if(!S.startingSetupMode)S.startingSetupMode=V228_LEGACY_MODE;
+ v228EnsureSetupShape();
+};
+function v228TrimPlayers(playerCount){
+ if(playerCount===4)return;
+ const keep=new Set(['P1','P2','P3']);
+ S.players=S.players.filter(p=>keep.has(p.id));
+ S.initiativeOrder=S.initiativeOrder.filter(id=>keep.has(id));
+ S.nextInitiativeOrder=(S.nextInitiativeOrder||[]).filter(id=>keep.has(id));
+ S.passOrder=(S.passOrder||[]).filter(id=>keep.has(id));
+ if(S.dealer?.market?.length>playerCount){const extra=S.dealer.market.splice(playerCount);S.dealer.deck=[...extra,...S.dealer.deck];}
+ if(S.dealer)S.dealer.marketSize=playerCount;
+}
+function v228InitSetupSummary(mode){
+ S.initialInitiativeOrder=[...S.initiativeOrder];
+ S.setupSummary={mode,initialInitiativeOrder:[...S.initialInitiativeOrder],startingGoldByPlayer:{},draftSelectionsByPlayer:mode==='ADVANCED_DRAFT'?{}:null,grantDetailsByPlayer:{}};
+}
+function v228GrantStandard(){
+ for(let pos=0;pos<S.initialInitiativeOrder.length;pos++){
+   const id=S.initialInitiativeOrder[pos],p=pById(id),baseGold=6,bonus=pos,total=baseGold+bonus;
+   p.gold=total;
+   S.setupSummary.startingGoldByPlayer[id]=total;
+   S.setupSummary.grantDetailsByPlayer[id]={baseGold,initiativeBonusGold:bonus,totalGoldGranted:total};
+   v228SetupEvent(`${id} Starting Gold: ${baseGold}G + Initiative ${bonus}G = ${total}G`,{eventType:'StartingGoldGrant',playerId:id,baseGold,initiativeBonusGold:bonus,totalGoldGranted:total});
+ }
+}
+function v228AssertStandardStartGold(){
+ if(S.startingSetupMode!=='STANDARD')return true;
+ for(let pos=0;pos<S.initialInitiativeOrder.length;pos++){
+   const id=S.initialInitiativeOrder[pos],p=pById(id),expected=6+pos;
+   if(!p||p.gold!==expected)throw new Error(`v2.2.8 Standard Setup Gold assertion failed: ${id}=${p?.gold} expected ${expected}`);
+ }
+ return true;
+}
+function v228FinalizeAdvancedSummary(){
+ if(!S||S.startingSetupMode!=='ADVANCED_DRAFT'||!S.startingDraft?.complete||S.setupSummary?.advancedFinalized)return;
+ S.setupSummary=S.setupSummary||{};S.setupSummary.mode='ADVANCED_DRAFT';S.setupSummary.initialInitiativeOrder=[...S.initialInitiativeOrder];
+ S.setupSummary.draftSelectionsByPlayer=clone(S.startingDraft.selected||{});
+ S.setupSummary.startingGoldByPlayer={};S.setupSummary.grantDetailsByPlayer={};
+ for(let pos=0;pos<S.initialInitiativeOrder.length;pos++){
+   const id=S.initialInitiativeOrder[pos],p=pById(id),cards=(S.startingDraft.selected?.[id]||[]).map(cid=>STARTING_DRAFT_POOL.find(c=>c.instanceId===cid)).filter(Boolean);
+   const draftGold=sum(cards.map(c=>c.gold||0)),bonus=pos,total=p?.gold||0;
+   S.setupSummary.startingGoldByPlayer[id]=total;
+   S.setupSummary.grantDetailsByPlayer[id]={draftCardIds:cards.map(c=>c.instanceId),draftGold,initiativeBonusGold:bonus,totalGoldGranted:draftGold+bonus,resolvedStartingGold:total};
+   v228SetupEvent(`${id} Advanced Starting Draft summary: cards ${cards.map(c=>c.instanceId).join(', ')}; Draft Gold ${draftGold}G + Initiative ${bonus}G`,{eventType:'AdvancedDraftStartingSummary',playerId:id,draftCardIds:cards.map(c=>c.instanceId),draftGold,initiativeBonusGold:bonus,totalGoldGranted:draftGold+bonus,resolvedStartingGold:total});
+ }
+ S.setupSummary.advancedFinalized=true;
+}
+const _v228PrevLogDraftEffect=logDraftEffect;
+logDraftEffect=function(entry){entry={...entry,startingSetupMode:'ADVANCED_DRAFT'};return _v228PrevLogDraftEffect(entry)};
+const _v228PrevInitializeStartingDraft=initializeStartingDraft;
+initializeStartingDraft=async function(){
+ if(S.startingSetupMode!=='ADVANCED_DRAFT')return;
+ await _v228PrevInitializeStartingDraft();v228FinalizeAdvancedSummary();
+};
+const _v228PrevInitializePointerSelections=initializePointerSelections;
+initializePointerSelections=async function(){
+ v228EnsureSetupShape();
+ if(S.startingSetupMode==='STANDARD')v228AssertStandardStartGold();
+ const r=await _v228PrevInitializePointerSelections();
+ if(S.startingSetupMode==='ADVANCED_DRAFT')v228FinalizeAdvancedSummary();
+ return r;
+};
+const _v228PrevNewGame=newGame;
+newGame=function(start=true){
+ const selectedMode=v228SelectedSetupMode(),playerCount=v228SelectedPlayerCount();
+ _v228PrevNewGame(false);
+ v228TrimPlayers(playerCount);
+ S.startingSetupMode=selectedMode;S.setupModeLocked=true;S.runId=v228NewRunId(S.seed);S.playerCount=playerCount;S.initialInitiativeOrder=[...S.initiativeOrder];
+ v228InitSetupSummary(selectedMode);v228SetVersion();
+ // Remove the v2.2.7 global-Starting-Draft declaration from this new run; v2.2.8 selects a mode explicitly.
+ S.logs=(S.logs||[]).filter(e=>!String(e.msg||'').includes('v2.2.7 patch active: Starting Draft replaces fixed 6G'));
+ v228SetupEvent(`Starting Setup Mode: ${selectedMode}${selectedMode==='STANDARD'?' (fixed base 6G)':' (19-card Starting Draft)'}`,{eventType:'GameSetupModeSelected',initialInitiativeOrder:[...S.initialInitiativeOrder],playerCount,seed:S.seed});
+ if(selectedMode==='STANDARD'){
+   S.startingDraft={phase:'not_applicable',complete:true,revealDone:false,notApplicable:true,effectResolutionLog:[]};S.draftPoolRemaining=[];S.privateHand3={};S.pick1={};S.passedPair={};S.pick2={};S.revealDone=false;S.effectResolutionLog=[];
+   for(const p of S.players){p.gold=0;p.pointerSetupDone=false}S.pointerSetupComplete=false;S.pointerSetupChoices={};
+   v228GrantStandard();v228AssertStandardStartGold();
+ }else{
+   for(const p of S.players){p.gold=0;p.pointerSetupDone=false}S.pointerSetupComplete=false;S.pointerSetupChoices={};
+   S.startingDraft={phase:'setup_public',complete:false,revealDone:false,publicInfoReady:true,discarded:[],unDealt:[],effectResolutionLog:[]};S.draftPoolRemaining=[];S.privateHand3={};S.pick1={};S.passedPair={};S.pick2={};S.revealDone=false;S.effectResolutionLog=S.startingDraft.effectResolutionLog;
+ }
+ v228EnsureSetupShape();render();if(start)advanceGame();
+};
+function v228ValidateExportState(st){
+ if(st.rulesVersion==='v2.2.8'){
+   if(!V228_SETUP_MODES.includes(st.startingSetupMode))throw new Error('v2.2.8 export rejected: missing/unknown startingSetupMode');
+   if(!st.setupModeLocked)throw new Error('v2.2.8 export rejected: setupModeLocked must be true');
+   if(!Array.isArray(st.initialInitiativeOrder)||!st.initialInitiativeOrder.length)throw new Error('v2.2.8 export rejected: missing initialInitiativeOrder');
+   if(!st.setupSummary||st.setupSummary.mode!==st.startingSetupMode)throw new Error('v2.2.8 export rejected: invalid setupSummary');
+ }
+ return true;
+}
+const _v228PrevDownloadState=downloadState;
+downloadState=function(){v228ValidateExportState(S);downloadBlob(`element_pipeline_${S.seed}_T${S.turnNumber}.json`,JSON.stringify(S,null,2))};
+downloadLog=function(){downloadBlob(`element_pipeline_${S.seed}_log.json`,JSON.stringify({rulesVersion:S.rulesVersion,startingSetupMode:S.startingSetupMode,seed:S.seed,runId:S.runId,playerCount:S.players?.length||S.playerCount,setupSummary:S.setupSummary,events:S.logs,ai:S.aiLog,telemetry:S.telemetry},null,2))};
+assertV208ImportCompatible=function(loaded){
+ const rv=loaded?.rulesVersion||'';
+ if(rv==='v2.2.8'){
+   if(!V228_SETUP_MODES.includes(loaded.startingSetupMode))throw new Error(`v2.2.8 存檔缺少或使用未知 startingSetupMode：${loaded.startingSetupMode||'空白'}`);
+   if(!loaded.setupModeLocked)throw new Error('v2.2.8 存檔缺少 setupModeLocked。');
+   if(!loaded.goldLongTerm?.marketSlots||!Array.isArray(loaded.goldLongTerm.drawPile))throw new Error('v2.2.8 存檔缺少 Gold Long-Term rotating market state。');
+   return true;
+ }
+ if(rv==='v2.2.7'){
+   if(!loaded.startingSetupMode)loaded.startingSetupMode=V228_LEGACY_MODE;
+   loaded.setupModeLocked=true;loaded.initialInitiativeOrder=loaded.initialInitiativeOrder||[...(loaded.initiativeOrder||[])];
+   loaded.setupSummary=loaded.setupSummary||{mode:V228_LEGACY_MODE,initialInitiativeOrder:[...loaded.initialInitiativeOrder],startingGoldByPlayer:{},draftSelectionsByPlayer:loaded.startingDraft?.selected||null,legacyNotice:'Imported v2.2.7 history; setup mode was not serialized.'};
+   return true;
+ }
+ throw new Error(`此存檔規則版本為 ${rv||'未知/舊版'}。v2.2.8 僅直接接受 v2.2.8，並以 LEGACY_UNSPECIFIED 保留 v2.2.7 歷史；更舊版請以新局回歸。`);
+};
+const _v228PrevResumeImportedState=resumeImportedState;
+resumeImportedState=async function(loaded){
+ if(loaded?.rulesVersion==='v2.2.7'&&!loaded.startingSetupMode)loaded.startingSetupMode=V228_LEGACY_MODE;
+ await _v228PrevResumeImportedState(loaded);
+ if(!S.startingSetupMode)S.startingSetupMode=V228_LEGACY_MODE;
+ if(S.startingSetupMode!==V228_LEGACY_MODE)v228SetVersion();
+ v228EnsureSetupShape();
+ S.setupModeLocked=true;S.playerCount=S.players?.length||S.playerCount||4;
+ if(V228_SETUP_MODES.includes(S.startingSetupMode)){
+   const radio=document.querySelector(`input[name="startingSetupModeUI"][value="${S.startingSetupMode}"]`);if(radio)radio.checked=true;
+ }
+ const pcs=document.getElementById('playerCountSelect');if(pcs&&[3,4].includes(S.playerCount))pcs.value=String(S.playerCount);
+ if(S.startingSetupMode===V228_LEGACY_MODE)tlog('Legacy import: startingSetupMode = LEGACY_UNSPECIFIED; historical setup state preserved without re-granting.');
+ render();
+};
+const _v228PrevGameEnd=gameEnd;
+gameEnd=function(){_v228PrevGameEnd();if(S.telemetry?.gameEnd){S.telemetry.gameEnd.startingSetupMode=S.startingSetupMode;S.telemetry.gameEnd.seed=S.seed;S.telemetry.gameEnd.runId=S.runId;S.telemetry.gameEnd.playerCount=S.players.length}};
+function v228ModeControlStatus(){
+ const ctl=document.getElementById('setupModeControl');if(!ctl)return;
+ let st=document.getElementById('setupModeStatus');if(!st){st=document.createElement('span');st.id='setupModeStatus';st.className='setupModeStatus';ctl.after(st)}
+ const pending=v228SelectedSetupMode(),active=S?.startingSetupMode;
+ st.textContent=S?`本局：${v228ModeLabel(active)}${pending!==active&&V228_SETUP_MODES.includes(active)?'｜下一局將改用 '+v228ModeLabel(pending):''}`:`下一局：${v228ModeLabel(pending)}`;
+}
+const _v228PrevRender=render;
+render=function(){v228EnsureSetupShape();_v228PrevRender();v228EnsureSetupShape();
+ const mini=document.querySelector('.brand .mini');if(mini)mini.textContent='v2.2.8 Web Playtest v5.2 Setup Modes';document.title='元素管道：術式工房 v2.2.8 Web Playtest v5.2 Setup Modes';
+ v228ModeControlStatus();
+ const panel=document.getElementById('startingDraftPanel');
+ if(panel&&S.startingSetupMode==='STANDARD'){
+   const gold=S.initialInitiativeOrder.map((id,i)=>`${playerDisplay(id)} ${6+i}G`).join(' · ');
+   panel.innerHTML=`<h3>Starting Setup｜Standard</h3><div class="mini"><b>固定基礎 6G + 初始 Initiative 補償</b>｜${gold}</div><div class="mini">Standard 不建立 Starting Draft 手牌／選牌／效果；Gold 結算後直接進 Pointer Setup。</div>`;
+ }else if(panel&&S.startingSetupMode==='ADVANCED_DRAFT'){
+   if(!panel.querySelector('.v228-mode-banner'))panel.insertAdjacentHTML('afterbegin','<div class="mini v228-mode-banner"><b>Setup Mode：Advanced Starting Draft</b>｜無固定基礎 6G；保留 Initiative 補償。</div>');
+ }else if(panel&&S.startingSetupMode===V228_LEGACY_MODE){
+   if(!panel.querySelector('.v228-mode-banner'))panel.insertAdjacentHTML('afterbegin','<div class="mini badtext v228-mode-banner"><b>Legacy import：</b>舊檔未記錄 Setup Mode，標記為 LEGACY_UNSPECIFIED；不重跑 Setup。</div>');
+ }
+ const n=document.getElementById('interpretation');if(n&&!n.dataset.v228){n.dataset.v228='1';n.innerHTML+='<br><b>v2.2.8</b>：New Game 預設使用 Standard Setup（固定 6G + Initiative 補償）；可選 Advanced Starting Draft（沿用 v2.2.7 19 張 Draft、無固定 6G）。兩模式互斥，且模式在建局後鎖定；改選只影響下一個 New Game。';}
+};
+// Ensure initial controls advertise the new default even before the first run is created.
+window.addEventListener('load',()=>{const std=document.querySelector('input[name="startingSetupModeUI"][value="STANDARD"]');if(std&&!document.querySelector('input[name="startingSetupModeUI"]:checked'))std.checked=true;v228ModeControlStatus()});
+
 </script>
 </body></html>
