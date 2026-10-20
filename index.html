@@ -2397,5 +2397,151 @@ render=function(){v229SetVersion();v229EnsureTelemetry();_v229PrevRender();v229S
  const tel=document.getElementById('telemetry');if(tel){const t=S.telemetry.v229;tel.innerHTML+=`<div class="row"><span class="chip">v2.2.9 LT ${t.lt.completed}</span><span class="chip">LT retired ${t.lt.retired}</span><span class="chip">Replace ${t.replacement.replacements}</span><span class="chip">Cascade lost ${t.replacement.dependentRemoved}</span><span class="chip">Breadth ${t.breadth.resolutions} / ${t.breadth.gold}G</span><span class="chip">AI decisions ${S.aiDecisionTelemetry.length}</span></div>`}
 };
 
+// ===== v2.2.10 Single LT Market + AI Contract Strategy Audit overlay =====
+const V2210_RULES_VERSION='v2.2.10';
+const V2210_SCHEMA_VERSION='2.2.10-web-5.4';
+const V2210_WEB_VERSION='v2.2.10-web-v5.4-single-lt-ai-audit';
+const V2210_WORKER_PATCH='v2.2.9-to-v2.2.10-vp-lt-removal-ai-strategy-audit-v1.0';
+const V2210_AI_POLICY=V229_AI_POLICY; // correctness-only: do not change policy weights in this patch.
+
+function v2210SetVersion(){
+ if(!S)return;
+ S.rulesVersion=V2210_RULES_VERSION;S.schemaVersion=V2210_SCHEMA_VERSION;S.version=V2210_WEB_VERSION;
+ S.config=S.config||{};S.config.workerPatch=V2210_WORKER_PATCH;S.config.economyPatchVersion='v2.2.10';
+ S.config.singleLongTermMarket=true;S.config.vpLongTermRemoved=true;S.config.aiContractStrategyAudit=true;
+}
+function v2210EnsureState(){
+ if(!S)return;v2210SetVersion();v229EnsureTelemetry();
+ // v2.2.10: no active independent VP Long-Term market/deck/slots.
+ S.longTerm=S.longTerm||{slots:[]};S.longTerm.slots=[];
+ delete S.vpLongTerm;delete S.vpLongTermDeck;delete S.vpLongTermMarket;delete S.vpLongTermSlots;
+ S.aiDecisionRecords=S.aiDecisionRecords||[];S.actionDecisionRecords=S.actionDecisionRecords||[];
+ S.telemetry=S.telemetry||{};S.telemetry.v2210=S.telemetry.v2210||{contractDecisions:0,oneTimeChoices:0,longTermChoices:0,machineChoices:0,patronChoices:0,passChoices:0,pairedComparisons:0,legacyVpLtBlocked:0};
+ if(S.goldLongTerm){for(const x of S.goldLongTerm.marketSlots||[])if(x.cardId)hydrateGoldLTSlot(x);v229SyncLTEraState();}
+}
+
+// P0: T2 transition only activates the current-era Gold/Mixed deck. Never create VP LT cards.
+activateT2LongTerms=function(){v2210EnsureState();v229ActivateLTEra(2);S.longTerm.slots=[];tlog('v2.2.10 LT: T2 era deck activated; independent VP Long-Term remains retired',{eventType:'SingleLongTermMarket',era:2})};
+
+// P0: only Gold/Mixed 4-slot Era Rotation is an active Long-Term source.
+currentLTOptions=function(p){
+ v2210EnsureState();let out=[];
+ for(const gs0 of S.goldLongTerm?.marketSlots||[]){if(!gs0.cardId)continue;const gs=hydrateGoldLTSlot(gs0);if(gs.usedThisTurn)continue;for(const req of structuralPaymentOption(p,gs.struct))out.push({slot:gs,req})}
+ return out;
+};
+const _v2210PrevCompleteLongTerm=completeLongTerm;
+completeLongTerm=async function(p,slot,req){
+ if(!slot?.goldRotating){v2210EnsureState();S.telemetry.v2210.legacyVpLtBlocked++;tlog(`Blocked retired VP Long-Term completion: ${slot?.id||'unknown'}`,{eventType:'RetiredVPLTBlocked',cardId:slot?.id||null});return false}
+ return _v2210PrevCompleteLongTerm(p,slot,req);
+};
+
+function v2210ReqMissing(p,req){
+ const miss={};for(const [e,n] of Object.entries(req||{})){const h=p.hand?.[e]||0;if(h<n)miss[e]=n-h}return miss;
+}
+function v2210ReqKey(req){return Object.entries(req||{}).sort().map(([e,n])=>`${e}:${n}`).join('|')}
+function v2210StructuralIdentities(struct){
+ const out=[],push=r=>{const k=v2210ReqKey(r);if(!out.some(x=>v2210ReqKey(x)===k))out.push(r)};
+ if(struct==='2diffB')for(let i=0;i<BASES.length;i++)for(let j=i+1;j<BASES.length;j++)push({[BASES[i]]:1,[BASES[j]]:1});
+ else if(struct==='2sameB')for(const b of BASES)push({[b]:2});
+ else if(struct==='3diffB')for(let i=0;i<BASES.length;i++)for(let j=i+1;j<BASES.length;j++)for(let k=j+1;k<BASES.length;k++)push({[BASES[i]]:1,[BASES[j]]:1,[BASES[k]]:1});
+ else if(struct==='3sameB')for(const b of BASES)push({[b]:3});
+ else if(struct==='1A')for(const a of FAMILIES)push({[a]:1});
+ else if(struct==='1A1B')for(const a of FAMILIES)for(const b of BASES)push({[a]:1,[b]:1});
+ else if(struct==='4sameB')for(const b of BASES)push({[b]:4});
+ else if(struct==='2same2same')for(let i=0;i<BASES.length;i++)for(let j=i+1;j<BASES.length;j++)push({[BASES[i]]:2,[BASES[j]]:2});
+ else if(struct==='1A2B')for(const a of FAMILIES)for(const b of BASES)push({[a]:1,[b]:2});
+ else if(struct==='3same2other')for(const b of BASES)for(const c of BASES)if(c!==b)push({[b]:3,[c]:2});
+ else if(struct==='1A3B')for(const a of FAMILIES)for(const b of BASES)push({[a]:1,[b]:3});
+ else if(struct==='2A1B')for(const a of FAMILIES)for(const b of BASES)push({[a]:2,[b]:1});
+ return out;
+}
+function v2210BestStructuralIdentity(p,struct){
+ const ids=v2210StructuralIdentities(struct);let best=null;
+ for(const req of ids){const m=v2210ReqMissing(p,req),d=sum(m);if(!best||d<best.deficit)best={req,missing:m,deficit:d}}
+ return best||{req:{},missing:{},deficit:999};
+}
+function v2210AcquisitionHints(p,missing){
+ const hints={};
+ for(const e of Object.keys(missing||{})){
+  let stock=0;for(const s of p.wheel?.sectors||[])for(const t of [...(s.outers||[]),...(s.middles||[]),s.inner].filter(Boolean))stock+=t.stock?.[e]||0;
+  const trans=transitionOptions(p).some(o=>o.gain===e);
+  hints[e]=stock>0?'PRODUCTION_STOCK_PRESENT':trans?'PUBLIC_TRANSITION_AVAILABLE':'BUILD_PRODUCTION_OR_OTHER_SOURCE_REQUIRED';
+ }
+ return hints;
+}
+function v2210ContractSnapshot(p){return {gold:p.gold,vp:p.vp,engineFee:p.engineFee,tech:clone(p.tech),rep:clone(p.reputation),hand:clone(p.hand),wheel:v229SectorDigest(p)}}
+function v2210ScoreComponents(p,a){
+ if(!a)return {totalScore:null,components:null,weights:null};
+ const total=scoreContractAction(p,a);
+ const c={heuristicTotal:total,requirementValue:a.req?rReqValue(a.req):(a.c?.req?rReqValue(a.c.req):null),reservePenalty:a.req?reservePenaltyForOT(p,a.req):0};
+ if(a.kind==='OT'){const r=parseRewardText(a.c.rewardText,p);Object.assign(c,{immediateVP:r.vp,immediateGold:r.g,tp:a.c.tp?1:0,repProgress:1,oneTimeClockProgress:1,eraStrategic:eraOneTimeStrategicValue(p,a.c)})}
+ if(a.kind==='LT'){hydrateGoldLTSlot(a.slot);Object.assign(c,{immediateVP:a.slot.reward?.vp||0,immediateGold:a.slot.reward?.g||0,aging:a.slot.aging||0,comboGold:(a.slot.comboReward&&p.comboTagged>0)?a.slot.comboReward:0,comboVP:(a.slot.comboRewardVP&&p.comboTagged>0)?a.slot.comboRewardVP:0,oneTimeClockProgress:0})}
+ if(a.kind==='DEALER'){const r=parseRewardText(a.step.rewardText,p);Object.assign(c,{immediateVP:r.vp,immediateGold:r.g,tp:a.step.hasTP?1:0,patronProgress:1})}
+ if(a.kind==='MACHINE')Object.assign(c,{machineValue:xMachineValue(a),oneTimeClockProgress:0});
+ return {totalScore:total,components:c,weights:null};
+}
+function v2210AuditChoices(p,legalActs){
+ const legalMap=new Map();for(const a of legalActs||[]){if(a.kind==='OT')legalMap.set('OT:'+a.c.id,a);else if(a.kind==='LT')legalMap.set('LT:'+a.slot.id,a);else if(a.kind==='DEALER')legalMap.set('PATRON:'+a.dealer.id+':'+p.dealerStep,a);else if(a.kind==='MACHINE')legalMap.set('MACHINE:'+a.m.id+':'+a.part.id,a);else if(a.kind==='PASS')legalMap.set('PASS',a)}
+ const choices=[];
+ for(const c of S.oneTime.market||[]){const key='OT:'+c.id,a=legalMap.get(key),missing=v2210ReqMissing(p,c.req),payable=!!a,sc=payable?v2210ScoreComponents(p,a):{totalScore:null,components:null,weights:null};choices.push({type:'ONE_TIME',cardId:c.id,requirements:clone(c.req),isLegal:true,payableNow:payable,missingElements:payable?{}:missing,nextAcquisitionHints:v2210AcquisitionHints(p,missing),paymentPlan:payable?clone(a.c.req):null,...sc,reasonCodes:payable?[]:['NOT_IMMEDIATELY_PAYABLE']})}
+ for(const gs0 of S.goldLongTerm?.marketSlots||[]){if(!gs0.cardId)continue;const gs=hydrateGoldLTSlot(gs0),key='LT:'+gs.id,a=legalMap.get(key),best=v2210BestStructuralIdentity(p,gs.struct),payable=!!a&&!gs.usedThisTurn,sc=payable?v2210ScoreComponents(p,a):{totalScore:null,components:null,weights:null};choices.push({type:'LONG_TERM',cardId:gs.id,printedEra:gs.stage,currentEra:S.ltEraState?.currentEra||S.stage,requirements:gs.req,isLegal:!gs.usedThisTurn,payableNow:payable,missingElements:payable?{}:best.missing,nextAcquisitionHints:v2210AcquisitionHints(p,best.missing),paymentPlan:payable?clone(a.req):clone(best.req),aging:gs.aging||0,...sc,reasonCodes:gs.usedThisTurn?['USED_THIS_TURN']:payable?[]:['NOT_IMMEDIATELY_PAYABLE']})}
+ const d=p.dealer,step=d?.steps?.[p.dealerStep];if(d&&step){const key='PATRON:'+d.id+':'+p.dealerStep,a=legalMap.get(key),fixed=step.req||null,best=fixed?{req:fixed,missing:v2210ReqMissing(p,fixed)}:v2210BestStructuralIdentity(p,step.reqType),payable=!!a,sc=payable?v2210ScoreComponents(p,a):{totalScore:null,components:null,weights:null};choices.push({type:'PATRON',cardId:d.id+':'+(p.dealerStep+1),patronId:d.id,step:p.dealerStep+1,requirements:step.reqText||step.reqType,isLegal:true,payableNow:payable,missingElements:payable?{}:best.missing,nextAcquisitionHints:v2210AcquisitionHints(p,best.missing),paymentPlan:payable?clone(a.req):clone(best.req),...sc,reasonCodes:payable?[]:['NOT_IMMEDIATELY_PAYABLE']})}
+ for(const m of S.machines||[])for(const part of m.parts||[]){const key='MACHINE:'+m.id+':'+part.id,a=legalMap.get(key),baseLegal=m.status==='ACTIVE'&&!part.filled&&machinePartRewardLegal(p,part)&&canNormalFillPart(p,m,part),best=part.req?.struct?v2210BestStructuralIdentity(p,part.req.struct):{req:part.req||{},missing:v2210ReqMissing(p,part.req||{})},payable=!!a,sc=payable?v2210ScoreComponents(p,a):{totalScore:null,components:null,weights:null},reasons=[];if(m.status!=='ACTIVE')reasons.push('MACHINE_NOT_ACTIVE');if(part.filled)reasons.push('PART_ALREADY_FILLED');if(baseLegal&&!payable)reasons.push('NOT_IMMEDIATELY_PAYABLE');if(!canNormalFillPart(p,m,part)&&part.kind==='Core')reasons.push('RESERVATION_OR_CORE_GATE');choices.push({type:'MACHINE',cardId:m.id+':'+part.id,requirements:part.reqText,isLegal:baseLegal,payableNow:payable,missingElements:payable?{}:best.missing,nextAcquisitionHints:v2210AcquisitionHints(p,best.missing),paymentPlan:payable?clone(a.req):clone(best.req),...sc,reasonCodes:reasons})}
+ const pass=legalMap.get('PASS');choices.push({type:'PASS',cardId:'PASS',requirements:null,isLegal:true,payableNow:true,missingElements:{},paymentPlan:null,...v2210ScoreComponents(p,pass),reasonCodes:[]});
+ return choices;
+}
+function v2210PairedComparisons(choices){
+ const ots=choices.filter(x=>x.type==='ONE_TIME'&&x.payableNow&&Number.isFinite(x.totalScore)),lts=choices.filter(x=>x.type==='LONG_TERM'&&x.payableNow&&Number.isFinite(x.totalScore)),out=[];
+ for(const o of ots)for(const l of lts){const oc=o.scoreComponents?.requirementValue,lc=l.scoreComponents?.requirementValue;if(oc!=null&&lc!=null&&Math.abs(oc-lc)<1e-9)out.push({oneTimeId:o.cardId,longTermId:l.cardId,requirementValue:oc,oneTimeScore:o.totalScore,longTermScore:l.totalScore,scoreGap:o.totalScore-l.totalScore,oneTimeRequirementKinds:Object.keys(o.requirements||{}).length,longTermRequirementKinds:Object.keys(l.paymentPlan||{}).length})}
+ return out;
+}
+function v2210BuildAudit(p){
+ const discount=ability(p,'B2')?2:0,drawAvail=BASES.filter(e=>(S.outerBag?.[e]||0)>0),rows=[];
+ for(let si=0;si<4;si++){const s=p.wheel.sectors[si],costs={outer:buildCostForLayer('outer',discount),middle:buildCostForLayer('middle',discount),inner:buildCostForLayer('inner',discount)};rows.push({sector:SECTORS[si],estimatedValue:v229BuildSectorPotential(p,si,drawAvail,discount),cashAffordability:{outer:p.gold>=costs.outer,middle:p.gold>=costs.middle,inner:p.gold>=costs.inner},costs,outer:{empty:s.outers.filter(x=>!x).length,replaceable:s.outers.filter(x=>x&&!x.anchor).length,anchors:s.outers.filter(x=>x?.anchor).length},middle:{empty:s.middles.filter(x=>!x).length,replaceable:s.middles.filter(Boolean).length},inner:{empty:s.inner?0:1,replaceable:s.inner?1:0},drawAvailability:clone(S.outerBag)})}
+ return rows;
+}
+
+const _v2210PrevRecordSecretDecision=v229RecordSecretDecision;
+v229RecordSecretDecision=function(p,chosen){const rec=_v2210PrevRecordSecretDecision(p,chosen);v2210EnsureState();const copy=clone(rec);copy.decisionId=`ACT-${S.runId||S.seed}-${p.id}-T${S.turnNumber+1}-${S.actionDecisionRecords.length+1}`;copy.decisionType='SECRET_ACTION';copy.rngState=S.rngState;copy.buildAudit=v2210BuildAudit(p);S.actionDecisionRecords.push(copy);return rec};
+
+const _v2210PrevChooseContractAI=chooseContractAI;
+chooseContractAI=async function(p,acts){
+ v2210EnsureState();const beforeRng=S.rngState,choices=v2210AuditChoices(p,acts),paired=v2210PairedComparisons(choices);const chosen=await _v2210PrevChooseContractAI(p,acts);
+ const chosenId=chosen.kind==='OT'?chosen.c.id:chosen.kind==='LT'?chosen.slot.id:chosen.kind==='DEALER'?chosen.dealer.id+':'+(p.dealerStep+1):chosen.kind==='MACHINE'?chosen.m.id+':'+chosen.part.id:'PASS';
+ for(const c of choices)c.selected=(c.cardId===chosenId)||(chosen.kind==='DEALER'&&c.type==='PATRON'&&c.cardId===chosenId);
+ const sorted=choices.filter(x=>Number.isFinite(x.totalScore)).sort((a,b)=>b.totalScore-a.totalScore);const best=sorted[0],selected=choices.find(x=>x.selected);const rec={decisionId:`CON-${S.runId||S.seed}-${p.id}-T${S.turnNumber}-${S.aiDecisionRecords.length+1}`,turn:S.turnNumber,era:S.stage,playerId:p.id,source:'CONTRACT',decisionType:'CONTRACT_OPPORTUNITY',aiPolicyVersion:V2210_AI_POLICY,rulesVersion:S.rulesVersion,startingSetupMode:S.startingSetupMode,rngState:beforeRng,playerSnapshot:v2210ContractSnapshot(p),choices,chosenId,tieBreakReason:selected&&best&&selected.totalScore===best.totalScore?'EXISTING_POLICY_RNG_TIEBREAK':'EXISTING_POLICY_SCORE',chosenOutcome:null,oneTimeDeckRemaining:S.oneTime.deck.length,oneTimeMarket:(S.oneTime.market||[]).map(c=>c.id),pairedComparisons:paired,scoreGapToBestAlternative:(selected&&sorted.length>1)?selected.totalScore-sorted.filter(x=>x!==selected)[0]?.totalScore:null};
+ S.aiDecisionRecords.push(rec);S.telemetry.v2210.contractDecisions++;S.telemetry.v2210.pairedComparisons+=paired.length;if(chosen.kind==='OT')S.telemetry.v2210.oneTimeChoices++;else if(chosen.kind==='LT')S.telemetry.v2210.longTermChoices++;else if(chosen.kind==='MACHINE')S.telemetry.v2210.machineChoices++;else if(chosen.kind==='DEALER')S.telemetry.v2210.patronChoices++;else S.telemetry.v2210.passChoices++;
+ return chosen;
+};
+
+// Correctness-only version boundary. v2.2.9 dual-market saves are intentionally rejected.
+
+const _v2210PrevResolveContractAction=resolveContractAction;
+resolveContractAction=async function(p,a){
+ const before={gold:p.gold,vp:p.vp,hand:clone(p.hand),rep:clone(p.reputation),deck:S.oneTime.deck.length,stage:S.stage};
+ const result=await _v2210PrevResolveContractAction(p,a);
+ if(p.type==='AI'){
+  const rec=[...(S.aiDecisionRecords||[])].reverse().find(x=>x.playerId===p.id&&x.turn===S.turnNumber&&x.chosenOutcome==null);
+  if(rec)rec.chosenOutcome={kind:a.kind,goldDelta:p.gold-before.gold,vpDelta:p.vp-before.vp,oneTimeDeckDelta:S.oneTime.deck.length-before.deck,stageBefore:before.stage,stageAfter:S.stage,repDelta:Object.fromEntries(TRADERS.map(t=>[t,(p.reputation[t]||0)-(before.rep[t]||0)]))};
+ }
+ return result;
+};
+
+const _v2210PrevNewGame=newGame;
+newGame=function(start=true){_v2210PrevNewGame(false);v2210EnsureState();S.longTerm.slots=[];tlog('v2.2.10 patch active: independent VP LT retired; only 4-slot Gold/Mixed LT market remains. AI policy unchanged; Contract strategy audit telemetry enabled.',{eventType:'V2210PatchApplied'});render();if(start)advanceGame()};
+assertV208ImportCompatible=function(loaded){const rv=loaded?.rulesVersion||'';if(rv!==V2210_RULES_VERSION)throw new Error(`此存檔規則版本為 ${rv||'未知/舊版'}。v2.2.10 正式移除獨立 VP Long-Term active market；v2.2.9 雙市場進行中存檔不可靜默續玩。請以 v2.2.10 新局或 v2.2.10 存檔續玩。`);if(!V228_SETUP_MODES.includes(loaded.startingSetupMode))throw new Error('v2.2.10 存檔缺少合法 startingSetupMode。');if(!loaded.ltEraState||!loaded.goldLongTerm?.marketSlots||loaded.goldLongTerm.marketSlots.length!==4)throw new Error('v2.2.10 存檔缺少唯一四格 Gold/Mixed LT market。');if((loaded.longTerm?.slots||[]).length)throw new Error('v2.2.10 存檔含已退役的 active VP Long-Term slots，拒絕混版續玩。');return true};
+const _v2210PrevResumeImportedState=resumeImportedState;
+resumeImportedState=async function(loaded){await _v2210PrevResumeImportedState(loaded);v2210EnsureState();render()};
+downloadState=function(){v2210EnsureState();downloadBlob(`element_pipeline_${S.seed}_T${S.turnNumber}_v2210.json`,JSON.stringify(S,null,2))};
+downloadLog=function(){v2210EnsureState();downloadBlob(`element_pipeline_${S.seed}_log_v2210.json`,JSON.stringify({rulesVersion:S.rulesVersion,schemaVersion:S.schemaVersion,startingSetupMode:S.startingSetupMode,seed:S.seed,runId:S.runId,playerCount:S.players?.length||S.playerCount,setupSummary:S.setupSummary,ltEraState:S.ltEraState,removedLtCardIds:S.removedLtCardIds,removedTileRecords:S.removedTileRecords,aiDecisionRecords:S.aiDecisionRecords,actionDecisionRecords:S.actionDecisionRecords,aiDecisionTelemetry:S.aiDecisionTelemetry,turnEconomySnapshots:S.turnEconomySnapshots,events:S.logs,ai:S.aiLog,telemetry:S.telemetry},null,2))};
+
+const _v2210PrevRender=render;
+render=function(){v2210EnsureState();_v2210PrevRender();v2210EnsureState();
+ const mini=document.querySelector('.brand .mini');if(mini)mini.textContent='v2.2.10 Web Playtest v5.4 Single LT / AI Audit';document.title='元素管道：術式工房 v2.2.10 Web Playtest v5.4';
+ const n=document.getElementById('interpretation');if(n){n.dataset.v2210='1';n.innerHTML='<b>v2.2.10 Current</b>：獨立 VP Long-Term 市場已正式退役；唯一 Long-Term 市場為四格 Gold / Mixed Era Rotation。T1/T2 舊展示卡跨 Era 可留到完成後退場；T3 Mixed 維持 4G+4VP / 5G+5VP、Aging +1VP（cap 4）、M03 Combo +3VP。AI 本版不調整權重，只新增完整 Contract/Build 決策稽核資料，用來分離「可支付」與「實際效益」問題。';}
+ const box=document.getElementById('ltMarket');if(box){const cur=S.ltEraState?.currentEra||S.stage||1;box.innerHTML=(S.goldLongTerm?.marketSlots||[]).map(gs0=>{if(!gs0.cardId)return `<div class="card"><h4>Empty LT Slot</h4><div class="mini">等待 T${cur} 當前 Era LT 返回循環牌堆</div></div>`;const gs=hydrateGoldLTSlot(gs0),key=`LT:${gs.id}`,leg=HUMAN_UI.kind==='CONTRACT'&&uiOptionIndexByKey(key)>=0,agingUnit=gs.stage===3?'VP':'G',kind=gs.stage===3?'Mixed LT':'Gold LT',legacy=gs.stage<cur?' · LEGACY':'';return `<div class="card ${leg?'contract-legal':''}" ${leg?`onclick="humanUIClick('${key}')"`:''}><h4>${gs.cardId} <span class="tag">${kind} · T${gs.stage}${legacy}</span>${gs.comboTag?'<span class="tag combo">Combo</span>':''}${gs.usedThisTurn?'<span class="tag">USED</span>':''}</h4><div class="reqIconLine">${iconizeText(gs.req)}</div><div class="ok">${gs.reward.g||0}G ${gs.reward.vp||0}VP${gs.comboReward?` · Combo +${gs.comboReward}G`:''}${gs.comboRewardVP?` · Combo +${gs.comboRewardVP}VP`:''}</div><div class="mini">Slot ${gs.slotId} · Aging ${gs.aging}${agingUnit} · ${gs.usedThisTurn?'本 Turn 已完成；輪替時處理':'本 Turn 可完成'}</div></div>`}).join('');const h=box.closest('section')?.querySelector('h2');if(h)h.innerHTML=`Long-Term <span class="mini">唯一四格市場 · Era T${cur} · current deck ${(S.ltEraState?.eraDecks?.[cur]||[]).length} · removed ${(S.removedLtCardIds||[]).length}</span>`}
+ const tel=document.getElementById('telemetry');if(tel){const t=S.telemetry.v2210;tel.innerHTML+=`<div class="row"><span class="chip">v2.2.10 Single LT 4 slots</span><span class="chip">VP LT 0</span><span class="chip">Contract audit ${S.aiDecisionRecords.length}</span><span class="chip">Action audit ${S.actionDecisionRecords.length}</span><span class="chip">OT/LT picks ${t.oneTimeChoices}/${t.longTermChoices}</span></div>`}
+};
+
 </script>
 </body></html>
