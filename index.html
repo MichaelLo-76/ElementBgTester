@@ -2606,5 +2606,117 @@ v2210SetVersion=function(){_v55BaseSetVersion();if(S){S.schemaVersion=V2210_STRA
 
 const _v55BaseV229SetVersion=v229SetVersion;
 v229SetVersion=function(){_v55BaseV229SetVersion();if(S){S.rulesVersion='v2.2.10';S.schemaVersion=V2210_STRATEGY_SCHEMA;S.version=V2210_STRATEGY_WEB;S.config=S.config||{};S.config.workerPatch='v2.2.10-single-lt-ai-strategy';S.config.economyPatchVersion='v2.2.10';S.config.aiPolicyVersion=V2210_STRATEGY_POLICY;}};
+// ===== v5.6 Bugfix: Maintenance per-element cap + AI no-op replacement =====
+const V2210_V56_SCHEMA='2.2.10-web-5.6';
+const V2210_V56_WEB='v2.2.10-web-v5.6-bugfix-restock-replacement';
+const V2210_V56_POLICY='v2.2.10-ai-planaware-a2-2';
+function v56PlannedCount(plan,t,e=null){let n=0;for(const q of plan||[]){if(q?.x?.t!==t)continue;if(e==null||q.x.e===e)n++;}return n}
+function v56MaintenanceAcceptsPlanned(p,t,e,plan){
+ if(!t||!t.cap)return false;
+ if(stockCount(t)+v56PlannedCount(plan,t)>=t.cap)return false;
+ if(t.anyCap)return true;
+ // Water Lv6 grants storage compatibility, but it does not rewrite printed per-element caps.
+ if(e==='W'&&p.tech.water>=6&&t.bElementCap)return true;
+ if(t.capByElement)return (t.stock?.[e]||0)+v56PlannedCount(plan,t,e)<(t.capByElement[e]||0);
+ if(t.element===e)return true;
+ if(t.allowed?.includes(e))return true;
+ return false;
+}
+maintenanceAvailableTargets=function(p,plan){return fundingRestockTargets(p).filter(x=>v56MaintenanceAcceptsPlanned(p,x.t,x.e,plan))};
+
+// Replace the v2.2.4 restock resolver with a shadow-ledger atomic validator.
+fundingRestock=async function(p,oldLimit=2){
+ ensureV224State();
+ const q=maintenanceRestockQuota(oldLimit),plan=[];
+ while(plan.length<q.totalCap){
+  const targets=maintenanceAvailableTargets(p,plan),nextPaid=plan.length>=q.freeCap;
+  const canAdd=targets.length&&(!nextPaid||Math.max(0,plan.length-q.freeCap)<q.paidCap&&p.gold>Math.max(0,plan.length-q.freeCap));
+  const opts=[{label:plan.length?'確認並完成 Restock':'不 Restock',commit:true,uiButton:true,uiButtonLabel:plan.length?'確認並完成 Restock':'不 Restock'}];
+  if(plan.length)opts.push({label:'撤銷上一個',undo:true,uiButton:true,uiButtonLabel:'撤銷上一個'});
+  if(canAdd)for(const x of targets)opts.push({label:`${x.e} → ${x.where}${nextPaid?' (1G)':' (FREE)'}`,x,uiButton:true,uiButtonLabel:`${elemIcon(x.e)} → ${x.where}${nextPaid?' · 1G':' · FREE'}`});
+  if(p.type==='AI'){
+   const c=await choose(p,`${p.id} Maintenance Restock preview`,opts,o=>{if(o.commit)return plan.length?0.05:0;if(o.undo)return -10;const paid=plan.length>=q.freeCap;return immediateDemand(p,o.x.e)+.25-(paid?.55:0)});
+   if(c.commit)break;if(c.undo){plan.pop();continue}if(c.x){plan.push({x:c.x});continue}break;
+  }
+  const c=await visualChoose(p,`${p.id} Maintenance Restock`,opts,{kind:'MAINT_RESTOCK',html:maintenanceRestockPreviewHtml(p,plan,q,'完整 Maintenance Action')});
+  if(c.commit)break;if(c.undo){plan.pop();continue}if(c.x)plan.push({x:c.x});
+ }
+ const free=Math.min(plan.length,q.freeCap),paid=Math.max(0,plan.length-q.freeCap);
+ if(paid>q.paidCap||paid>p.gold)throw new Error('Maintenance Restock atomic validation failed: paid quota/Gold');
+ const shadows=new Map();
+ for(const z of plan){
+  const t=z.x.t,e=z.x.e;
+  if(!shadows.has(t))shadows.set(t,{total:stockCount(t),byElement:{...(t.stock||{})}});
+  const sh=shadows.get(t);
+  if(sh.total>=t.cap)throw new Error('Maintenance Restock atomic validation failed: total capacity');
+  if(!t.anyCap){
+   if(e==='W'&&p.tech.water>=6&&t.bElementCap){/* total cap only */}
+   else if(t.capByElement){if((sh.byElement[e]||0)>=(t.capByElement[e]||0))throw new Error(`Maintenance Restock atomic validation failed: per-element capacity ${e}`)}
+   else if(!(t.element===e||t.allowed?.includes(e)))throw new Error('Maintenance Restock atomic validation failed: identity');
+  }
+  sh.total++;sh.byElement[e]=(sh.byElement[e]||0)+1;
+ }
+ p.gold-=paid;
+ for(let i=0;i<plan.length;i++){const z=plan[i];z.x.t.stock[z.x.e]=(z.x.t.stock[z.x.e]||0)+1;tlog(`${p.id} Maintenance Restock: supply ${z.x.e} → ${z.x.where}${i<q.freeCap?' [FREE]':' [1G]'}`)}
+ const tm=S.telemetry.maintenanceRestock;tm.actions++;tm.restockFreeCount+=free;tm.restockPaidCount+=paid;tm.restockGoldSpent+=paid;tm.restockTotalCount+=plan.length;tm.abilityModifierTotal+=q.modifier;const src=S.timing?.actionSource||S.timing?.macroStep||'UNKNOWN';tm.bySource[src]=(tm.bySource[src]||0)+1;for(const z of plan)tm.destinations[z.x.where]=(tm.destinations[z.x.where]||0)+1;
+ S.telemetry.fundingRestock=S.telemetry.fundingRestock||{actions:0,counts:{}};S.telemetry.fundingRestock.actions++;S.telemetry.fundingRestock.counts[plan.length]=(S.telemetry.fundingRestock.counts[plan.length]||0)+1;
+ tlog(`${p.id} Maintenance Restock commit: free=${free}, paid=${paid}, total=${plan.length}, cost=${paid}G, modifier=${q.modifier}`);
+ return plan.length;
+};
+
+// Correct identity comparison for Middle replacements. v5.5 compared AProduction against x.family,
+// but legalMiddleBuilds stores parents a/b and makeMiddle derives the family from that pair.
+v2210SameBuildIdentity=function(old,o){
+ if(!old)return false;
+ if(o.mode==='outer')return old.kind==='Outer'&&old.element===o.e;
+ if(o.mode==='middle'){
+  if(old.kind!=='Middle'||old.mode!==o.x?.mode)return false;
+  if(old.mode==='Standard'){
+   const want=[...new Set([o.x?.a,o.x?.b].filter(Boolean))].sort().join('|');
+   const have=[...new Set(old.allowed||[])].sort().join('|');
+   return want===have;
+  }
+  if(old.mode==='BEnhance')return old.element===o.x?.a;
+  if(old.mode==='AProduction'){
+   const f=FAMILY_BY_PAIR[[o.x?.a,o.x?.b].filter(Boolean).sort().join(',')];
+   return old.family===f;
+  }
+  if(old.mode==='Breadth')return true;
+  return false;
+ }
+ if(o.mode==='inner'){
+  if(old.kind!=='Inner')return false;
+  if(o.x?.kind==='Universal')return (o.x.val==='standard'&&old.name==='工房標準化核心')||(o.x.val==='buffer'&&old.name==='產線回流核心');
+  if(o.x?.kind==='B')return old.type==='B'&&old.element===o.x.val;
+  if(o.x?.kind==='A')return old.type==='A'&&old.family===o.x.val;
+  if(o.x?.kind==='Wildcard')return old.type==='Wildcard';
+ }
+ return false;
+};
+
+function v56RepairIllegalPerElementStock(){
+ if(!S?.players)return 0;let repaired=0;
+ for(const p of S.players)for(const s of p.wheel?.sectors||[])for(const t of [...(s.outers||[]),...(s.middles||[]),s.inner].filter(Boolean)){
+  if(!t.capByElement||!t.stock)continue;
+  for(const [e,cap0] of Object.entries(t.capByElement)){
+   const cap=+cap0||0,have=+t.stock[e]||0;
+   if(have>cap){const excess=have-cap;t.stock[e]=cap;repaired+=excess;tlog(`v5.6 recovery: ${p.id} ${tileLabel(t)} ${e} stock ${have}→${cap}; ${excess} illegal excess returned to Supply`,{eventType:'V56StockRecovery',playerId:p.id,element:e,excess});}
+  }
+ }
+ return repaired;
+}
+
+const _v56PrevStrategyEnsure=v2210StrategyEnsure;
+v2210StrategyEnsure=function(){_v56PrevStrategyEnsure();if(!S)return;S.schemaVersion=V2210_V56_SCHEMA;S.version=V2210_V56_WEB;S.config=S.config||{};S.config.aiPolicyVersion=V2210_V56_POLICY;S.config.v56Bugfix='maintenance-per-element-cap+ai-noop-replacement';S.telemetry.v2210Strategy=S.telemetry.v2210Strategy||{};S.telemetry.v2210Strategy.v56=true;};
+const _v56PrevNewGame=newGame;
+newGame=function(start=true){_v56PrevNewGame(false);v2210StrategyEnsure();tlog('v5.6 bugfix active: Maintenance Restock uses per-element shadow capacity; AI rejects identity-equivalent no-op replacement.',{eventType:'V56Bugfix'});render();if(start)advanceGame();};
+const _v56PrevResume=resumeImportedState;
+resumeImportedState=async function(loaded){await _v56PrevResume(loaded);v2210StrategyEnsure();const repaired=v56RepairIllegalPerElementStock();if(repaired)tlog(`v5.6 import recovery repaired ${repaired} illegal over-cap Stock token(s) from v5.5.`);render();};
+const _v56PrevRender=render;
+render=function(){v2210StrategyEnsure();_v56PrevRender();const mini=document.querySelector('.brand .mini');if(mini)mini.textContent='v2.2.10 Web Playtest v5.6 Bugfix';document.title='元素管道：術式工房 v2.2.10 Web Playtest v5.6';const n=document.getElementById('interpretation');if(n)n.innerHTML='<b>v2.2.10 Rules / v5.6 Bugfix</b>：修正 Maintenance Restock preview 未計入同一批次既選 token，可能突破 Middle per-element cap 並在 Turn End ASSERT；同時修正 AI 對 AProduction / Standard Middle 同身份 Replacement 的辨識，避免花 Gold 重建完全相同 Tile 或把 upgraded Tile 降回未升級。正式規則未改。';};
+downloadState=function(){v2210StrategyEnsure();downloadBlob(`element_pipeline_${S.seed}_T${S.turnNumber}_v2210_v56.json`,JSON.stringify(S,null,2))};
+downloadLog=function(){v2210StrategyEnsure();downloadBlob(`element_pipeline_${S.seed}_log_v2210_v56.json`,JSON.stringify({rulesVersion:S.rulesVersion,schemaVersion:S.schemaVersion,aiPolicyVersion:V2210_V56_POLICY,startingSetupMode:S.startingSetupMode,seed:S.seed,runId:S.runId,playerCount:S.players?.length||S.playerCount,setupSummary:S.setupSummary,ltEraState:S.ltEraState,removedLtCardIds:S.removedLtCardIds,removedTileRecords:S.removedTileRecords,aiDecisionRecords:S.aiDecisionRecords,actionDecisionRecords:S.actionDecisionRecords,aiDecisionTelemetry:S.aiDecisionTelemetry,planProgressRecords:S.planProgressRecords,goldCashflowRecords:S.goldCashflowRecords,turnEconomySnapshots:S.turnEconomySnapshots,events:S.logs,ai:S.aiLog,telemetry:S.telemetry},null,2))};
+
+
 </script>
 </body></html>
