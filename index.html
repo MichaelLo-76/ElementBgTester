@@ -79,6 +79,10 @@ button,input,select,textarea{font:inherit}.top{position:sticky;top:0;z-index:20;
    <label><input type="radio" name="startingSetupModeUI" value="STANDARD" checked> 初階 Standard（固定起始 6G）</label>
    <label><input type="radio" name="startingSetupModeUI" value="ADVANCED_DRAFT"> 進階 Advanced（Starting Draft）</label>
  </span>
+ <span id="experimentControl" class="setupModeControl" title="EXP-T3-01：只影響下一次 New / Restart；本局建立後鎖定">
+   <label><input type="checkbox" id="expT3LtVpOnlyUI"> EXP A：T3 LT VP-only</label>
+   <label><input type="checkbox" id="expT3StagnationUI"> EXP B：T3 One-Time 空轉淘汰</label>
+ </span>
  <button onclick="newGame()">New / Restart</button><button id="advanceBtn" onclick="advanceGame()">Debug Advance</button><button id="autoBtn" onclick="toggleAuto()">Auto ▶</button>
  <button onclick="downloadState()">Export JSON</button><button onclick="document.getElementById('importFile').click()">Import JSON</button><input class="hidden" id="importFile" type="file" accept="application/json" onchange="importStateFile(event)">
  <button onclick="downloadLog()">Export Log</button><button onclick="runSmoke(20)">4AI Smoke×20</button>
@@ -2716,6 +2720,128 @@ const _v56PrevRender=render;
 render=function(){v2210StrategyEnsure();_v56PrevRender();const mini=document.querySelector('.brand .mini');if(mini)mini.textContent='v2.2.10 Web Playtest v5.6 Bugfix';document.title='元素管道：術式工房 v2.2.10 Web Playtest v5.6';const n=document.getElementById('interpretation');if(n)n.innerHTML='<b>v2.2.10 Rules / v5.6 Bugfix</b>：修正 Maintenance Restock preview 未計入同一批次既選 token，可能突破 Middle per-element cap 並在 Turn End ASSERT；同時修正 AI 對 AProduction / Standard Middle 同身份 Replacement 的辨識，避免花 Gold 重建完全相同 Tile 或把 upgraded Tile 降回未升級。正式規則未改。';};
 downloadState=function(){v2210StrategyEnsure();downloadBlob(`element_pipeline_${S.seed}_T${S.turnNumber}_v2210_v56.json`,JSON.stringify(S,null,2))};
 downloadLog=function(){v2210StrategyEnsure();downloadBlob(`element_pipeline_${S.seed}_log_v2210_v56.json`,JSON.stringify({rulesVersion:S.rulesVersion,schemaVersion:S.schemaVersion,aiPolicyVersion:V2210_V56_POLICY,startingSetupMode:S.startingSetupMode,seed:S.seed,runId:S.runId,playerCount:S.players?.length||S.playerCount,setupSummary:S.setupSummary,ltEraState:S.ltEraState,removedLtCardIds:S.removedLtCardIds,removedTileRecords:S.removedTileRecords,aiDecisionRecords:S.aiDecisionRecords,actionDecisionRecords:S.actionDecisionRecords,aiDecisionTelemetry:S.aiDecisionTelemetry,planProgressRecords:S.planProgressRecords,goldCashflowRecords:S.goldCashflowRecords,turnEconomySnapshots:S.turnEconomySnapshots,events:S.logs,ai:S.aiLog,telemetry:S.telemetry},null,2))};
+
+
+// ===== v5.7 EXP-T3-01 Experimental Toggle Overlay =====
+// Test-only. Formal rules remain v2.2.10. Two independent toggles are locked into each newly-created run.
+const EXP_T3_SCHEMA='2.2.10-web-5.7-exp-t3-01';
+const EXP_T3_WEB='v2.2.10-web-v5.7-exp-t3-01';
+const EXP_T3_PATCH='EXP-T3-01';
+const _expPrevV229SetVersion=v229SetVersion;
+v229SetVersion=function(){_expPrevV229SetVersion();if(S){S.rulesVersion='v2.2.10';S.schemaVersion=EXP_T3_SCHEMA;S.version=EXP_T3_WEB;S.config=S.config||{};S.config.experimentalWorkerPatch=EXP_T3_PATCH;}};
+const _expPrevV2210SetVersion=v2210SetVersion;
+v2210SetVersion=function(){_expPrevV2210SetVersion();if(S){S.schemaVersion=EXP_T3_SCHEMA;S.version=EXP_T3_WEB;S.config=S.config||{};S.config.experimentalWorkerPatch=EXP_T3_PATCH;}};
+const _expPrevStrategyEnsure=v2210StrategyEnsure;
+v2210StrategyEnsure=function(){_expPrevStrategyEnsure();if(S){S.schemaVersion=EXP_T3_SCHEMA;S.version=EXP_T3_WEB;S.config=S.config||{};S.config.experimentalWorkerPatch=EXP_T3_PATCH;}};
+function expUiFlags(){return {t3LtVpOnly:!!document.getElementById('expT3LtVpOnlyUI')?.checked,t3OneTimeStagnationDiscard:!!document.getElementById('expT3StagnationUI')?.checked}}
+function expDefaultFlags(){return {t3LtVpOnly:false,t3OneTimeStagnationDiscard:false}}
+function expEnsureState(){
+ if(!S)return;v2210StrategyEnsure();
+ S.schemaVersion=EXP_T3_SCHEMA;S.version=EXP_T3_WEB;
+ S.experimentFlags={...expDefaultFlags(),...(S.experimentFlags||{})};
+ S.config=S.config||{};S.config.experimentalWorkerPatch=EXP_T3_PATCH;
+ S.oneTimeRevealSerialCounter=Number.isInteger(S.oneTimeRevealSerialCounter)?S.oneTimeRevealSerialCounter:0;
+ S.oneTimeCompletedThisTurn=S.oneTimeCompletedThisTurn||{total:0,byPrintedEra:{T1:0,T2:0,T3:0}};
+ S.stagnationDiscardRecords=S.stagnationDiscardRecords||[];
+ S.oneTimeProgressRecords=S.oneTimeProgressRecords||[];
+ S.ltPayoutBySource=S.ltPayoutBySource||[];
+ S.aiTargetInterruptionRecords=S.aiTargetInterruptionRecords||[];
+ S.expEconomyEvents=S.expEconomyEvents||[];
+ S.expEconomyTurnRecords=S.expEconomyTurnRecords||[];
+ S.telemetry=S.telemetry||{};
+ S.telemetry.expT3=S.telemetry.expT3||{playerCompleted:0,autoDiscarded:0,stagnationChecks:0,stagnationTriggered:0,ltT3Completions:0,ltVpOnlyCompletions:0,targetInterruptions:0,finalTurnTriggeredBy:null};
+ // Legacy v5.6 saves have no serials. Deterministically assign in current slot order; old saves imply flags OFF.
+ for(let i=0;i<(S.oneTime?.market||[]).length;i++){const c=S.oneTime.market[i];if(!Number.isInteger(c.revealSerial)){c.revealSerial=++S.oneTimeRevealSerialCounter;c.revealSlotIndex=i}}
+}
+function expFlagsText(){const f=S?.experimentFlags||expDefaultFlags();return `LT VP-only ${f.t3LtVpOnly?'ON':'OFF'} / Stagnation ${f.t3OneTimeStagnationDiscard?'ON':'OFF'}`}
+function expRecordEconomyEvent(playerId,source,before,after,meta={}){if(!S||before===after)return;expEnsureState();S.expEconomyEvents.push({turn:S.turnNumber,era:S.stage,playerId,source,goldBefore:before,goldAfter:after,delta:after-before,...meta});}
+function expRecordTurnEconomy(){
+ expEnsureState();const turn=S.turnNumber;
+ for(const p of S.players||[]){const es=S.expEconomyEvents.filter(e=>e.turn===turn&&e.playerId===p.id);const incomeBySource={},expenseBySource={};for(const e of es){const k=e.source||'OTHER';if(e.delta>0)incomeBySource[k]=(incomeBySource[k]||0)+e.delta;else expenseBySource[k]=(expenseBySource[k]||0)-e.delta}
+  S.expEconomyTurnRecords.push({turn,era:S.stage,playerId:p.id,incomeBySource,expenseBySource,endingGold:p.gold,experimentFlags:clone(S.experimentFlags)});
+ }
+}
+function expAssignReveal(c,slotIndex=null){if(!c)return null;expEnsureState();if(!Number.isInteger(c.revealSerial))c.revealSerial=++S.oneTimeRevealSerialCounter;if(slotIndex!=null)c.revealSlotIndex=slotIndex;return c}
+function expRefreshInitialRevealSerials(){expEnsureState();S.oneTimeRevealSerialCounter=0;for(let i=0;i<(S.oneTime?.market||[]).length;i++){const c=S.oneTime.market[i];c.revealSerial=++S.oneTimeRevealSerialCounter;c.revealSlotIndex=i}}
+
+// Reward mode is one source of truth for UI, AI evaluation and actual payout.
+const _expPrevHydrateGoldLTSlot=hydrateGoldLTSlot;
+hydrateGoldLTSlot=function(gs){
+ const x=_expPrevHydrateGoldLTSlot(gs);if(!x)return x;
+ if(S?.experimentFlags?.t3LtVpOnly&&x.stage===3){const printed=GOLD_LT_CARDS[x.cardId]?.reward||{};x.reward={g:0,vp:(printed.g||0)+(printed.vp||0)};x.effectiveRewardMode='T3_VP_ONLY'}
+ else{x.effectiveRewardMode='CANONICAL'}
+ return x;
+};
+
+const _expPrevRefillOneTime=refillOneTime;
+refillOneTime=function(){const beforeFinal=!!S?.isFinalTurn,c=_expPrevRefillOneTime();if(c){const idx=(S.oneTime.market||[]).findIndex(x=>x===c||x.id===c.id);expAssignReveal(c,idx<0?null:idx);if(!beforeFinal&&S.isFinalTurn&&!S.telemetry.expT3.finalTurnTriggeredBy)S.telemetry.expT3.finalTurnTriggeredBy='PLAYER_OR_STAGNATION_REFILL'}return c};
+
+const _expPrevStartTurn=startTurn;
+startTurn=async function(replaying=false){expEnsureState();S.oneTimeCompletedThisTurn={total:0,byPrintedEra:{T1:0,T2:0,T3:0}};return _expPrevStartTurn(replaying)};
+
+const _expPrevCompleteOneTime=completeOneTime;
+completeOneTime=async function(p,c){
+ expEnsureState();const n0=S.telemetry.contracts.OneTime||0,g0=p.gold,final0=!!S.isFinalTurn;const r=await _expPrevCompleteOneTime(p,c);const done=(S.telemetry.contracts.OneTime||0)>n0;
+ if(done){const k='T'+(c.tier||S.stage);S.oneTimeCompletedThisTurn.total++;S.oneTimeCompletedThisTurn.byPrintedEra[k]=(S.oneTimeCompletedThisTurn.byPrintedEra[k]||0)+1;S.telemetry.expT3.playerCompleted++;expRecordEconomyEvent(p.id,'ONE_TIME',g0,p.gold,{cardId:c.id});if(!final0&&S.isFinalTurn)S.telemetry.expT3.finalTurnTriggeredBy='PLAYER_COMPLETION_REFILL'}
+ return r;
+};
+
+const _expPrevCompleteLongTerm=completeLongTerm;
+completeLongTerm=async function(p,slot,req){
+ expEnsureState();hydrateGoldLTSlot(slot);const g0=p.gold,v0=p.vp,aging=slot.aging||0,priorTagged=p.comboTagged>0,printedEra=slot.stage||0,baseG=slot.reward?.g||0,baseVP=slot.reward?.vp||0,comboVP=priorTagged?(slot.comboRewardVP||0):0,comboG=priorTagged?(slot.comboReward||0):0;
+ const r=await _expPrevCompleteLongTerm(p,slot,req);if(r===false)return r;
+ if(slot?.goldRotating){const rec={turn:S.turnNumber,era:S.stage,playerId:p.id,cardId:slot.cardId,printedEra,actualBaseGold:baseG,actualBaseVP:baseVP,agingVP:printedEra===3?aging:0,agingGold:printedEra===3?0:aging,comboVP,comboGold:comboG,effectiveRewardMode:(S.experimentFlags.t3LtVpOnly&&printedEra===3)?'T3_VP_ONLY':'CANONICAL',goldDelta:p.gold-g0,vpDelta:p.vp-v0};S.ltPayoutBySource.push(rec);if(printedEra===3){S.telemetry.expT3.ltT3Completions++;if(rec.effectiveRewardMode==='T3_VP_ONLY')S.telemetry.expT3.ltVpOnlyCompletions++}expRecordEconomyEvent(p.id,'LONG_TERM',g0,p.gold,{cardId:slot.cardId,effectiveRewardMode:rec.effectiveRewardMode})}
+ return r;
+};
+
+function expLatestPlanForPlayer(pid){return [...(S.planProgressRecords||[])].reverse().find(x=>x.playerId===pid)||null}
+function expInterruptTargets(card){for(const p of S.players||[]){const plan=expLatestPlanForPlayer(p.id);if(!plan||plan.targetContractId!==card.id)continue;const rec={turn:S.turnNumber,era:S.stage,playerId:p.id,targetContractId:card.id,targetRemovedByStagnation:true,planCreatedAt:plan.planCreatedAt,investedTurns:Math.max(0,S.turnNumber-(plan.planCreatedAt||S.turnNumber)),reservedElements:clone(plan.reservedElements||{}),estimatedCompletionTurn:S.turnNumber+(plan.progressByTurn?.estimatedTurns||0),planBreakReason:'TARGET_REMOVED_BY_STAGNATION'};S.aiTargetInterruptionRecords.push(rec);S.telemetry.expT3.targetInterruptions++;S.planProgressRecords.push({...plan,turn:S.turnNumber,reason:'STAGNATION_INTERRUPT',targetRemovedByStagnation:true,planBreakReason:'TARGET_REMOVED_BY_STAGNATION'});}}
+function expStagnationDiscard(){
+ expEnsureState();const f=S.experimentFlags,check={turn:S.turnNumber,era:S.stage,triggered:false,discardCardId:null,slotId:null,revealSerial:null,reason:null,marketSizeBefore:S.oneTime.market.length,deckSizeBefore:S.oneTime.deck.length,marketSizeAfter:null,deckSizeAfter:null,experimentFlags:clone(f)};S.telemetry.expT3.stagnationChecks++;
+ if(!f.t3OneTimeStagnationDiscard){check.reason='FLAG_OFF';}
+ else if(S.stage!==3){check.reason='NOT_T3';}
+ else if((S.oneTimeCompletedThisTurn?.total||0)>0){check.reason='ONE_TIME_COMPLETED_THIS_TURN';}
+ else if(!(S.oneTime.market||[]).length){check.reason='SKIPPED_EMPTY_MARKET';}
+ else{
+  const ranked=S.oneTime.market.map((c,i)=>({c,i,serial:Number.isInteger(c.revealSerial)?c.revealSerial:Number.MAX_SAFE_INTEGER})).sort((a,b)=>a.serial-b.serial||a.i-b.i);const pick=ranked[0];
+  check.triggered=true;check.discardCardId=pick.c.id;check.slotId=`OT-S${pick.i+1}`;check.revealSerial=pick.c.revealSerial;check.reason='T3_ZERO_ONE_TIME_COMPLETIONS';
+  expInterruptTargets(pick.c);S.oneTime.market.splice(pick.i,1);S.telemetry.expT3.autoDiscarded++;S.telemetry.expT3.stagnationTriggered++;
+  tlog(`EXP-T3 stagnation discard: ${pick.c.id} (serial ${pick.c.revealSerial})`,{eventType:'StagnationDiscard',cardId:pick.c.id,revealSerial:pick.c.revealSerial,slotId:check.slotId,turn:S.turnNumber});
+  const final0=!!S.isFinalTurn;const refill=refillOneTime();if(!final0&&S.isFinalTurn)S.telemetry.expT3.finalTurnTriggeredBy='STAGNATION_DISCARD_REFILL';check.refilledCardId=refill?.id||null;
+ }
+ check.marketSizeAfter=S.oneTime.market.length;check.deckSizeAfter=S.oneTime.deck.length;S.stagnationDiscardRecords.push(check);
+ S.oneTimeProgressRecords.push({turn:S.turnNumber,era:S.stage,completedByPlayers:S.oneTimeCompletedThisTurn?.total||0,completedByPrintedEra:clone(S.oneTimeCompletedThisTurn?.byPrintedEra||{}),autoDiscarded:check.triggered?1:0,discardCardId:check.discardCardId,deckRemaining:S.oneTime.deck.length,marketRemaining:S.oneTime.market.length,finalTurnTriggeredBy:S.telemetry.expT3.finalTurnTriggeredBy,experimentFlags:clone(f)});
+ return check;
+}
+
+const _expPrevContractPhaseEnd=contractPhaseEnd;
+contractPhaseEnd=async function(){const r=await _expPrevContractPhaseEnd();expStagnationDiscard();return r};
+const _expPrevTurnEnd=turnEnd;
+turnEnd=async function(){const r=await _expPrevTurnEnd();expRecordTurnEconomy();return r};
+
+const _expPrevResolveContractAction=resolveContractAction;
+resolveContractAction=async function(p,a){const g0=p.gold,r=await _expPrevResolveContractAction(p,a);if(a?.kind==='DEALER')expRecordEconomyEvent(p.id,'PATRON',g0,p.gold);else if(a?.kind==='MACHINE')expRecordEconomyEvent(p.id,'MACHINE',g0,p.gold);return r};
+const _expPrevExecuteStandardAction=executeStandardAction;
+executeStandardAction=async function(p,type,source='SECRET',mods={}){const g0=p.gold,r=await _expPrevExecuteStandardAction(p,type,source,mods);if(source==='SECRET')expRecordEconomyEvent(p.id,type==='Funding'?'MAINTENANCE':type.toUpperCase(),g0,p.gold,{actionSource:source});return r};
+
+const _expPrevNewGame=newGame;
+newGame=function(start=true){const flags=expUiFlags();_expPrevNewGame(false);S.experimentFlags=flags;expEnsureState();expRefreshInitialRevealSerials();for(const x of S.goldLongTerm?.marketSlots||[])hydrateGoldLTSlot(x);tlog(`EXP-T3-01 run locked: ${expFlagsText()}`,{eventType:'ExperimentFlags',experimentFlags:clone(S.experimentFlags),rulesVersion:S.rulesVersion,aiPolicyVersion:S.config?.aiPolicyVersion,seed:S.seed,runId:S.runId});render();if(start)advanceGame()};
+
+const _expPrevResumeImportedState=resumeImportedState;
+resumeImportedState=async function(loaded){await _expPrevResumeImportedState(loaded);S.experimentFlags={...expDefaultFlags(),...(loaded?.experimentFlags||{})};expEnsureState();for(const x of S.goldLongTerm?.marketSlots||[])hydrateGoldLTSlot(x);render()};
+
+const _expPrevRender=render;
+render=function(){expEnsureState();_expPrevRender();
+ const mini=document.querySelector('.brand .mini');if(mini)mini.textContent='v2.2.10 Web Playtest v5.7 EXP-T3-01';document.title='元素管道：術式工房 v2.2.10 Web v5.7 EXP-T3-01';
+ const n=document.getElementById('interpretation');if(n)n.innerHTML=`<b>v2.2.10 Canonical + EXP-T3-01（測試版）</b>：正式規則不變。此局鎖定 <b>${expFlagsText()}</b>。A 開關只把 T3 新 Mixed LT 的基礎 4G+4VP / 5G+5VP 改成 0G+8VP / 0G+10VP；Aging 與 Combo 仍為原 VP。B 開關只在 T3 的 Contract Phase 完整結束後檢查：本 Turn 若 0 張 One-Time 由玩家完成，淘汰市場 revealSerial 最舊的一張並正常補牌；淘汰不算完成、不給任何獎勵。`;
+ const ctl=document.getElementById('experimentControl');if(ctl){const f=S.experimentFlags;ctl.dataset.locked='1';ctl.title=`目前進行中：${expFlagsText()}。勾選框只決定下一次 New / Restart。`;}
+ const box=document.getElementById('ltMarket');if(box){for(const gs of S.goldLongTerm?.marketSlots||[])hydrateGoldLTSlot(gs);const cur=S.ltEraState?.currentEra||S.stage||1;box.innerHTML=(S.goldLongTerm?.marketSlots||[]).map(gs0=>{if(!gs0.cardId)return `<div class="card"><h4>Empty LT Slot</h4></div>`;const gs=hydrateGoldLTSlot(gs0),key=`LT:${gs.id}`,leg=HUMAN_UI.kind==='CONTRACT'&&uiOptionIndexByKey(key)>=0,agingUnit=gs.stage===3?'VP':'G',legacy=gs.stage<cur?' · LEGACY':'',mode=gs.effectiveRewardMode==='T3_VP_ONLY'?' · VP-ONLY':'';return `<div class="card ${leg?'contract-legal':''}" ${leg?`onclick="humanUIClick('${key}')"`:''}><h4>${gs.cardId} <span class="tag">${gs.stage===3?'Mixed LT':'Gold LT'} · T${gs.stage}${legacy}${mode}</span>${gs.comboTag?'<span class="tag combo">Combo</span>':''}${gs.usedThisTurn?'<span class="tag">USED</span>':''}</h4><div class="reqIconLine">${iconizeText(gs.req)}</div><div class="ok">${gs.reward.g||0}G ${gs.reward.vp||0}VP${gs.comboReward?` · Combo +${gs.comboReward}G`:''}${gs.comboRewardVP?` · Combo +${gs.comboRewardVP}VP`:''}</div><div class="mini">Slot ${gs.slotId} · Aging ${gs.aging}${agingUnit}</div></div>`}).join('');}
+ const tel=document.getElementById('telemetry');if(tel){const e=S.telemetry.expT3||{};tel.innerHTML+=`<div class="row"><span class="chip">EXP ${S.experimentFlags.t3LtVpOnly?'A✓':'A–'} ${S.experimentFlags.t3OneTimeStagnationDiscard?'B✓':'B–'}</span><span class="chip">OT player ${e.playerCompleted||0}</span><span class="chip">OT auto-discard ${e.autoDiscarded||0}</span><span class="chip">Target interrupt ${e.targetInterruptions||0}</span><span class="chip">T3 LT VP-only ${e.ltVpOnlyCompletions||0}</span></div>`;}
+ S.schemaVersion=EXP_T3_SCHEMA;S.version=EXP_T3_WEB;
+};
+
+downloadState=function(){expEnsureState();downloadBlob(`element_pipeline_${S.seed}_T${S.turnNumber}_v2210_v57_${S.experimentFlags.t3LtVpOnly?'A1':'A0'}${S.experimentFlags.t3OneTimeStagnationDiscard?'B1':'B0'}.json`,JSON.stringify(S,null,2))};
+downloadLog=function(){expEnsureState();downloadBlob(`element_pipeline_${S.seed}_log_v2210_v57_${S.experimentFlags.t3LtVpOnly?'A1':'A0'}${S.experimentFlags.t3OneTimeStagnationDiscard?'B1':'B0'}.json`,JSON.stringify({rulesVersion:S.rulesVersion,schemaVersion:S.schemaVersion,aiPolicyVersion:S.config?.aiPolicyVersion,startingSetupMode:S.startingSetupMode,seed:S.seed,runId:S.runId,playerCount:S.players?.length||S.playerCount,experimentFlags:S.experimentFlags,setupSummary:S.setupSummary,ltEraState:S.ltEraState,oneTimeCompletedThisTurn:S.oneTimeCompletedThisTurn,stagnationDiscard:S.stagnationDiscardRecords,oneTimeProgress:S.oneTimeProgressRecords,ltPayoutBySource:S.ltPayoutBySource,economy:S.expEconomyTurnRecords,economyEvents:S.expEconomyEvents,aiTargetInterruption:S.aiTargetInterruptionRecords,aiDecisionRecords:S.aiDecisionRecords,actionDecisionRecords:S.actionDecisionRecords,aiDecisionTelemetry:S.aiDecisionTelemetry,planProgressRecords:S.planProgressRecords,goldCashflowRecords:S.goldCashflowRecords,turnEconomySnapshots:S.turnEconomySnapshots,events:S.logs,ai:S.aiLog,telemetry:S.telemetry},null,2))};
 
 
 </script>
