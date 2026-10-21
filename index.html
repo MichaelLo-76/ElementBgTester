@@ -80,8 +80,9 @@ button,input,select,textarea{font:inherit}.top{position:sticky;top:0;z-index:20;
    <label><input type="radio" name="startingSetupModeUI" value="ADVANCED_DRAFT"> 進階 Advanced（Starting Draft）</label>
  </span>
  <span id="experimentControl" class="setupModeControl" title="EXP-T3-01：只影響下一次 New / Restart；本局建立後鎖定">
-   <label><input type="checkbox" id="expT3LtVpOnlyUI"> EXP A：T3 LT VP-only</label>
+   <label><input type="checkbox" id="expT3LtVpOnlyUI" checked> EXP A：T3 LT VP-only</label>
    <label><input type="checkbox" id="expT3StagnationUI"> EXP B：T3 One-Time 空轉淘汰</label>
+   <label><input type="checkbox" id="expT3OneTime20UI" checked> EXP C：T3 One-Time 20-card v0.4</label>
  </span>
  <button onclick="newGame()">New / Restart</button><button id="advanceBtn" onclick="advanceGame()">Debug Advance</button><button id="autoBtn" onclick="toggleAuto()">Auto ▶</button>
  <button onclick="downloadState()">Export JSON</button><button onclick="document.getElementById('importFile').click()">Import JSON</button><input class="hidden" id="importFile" type="file" accept="application/json" onchange="importStateFile(event)">
@@ -2724,8 +2725,8 @@ downloadLog=function(){v2210StrategyEnsure();downloadBlob(`element_pipeline_${S.
 
 // ===== v5.7 EXP-T3-01 Experimental Toggle Overlay =====
 // Test-only. Formal rules remain v2.2.10. Two independent toggles are locked into each newly-created run.
-const EXP_T3_SCHEMA='2.2.10-web-5.7-exp-t3-01';
-const EXP_T3_WEB='v2.2.10-web-v5.7-exp-t3-01';
+const EXP_T3_SCHEMA='2.2.10-web-5.8-t3-20card-v04-test';
+const EXP_T3_WEB='v2.2.10-web-v5.8-t3-20card-v04-test';
 const EXP_T3_PATCH='EXP-T3-01';
 const _expPrevV229SetVersion=v229SetVersion;
 v229SetVersion=function(){_expPrevV229SetVersion();if(S){S.rulesVersion='v2.2.10';S.schemaVersion=EXP_T3_SCHEMA;S.version=EXP_T3_WEB;S.config=S.config||{};S.config.experimentalWorkerPatch=EXP_T3_PATCH;}};
@@ -2844,5 +2845,112 @@ downloadState=function(){expEnsureState();downloadBlob(`element_pipeline_${S.see
 downloadLog=function(){expEnsureState();downloadBlob(`element_pipeline_${S.seed}_log_v2210_v57_${S.experimentFlags.t3LtVpOnly?'A1':'A0'}${S.experimentFlags.t3OneTimeStagnationDiscard?'B1':'B0'}.json`,JSON.stringify({rulesVersion:S.rulesVersion,schemaVersion:S.schemaVersion,aiPolicyVersion:S.config?.aiPolicyVersion,startingSetupMode:S.startingSetupMode,seed:S.seed,runId:S.runId,playerCount:S.players?.length||S.playerCount,experimentFlags:S.experimentFlags,setupSummary:S.setupSummary,ltEraState:S.ltEraState,oneTimeCompletedThisTurn:S.oneTimeCompletedThisTurn,stagnationDiscard:S.stagnationDiscardRecords,oneTimeProgress:S.oneTimeProgressRecords,ltPayoutBySource:S.ltPayoutBySource,economy:S.expEconomyTurnRecords,economyEvents:S.expEconomyEvents,aiTargetInterruption:S.aiTargetInterruptionRecords,aiDecisionRecords:S.aiDecisionRecords,actionDecisionRecords:S.actionDecisionRecords,aiDecisionTelemetry:S.aiDecisionTelemetry,planProgressRecords:S.planProgressRecords,goldCashflowRecords:S.goldCashflowRecords,turnEconomySnapshots:S.turnEconomySnapshots,events:S.logs,ai:S.aiLog,telemetry:S.telemetry},null,2))};
 
 
+</script>
+
+<script>
+// ===== v5.8 T3 One-Time 20-card v0.4 proposed-data overlay =====
+// Test-only. Canonical remains v2.2.10. This overlay preserves v5.7 EXP A/B and adds a reversible T3 card-table switch.
+const V58_SCHEMA='2.2.10-web-5.8-t3-20card-v04-test';
+const V58_WEB='v2.2.10-web-v5.8-t3-20card-v04-test';
+const V58_T3_PATCH='T3-OT-20-v0.4-BonusAligned';
+const _v58PrevV229SetVersion=v229SetVersion;
+v229SetVersion=function(){_v58PrevV229SetVersion();if(S){S.schemaVersion=V58_SCHEMA;S.version=V58_WEB;S.config=S.config||{};S.config.t3OneTimeWorkerPatch=V58_T3_PATCH;}};
+const _v58PrevV2210SetVersion=v2210SetVersion;
+v2210SetVersion=function(){_v58PrevV2210SetVersion();if(S){S.schemaVersion=V58_SCHEMA;S.version=V58_WEB;S.config=S.config||{};S.config.t3OneTimeWorkerPatch=V58_T3_PATCH;}};
+const _v58PrevStrategyEnsure2=v2210StrategyEnsure;
+v2210StrategyEnsure=function(){_v58PrevStrategyEnsure2();if(S){S.schemaVersion=V58_SCHEMA;S.version=V58_WEB;S.config=S.config||{};S.config.t3OneTimeWorkerPatch=V58_T3_PATCH;}};
+const V58_BASELINE_T3_ROWS=V226_OT_ROWS.filter(r=>r[1]===3).map(r=>r.slice());
+const V58_T3_20_ROWS=[
+ ['T3-01',3,'Build','Steam W F','5VP','','',false,null,4],
+ ['T3-02',3,'Production','Magma F E','5VP','','HIGH:+2VP',false,null,4],
+ ['T3-03',3,'Funding','Frost W Wind','5VP','','LOW:+2VP',false,null,4],
+ ['T3-04',3,'Era','Sandstorm E Wind','5VP','','',true,null,4],
+ ['T3-05',3,'Production','Steam 2W F','6VP','Water','',false,null,5],
+ ['T3-06',3,'Funding','Magma 2F E','6VP','Fire','HIGH:+2VP',false,null,5],
+ ['T3-07',3,'Era','Frost W 2Wind','6VP','Wind','LOW:+2VP',false,null,5],
+ ['T3-08',3,'Build','Sandstorm 2E Wind','6VP','Earth','',true,null,5],
+ ['T3-09',3,'Funding','Steam 2W 2F','8VP','','',false,null,6],
+ ['T3-10',3,'Era','Magma 2F 2E','8VP','','',false,null,6],
+ ['T3-11',3,'Build','Frost Steam W Wind','8VP','','',false,null,6],
+ ['T3-12',3,'Production','Sandstorm Magma E Wind','8VP','','',true,'+3VP',6],
+ ['T3-13',3,'Era','2Steam 2W F','9VP','','',false,null,7],
+ ['T3-14',3,'Build','2Magma F 2E','9VP','','HIGH:+3VP',false,null,7],
+ ['T3-15',3,'Production','Frost Sandstorm 2Wind E','9VP','','',true,'+3VP',7],
+ ['T3-16',3,'Funding','Sandstorm Steam 2E Wind','9VP','','',true,null,7],
+ ['T3-17',3,'Build','2Steam 2W 2F','11VP','','',false,null,8],
+ ['T3-18',3,'Production','2Magma 2F 2E','11VP','','',false,null,8],
+ ['T3-19',3,'Funding','2Frost 2W 2Wind','11VP','','LOW:+4VP',false,null,8],
+ ['T3-20',3,'Era','3Sandstorm E Wind','11VP','','',true,null,8]
+];
+function v58MakeOneTimeRow(row){
+ const [id,tier,trader,reqText,rewardText,tp,note,comboTag,comboReward=null,cost=null]=row;
+ return {id,tier,trader,req:v226Req(reqText),reqText,rewardText,tp,comboTag:!!comboTag,comboReward:comboReward||null,
+  bonus:note||'',baseRewardText:rewardText,cost:cost??rReqValue(v226Req(reqText)),testPatch:V58_T3_PATCH};
+}
+const V58_NEW_T3_CARDS=V58_T3_20_ROWS.map(v58MakeOneTimeRow);
+const V58_BASELINE_T3_CARDS=V58_BASELINE_T3_ROWS.map(r=>{
+ const c=v58MakeOneTimeRow(r); delete c.testPatch; return c;
+});
+function v58UseProposedT3(on){
+ const keep=OT_ALL.filter(c=>c.tier!==3),t3=on?V58_NEW_T3_CARDS:V58_BASELINE_T3_CARDS;
+ OT_ALL.splice(0,OT_ALL.length,...keep,...t3.map(clone));
+}
+function v58ReqRV(req){return Object.entries(req||{}).reduce((n,[e,v])=>n+(BASES.includes(e)?1:2)*v,0)}
+function v58ValidateProposedT3(){
+ const a=V58_NEW_T3_CARDS,ids=new Set(a.map(c=>c.id)); if(a.length!==20||ids.size!==20)throw new Error('T3 v0.4 validation: expected 20 unique cards');
+ const guild={Build:0,Production:0,Funding:0,Era:0},bon={NONE:0,HIGH:0,LOW:0,COMBO:0};
+ for(const c of a){guild[c.trader]=(guild[c.trader]||0)+1;const rv=v58ReqRV(c.req);if(rv!==c.cost||rv<4||rv>8)throw new Error(`${c.id} RV mismatch ${rv}/${c.cost}`);const base=parseRewardText(c.rewardText,{engineFee:0});if((base.g||0)!==0)throw new Error(`${c.id} base Gold must be 0`);if(c.comboReward)bon.COMBO++;else if(c.bonus.startsWith('HIGH'))bon.HIGH++;else if(c.bonus.startsWith('LOW'))bon.LOW++;else bon.NONE++}
+ if(Object.values(guild).some(n=>n!==5))throw new Error('T3 v0.4 Guild distribution must be 5×4');
+ if(JSON.stringify(bon)!==JSON.stringify({NONE:12,HIGH:3,LOW:3,COMBO:2}))throw new Error('T3 v0.4 bonus distribution mismatch '+JSON.stringify(bon));
+ const c20=a.find(c=>c.id==='T3-20');if(c20.req.Sandstorm!==3)throw new Error('T3-20 must require 3 Sandstorm');
+ return {count:a.length,guild,bonus:bon,costs:Object.fromEntries([4,5,6,7,8].map(v=>[v,a.filter(c=>c.cost===v).length]))};
+}
+const _v58PrevExpUiFlags=expUiFlags;
+expUiFlags=function(){return {..._v58PrevExpUiFlags(),t3OneTime20CardV04:!!document.getElementById('expT3OneTime20UI')?.checked}}
+const _v58PrevExpDefaultFlags=expDefaultFlags;
+expDefaultFlags=function(){return {..._v58PrevExpDefaultFlags(),t3OneTime20CardV04:false}}
+const _v58PrevExpEnsureState=expEnsureState;
+expEnsureState=function(){_v58PrevExpEnsureState();if(!S)return;S.schemaVersion=V58_SCHEMA;S.version=V58_WEB;S.config=S.config||{};S.config.t3OneTimeDataPatch=S.experimentFlags?.t3OneTime20CardV04?V58_T3_PATCH:'BASELINE_24';S.t3OneTimeCardEvents=S.t3OneTimeCardEvents||[];}
+const _v58PrevExpFlagsText=expFlagsText;
+expFlagsText=function(){const f=S?.experimentFlags||expDefaultFlags();return `${_v58PrevExpFlagsText()} / T3-20 v0.4 ${f.t3OneTime20CardV04?'ON':'OFF'}`}
+const _v58PrevExpAssignReveal=expAssignReveal;
+expAssignReveal=function(c,slotIndex=null){const x=_v58PrevExpAssignReveal(c,slotIndex);if(x&&x.tier===3){if(!Number.isInteger(x.revealTurn))x.revealTurn=S.turnNumber;S.t3OneTimeCardEvents=S.t3OneTimeCardEvents||[];if(!S.t3OneTimeCardEvents.some(e=>e.event==='REVEAL'&&e.revealSerial===x.revealSerial))S.t3OneTimeCardEvents.push({event:'REVEAL',cardId:x.id,revealTurn:x.revealTurn,revealSerial:x.revealSerial,slotIndex:x.revealSlotIndex,patch:x.testPatch||'BASELINE_24'});}return x}
+const _v58PrevRefreshInitial=expRefreshInitialRevealSerials;
+expRefreshInitialRevealSerials=function(){_v58PrevRefreshInitial();for(let i=0;i<(S.oneTime?.market||[]).length;i++){const c=S.oneTime.market[i];if(c.tier===3){c.revealTurn=S.turnNumber;c.revealSlotIndex=i}}}
+
+// Full One-Time resolver with v0.4 printed Combo Reward support. Same flow as v5.7 for non-v0.4 cards.
+completeOneTime=async function(p,c){
+ expEnsureState();const n0=S.telemetry.contracts.OneTime||0,g0=p.gold,final0=!!S.isFinalTurn,priorTagged=p.comboTagged>0;
+ const pay=await payRequirement(p,c.req,{qualifying:true});if(!pay)return;
+ const b=v226RewardBreakdown(c,p);gainReward(p,b.base);gainReward(p,b.bonus);if(c.tp)await awardTP(p,c.tp);
+ let comboDone=false,comboBonus={vp:0,g:0};
+ if(c.comboReward&&priorTagged){const vp=String(c.comboReward).match(/\+?(\d+)VP/),g=String(c.comboReward).match(/\+?(\d+)G/);if(vp)comboBonus.vp=+vp[1];if(g)comboBonus.g=+g[1];gainReward(p,comboBonus);await resolveComboTrigger(p,pay,{qualifying:true,oneTime:true});comboDone=true;}
+ tlog(`${p.id} completes ${c.id}`,{card_id:c.id,resolved_cost:c.cost??rReqValue(c.req),declaredRequirement:c.req,actualPayment:pay,base_reward:b.base,condition_state:b.conditionState,bonus_reward:b.bonus,combo_reward:comboBonus,tp:c.tp||null,comboTag:!!c.comboTag,revealTurn:c.revealTurn??null,revealSerial:c.revealSerial??null,testPatch:c.testPatch||null});
+ S.telemetry.contracts.OneTime++;
+ await afterContractResolution(p,{qualifying:true,comboTag:c.comboTag,comboReward:c.comboReward||null,payment:pay,alreadyCombo:comboDone});
+ let actual=c.trader,repCost=0;
+ if(typeof chooseOneTimeRepGuild==='function'){const repChoice=await chooseOneTimeRepGuild(p,c);actual=repChoice.guild;repCost=repChoice.cost||0;p.reputation[actual]=(p.reputation[actual]||0)+1;const rt=S.telemetry.repReassignment;if(rt){rt.byPrintedGuild[c.trader]=(rt.byPrintedGuild[c.trader]||0)+1;rt.byActualGuild[actual]=(rt.byActualGuild[actual]||0)+1;rt.claimChecks++;if(repChoice.reassigned){rt.uses++;rt.costPaid+=2;rt.byPlayer[p.id]=(rt.byPlayer[p.id]||0)+1}}tlog(`${p.id} One-Time Rep: printed=${guildDisplay(c.trader)}, actual=${guildDisplay(actual)}, reassignmentPaidGold=${repCost}, usedThisTurn=${!!p.flags?.repReassignmentUsedThisTurn}`,{printedRepGuild:c.trader,actualRepGuild:actual,reassignmentPaidGold:repCost,reassignmentUsedThisTurn:!!p.flags?.repReassignmentUsedThisTurn});checkMachineClaim(p,actual)}
+ else {p.reputation[c.trader]++;checkMachineClaim(p,c.trader)}
+ const completion={event:'COMPLETE',cardId:c.id,revealTurn:c.revealTurn??null,revealSerial:c.revealSerial??null,completedBy:p.id,completedTurn:S.turnNumber,printedGuild:c.trader,cost:c.cost??v58ReqRV(c.req),actualPayment:clone(pay),baseConsumed:Object.fromEntries(Object.entries(c.req).filter(([e])=>BASES.includes(e))),compoundConsumed:Object.fromEntries(Object.entries(c.req).filter(([e])=>!BASES.includes(e))),baseReward:clone(b.base),conditionBonus:clone(b.bonus),comboBonus:clone(comboBonus),goldFromCard:(b.base.g||0)+(b.bonus.g||0)+(comboBonus.g||0),patch:c.testPatch||'BASELINE_24'};S.t3OneTimeCardEvents.push(completion);
+ S.oneTime.market=S.oneTime.market.filter(x=>x.id!==c.id);refillOneTime();
+ const done=(S.telemetry.contracts.OneTime||0)>n0;if(done){const k='T'+(c.tier||S.stage);S.oneTimeCompletedThisTurn.total++;S.oneTimeCompletedThisTurn.byPrintedEra[k]=(S.oneTimeCompletedThisTurn.byPrintedEra[k]||0)+1;S.telemetry.expT3.playerCompleted++;expRecordEconomyEvent(p.id,'ONE_TIME',g0,p.gold,{cardId:c.id});if(!final0&&S.isFinalTurn)S.telemetry.expT3.finalTurnTriggeredBy='PLAYER_COMPLETION_REFILL'}
+};
+
+// AI score: include the printed combo bonus only when a previous Combo Tag exists this Turn.
+const _v58PrevScoreContractAction=scoreContractAction;
+scoreContractAction=function(p,a){let v=_v58PrevScoreContractAction(p,a);if(a?.kind==='OT'&&a.c?.comboReward&&p.comboTagged>0){const vp=String(a.c.comboReward).match(/\+?(\d+)VP/),g=String(a.c.comboReward).match(/\+?(\d+)G/);if(vp)v+=+vp[1];if(g)v+=(+g[1])*.5}return v};
+const _v58PrevScoreComponents=v2210ScoreComponents;
+v2210ScoreComponents=function(p,a){const z=_v58PrevScoreComponents(p,a);if(a?.kind==='OT'&&z.components){z.components.printedCost=a.c.cost??v58ReqRV(a.c.req);z.components.comboVP=(a.c.comboReward&&p.comboTagged>0)?+(String(a.c.comboReward).match(/(\d+)VP/)?.[1]||0):0;z.components.rewardGoldFromCard=0;}return z};
+
+const _v58PrevNewGame=newGame;
+newGame=function(start=true){const on=!!document.getElementById('expT3OneTime20UI')?.checked;v58UseProposedT3(on);if(on)v58ValidateProposedT3();const r=_v58PrevNewGame(start);if(S){S.schemaVersion=V58_SCHEMA;S.version=V58_WEB;S.config=S.config||{};S.config.t3OneTimeDataPatch=on?V58_T3_PATCH:'BASELINE_24';tlog(`T3 One-Time data set locked: ${on?'20-card v0.4 proposed':'24-card baseline'}`,{eventType:'T3OneTimeDataset',enabled:on,patch:on?V58_T3_PATCH:'BASELINE_24',count:on?20:24});}return r};
+
+const _v58PrevRender=render;
+render=function(){_v58PrevRender();if(!S)return;const mini=document.querySelector('.brand .mini');if(mini)mini.textContent='v2.2.10 Web Playtest v5.8 · T3 20-card v0.4 test';document.title='元素管道：術式工房 v2.2.10 Web v5.8 T3 20-card v0.4';const n=document.getElementById('interpretation');if(n)n.innerHTML=`<b>v2.2.10 Canonical + T3 One-Time v0.4 測試卡表</b>：正式規則不變。此局：${expFlagsText()}。T3-20 v0.4 ON 時，T3 One-Time 改為 20 張、RV 4–8、卡片本身 0G，HIGH/LOW/COMBO 依印刷條件結算；預設搭配 LT VP-only ON、Stagnation OFF。`;
+ const box=document.getElementById('otMarket');if(box){[...box.children].forEach((el,i)=>{const c=S.oneTime.market[i];if(!c||c.tier!==3)return;let d=el.querySelector('.v58T3Meta');if(!d){d=document.createElement('div');d.className='mini v58T3Meta';el.appendChild(d)}const cr=c.comboReward?` · Combo Reward ${c.comboReward}`:'';d.innerHTML=`RV ${c.cost??v58ReqRV(c.req)}${cr} · reveal T${c.revealTurn??'—'} / #${c.revealSerial??'—'}`;})}
+};
+
+// New UI switch is test-default ON. It changes only the next New / Restart.
+setTimeout(()=>{const e=document.getElementById('expT3OneTime20UI');if(e)e.checked=true;const a=document.getElementById('expT3LtVpOnlyUI');if(a)a.checked=true;const b=document.getElementById('expT3StagnationUI');if(b)b.checked=false;},0);
 </script>
 </body></html>
