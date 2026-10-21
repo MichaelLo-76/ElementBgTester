@@ -83,6 +83,8 @@ button,input,select,textarea{font:inherit}.top{position:sticky;top:0;z-index:20;
    <label><input type="checkbox" id="expT3LtVpOnlyUI" checked> EXP A：T3 LT VP-only</label>
    <label><input type="checkbox" id="expT3StagnationUI"> EXP B：T3 One-Time 空轉淘汰</label>
    <label><input type="checkbox" id="expT3OneTime20UI" checked> EXP C：T3 One-Time 20-card v0.4</label>
+   <label><input type="checkbox" id="expComboRoundRobinV01UI" checked> EXP D：COMBO Round Robin v0.1</label>
+   <label><input type="checkbox" id="expT3LtAgingCap2UI" checked> EXP E：T3 LT Aging cap +2VP</label>
  </span>
  <button onclick="newGame()">New / Restart</button><button id="advanceBtn" onclick="advanceGame()">Debug Advance</button><button id="autoBtn" onclick="toggleAuto()">Auto ▶</button>
  <button onclick="downloadState()">Export JSON</button><button onclick="document.getElementById('importFile').click()">Import JSON</button><input class="hidden" id="importFile" type="file" accept="application/json" onchange="importStateFile(event)">
@@ -2953,4 +2955,272 @@ render=function(){_v58PrevRender();if(!S)return;const mini=document.querySelecto
 // New UI switch is test-default ON. It changes only the next New / Restart.
 setTimeout(()=>{const e=document.getElementById('expT3OneTime20UI');if(e)e.checked=true;const a=document.getElementById('expT3LtVpOnlyUI');if(a)a.checked=true;const b=document.getElementById('expT3StagnationUI');if(b)b.checked=false;},0);
 </script>
+
+<script>
+// ===== v5.9 T3 LT VP-only Halving Hotfix v1.2 =====
+// Test-only overlay. Canonical remains v2.2.10. Corrects EXP A payout only.
+const V59_SCHEMA='2.2.10-web-5.9-t3-lt-vponly-hotfix';
+const V59_WEB='v2.2.10-web-v5.9-t3-lt-vponly-hotfix';
+const V59_LT_HOTFIX='T3-LT-VPOnly-Halving-Hotfix-v1.2';
+
+function v59EffectiveT3LT(cardId, vpOnly){
+ const printed=GOLD_LT_CARDS[cardId];
+ if(!printed)return null;
+ if(!vpOnly || printed.tier!==3){
+  return {reward:clone(printed.reward||{}),comboRewardVP:printed.comboRewardVP||0,effectiveRewardMode:'CANONICAL'};
+ }
+ const baseVP={ 'LT3-M01':4, 'LT3-M02':4, 'LT3-M03':3, 'LT3-M04':5 }[cardId];
+ if(baseVP==null)return {reward:clone(printed.reward||{}),comboRewardVP:printed.comboRewardVP||0,effectiveRewardMode:'CANONICAL'};
+ return {reward:{g:0,vp:baseVP},comboRewardVP:cardId==='LT3-M03'?2:0,effectiveRewardMode:'T3_VP_ONLY_HOTFIX_V1_2'};
+}
+
+// Override the v5.7 EXP hydration source-of-truth so UI, AI and actual payout read the same corrected values.
+const _v59PrevHydrateGoldLTSlot=hydrateGoldLTSlot;
+hydrateGoldLTSlot=function(gs){
+ const x=_v59PrevHydrateGoldLTSlot(gs);if(!x)return x;
+ const eff=v59EffectiveT3LT(x.cardId,!!S?.experimentFlags?.t3LtVpOnly);
+ if(eff){x.reward=clone(eff.reward);x.comboRewardVP=eff.comboRewardVP;x.effectiveRewardMode=eff.effectiveRewardMode;}
+ return x;
+};
+
+const _v59PrevExpEnsureState=expEnsureState;
+expEnsureState=function(){
+ _v59PrevExpEnsureState();if(!S)return;
+ S.schemaVersion=V59_SCHEMA;S.version=V59_WEB;S.config=S.config||{};S.config.t3LtVpOnlyHotfix=V59_LT_HOTFIX;
+};
+
+const _v59PrevRender=render;
+render=function(){
+ _v59PrevRender();if(!S)return;
+ for(const gs of S.goldLongTerm?.marketSlots||[])hydrateGoldLTSlot(gs);
+ const mini=document.querySelector('.brand .mini');if(mini)mini.textContent='v2.2.10 Web Playtest v5.9 · T3 LT VP-only hotfix';
+ document.title='元素管道：術式工房 v2.2.10 Web v5.9 T3 LT VP-only Hotfix';
+ const n=document.getElementById('interpretation');if(n)n.innerHTML=`<b>v2.2.10 Canonical + T3 測試 Hotfix v1.2</b>：正式規則不變。此局：${expFlagsText()}。EXP A ON 時，T3 Mixed LT 改為 M01=4VP、M02=4VP、M03=3VP（若 Combo 成功另 +2VP）、M04=5VP，且 base Gold=0；Aging 仍每 tick +1VP、上限 +4VP。EXP A OFF 時維持原 mixed reward，M03 Combo 仍 +3VP。T3 One-Time v0.4 與 Stagnation 設定不受本 Hotfix 影響。`;
+ const a=document.getElementById('expT3LtVpOnlyUI');if(a&&a.parentElement)a.parentElement.title='ON：M01 4VP / M02 4VP / M03 3VP + Combo 2VP / M04 5VP；Gold=0。只影響下一次 New / Restart。';
+ S.schemaVersion=V59_SCHEMA;S.version=V59_WEB;
+};
+
+// Re-wrap exports so corrected version identity is explicit in filenames and JSON metadata.
+downloadState=function(){expEnsureState();downloadBlob(`element_pipeline_${S.seed}_T${S.turnNumber}_v2210_v59_${S.experimentFlags.t3LtVpOnly?'A1':'A0'}${S.experimentFlags.t3OneTimeStagnationDiscard?'B1':'B0'}${S.experimentFlags.t3OneTime20CardV04?'C1':'C0'}.json`,JSON.stringify(S,null,2))};
+downloadLog=function(){expEnsureState();downloadBlob(`element_pipeline_${S.seed}_log_v2210_v59_${S.experimentFlags.t3LtVpOnly?'A1':'A0'}${S.experimentFlags.t3OneTimeStagnationDiscard?'B1':'B0'}${S.experimentFlags.t3OneTime20CardV04?'C1':'C0'}.json`,JSON.stringify({rulesVersion:S.rulesVersion,schemaVersion:S.schemaVersion,aiPolicyVersion:S.config?.aiPolicyVersion,startingSetupMode:S.startingSetupMode,seed:S.seed,runId:S.runId,playerCount:S.players?.length||S.playerCount,experimentFlags:S.experimentFlags,config:S.config,setupSummary:S.setupSummary,ltEraState:S.ltEraState,oneTimeCompletedThisTurn:S.oneTimeCompletedThisTurn,stagnationDiscard:S.stagnationDiscardRecords,oneTimeProgress:S.oneTimeProgressRecords,ltPayoutBySource:S.ltPayoutBySource,economy:S.expEconomyTurnRecords,economyEvents:S.expEconomyEvents,aiTargetInterruption:S.aiTargetInterruptionRecords,aiDecisionRecords:S.aiDecisionRecords,actionDecisionRecords:S.actionDecisionRecords,aiDecisionTelemetry:S.aiDecisionTelemetry,planProgressRecords:S.planProgressRecords,goldCashflowRecords:S.goldCashflowRecords,turnEconomySnapshots:S.turnEconomySnapshots,t3OneTimeCardEvents:S.t3OneTimeCardEvents,events:S.logs,ai:S.aiLog,telemetry:S.telemetry},null,2))};
+
+// Test helper: checks both ON/OFF reward tables without changing active game state.
+function v59AssertLtRewardTable(){
+ const on={M01:v59EffectiveT3LT('LT3-M01',true),M02:v59EffectiveT3LT('LT3-M02',true),M03:v59EffectiveT3LT('LT3-M03',true),M04:v59EffectiveT3LT('LT3-M04',true)};
+ if(on.M01.reward.g!==0||on.M01.reward.vp!==4)throw new Error('v5.9 M01 ON mismatch');
+ if(on.M02.reward.g!==0||on.M02.reward.vp!==4)throw new Error('v5.9 M02 ON mismatch');
+ if(on.M03.reward.g!==0||on.M03.reward.vp!==3||on.M03.comboRewardVP!==2)throw new Error('v5.9 M03 ON mismatch');
+ if(on.M04.reward.g!==0||on.M04.reward.vp!==5)throw new Error('v5.9 M04 ON mismatch');
+ const off=v59EffectiveT3LT('LT3-M03',false);if(off.reward.g!==4||off.reward.vp!==4||off.comboRewardVP!==3)throw new Error('v5.9 M03 OFF regression');
+ return true;
+}
+v59AssertLtRewardTable();
+</script>
+
+<script>
+// ===== v6.0 Experimental Overlay: COMBO Round Robin v0.1 + T3 LT Aging cap2 =====
+// Test-only. Canonical remains v2.2.10. Depends on v5.9 EXP stack.
+const V60_SCHEMA='2.2.10-web-6.0-combo-roundrobin-agingcap2-test';
+const V60_WEB='v2.2.10-web-v6.0-combo-roundrobin-agingcap2-test';
+const V60_PATCH='Combo-RoundRobin-Rework+T3-LT-AgingCap2-v0.1';
+
+const _v60PrevExpUiFlags=expUiFlags;
+expUiFlags=function(){return {..._v60PrevExpUiFlags(),comboRoundRobinV01:!!document.getElementById('expComboRoundRobinV01UI')?.checked,t3LtAgingCap2:!!document.getElementById('expT3LtAgingCap2UI')?.checked}};
+const _v60PrevExpDefaultFlags=expDefaultFlags;
+expDefaultFlags=function(){return {..._v60PrevExpDefaultFlags(),comboRoundRobinV01:false,t3LtAgingCap2:false}};
+
+function v60EnsureState(){
+ if(!S)return;
+ expEnsureState();
+ S.schemaVersion=V60_SCHEMA;S.version=V60_WEB;
+ S.config=S.config||{};S.config.comboRoundRobinPatch=V60_PATCH;
+ S.experimentFlags={...expDefaultFlags(),...(S.experimentFlags||{})};
+ S.contractRoundRobinOpportunityIndex=S.contractRoundRobinOpportunityIndex||Object.fromEntries((S.players||[]).map(p=>[p.id,0]));
+ S.comboRoundRobinRecords=S.comboRoundRobinRecords||[];
+ S.telemetry=S.telemetry||{};
+ S.telemetry.comboRoundRobin=S.telemetry.comboRoundRobin||{opportunities:0,comboRewardEligible:0,comboRewardPaid:0,firstOpportunityDenied:0,passOutBeforeSecond:0,byStage:{T1:0,T2:0,T3:0}};
+}
+function v60ComboRRActive(){return !!S?.experimentFlags?.comboRoundRobinV01}
+function v60CurrentOpportunity(p){v60EnsureState();return S.contractRoundRobinOpportunityIndex?.[p.id]||0}
+function v60BeginOpportunity(p){
+ v60EnsureState();
+ const idx=(S.contractRoundRobinOpportunityIndex[p.id]||0)+1;
+ S.contractRoundRobinOpportunityIndex[p.id]=idx;
+ if(v60ComboRRActive())p.comboTagged=idx>=2?1:0; // compatibility shim only; tags themselves are ignored.
+ S.telemetry.comboRoundRobin.opportunities++;
+ S.telemetry.comboRoundRobin.byStage['T'+S.stage]=(S.telemetry.comboRoundRobin.byStage['T'+S.stage]||0)+1;
+ tlog(`${p.id} Contract Round Robin opportunity #${idx}`,{eventType:'ContractRoundRobinOpportunity',playerId:p.id,turn:S.turnNumber,stage:S.stage,personalOpportunityIndex:idx,comboRoundRobin:!!v60ComboRRActive()});
+ return idx;
+}
+function v60PrintedComboInfo(a){
+ if(!a)return null;
+ if(a.kind==='OT'&&a.c?.comboReward)return {cardId:a.c.id,reward:a.c.comboReward,source:'ONE_TIME'};
+ if(a.kind==='LT'&&a.slot&&(a.slot.comboReward||a.slot.comboRewardVP))return {cardId:a.slot.cardId||a.slot.id,reward:{g:a.slot.comboReward||0,vp:a.slot.comboRewardVP||0},source:'LONG_TERM'};
+ if(a.kind==='DEALER'&&a.step?.comboReward)return {cardId:a.step.id||a.dealer?.id,reward:a.step.comboReward,source:'PATRON'};
+ return null;
+}
+function v60ParseComboReward(r){
+ if(!r)return {vp:0,g:0};if(typeof r==='object')return {vp:+(r.vp||0),g:+(r.g||0)};
+ const s=String(r),vp=+(s.match(/(\d+)VP/)?.[1]||0),g=+(s.match(/(\d+)G/)?.[1]||0);return {vp,g};
+}
+function v60RecordComboDecision(p,a,beforeVP,beforeG){
+ if(!v60ComboRRActive())return;const info=v60PrintedComboInfo(a);if(!info)return;
+ const idx=v60CurrentOpportunity(p),eligible=idx>=2,printed=v60ParseComboReward(info.reward);
+ const rec={playerId:p.id,turn:S.turnNumber,stage:S.stage,cardId:info.cardId,source:info.source,personalOpportunityIndex:idx,bonusEligible:eligible,comboVP:eligible?printed.vp:0,comboG:eligible?printed.g:0,reason:eligible?'PERSONAL_OPPORTUNITY_INDEX_GE_2':'FIRST_PERSONAL_OPPORTUNITY',vpDeltaTotal:p.vp-beforeVP,goldDeltaTotal:p.gold-beforeG};
+ S.comboRoundRobinRecords.push(rec);if(eligible)S.telemetry.comboRoundRobin.comboRewardEligible++;else S.telemetry.comboRoundRobin.firstOpportunityDenied++;
+ if(eligible&&(printed.vp||printed.g))S.telemetry.comboRoundRobin.comboRewardPaid++;
+ tlog(`${p.id} COMBO reward ${eligible?'eligible':'not eligible'} at personal opportunity #${idx}`,{eventType:'ComboRoundRobinReward',...rec});
+}
+
+// Remove old Combo Tag / qualifying-chain semantics from post-contract resolution while patch is ON.
+const _v60PrevAfterContractResolution=afterContractResolution;
+afterContractResolution=async function(p,ctx){
+ if(!v60ComboRRActive())return _v60PrevAfterContractResolution(p,ctx);
+ if(ctx?.qualifying)p.qualifyingCount=(p.qualifyingCount||0)+1; // retained for non-COMBO rules/telemetry only.
+ // Fire Lv6 payoff retained exactly; Combo eligibility no longer reads tag/qualifying state.
+ if(p.tech.fire>=6&&((p.hand.F||0)>0||(p.tech.water>=10&&(p.hand.W||0)>0))){const high=isHigh(p),opts=[{label:'略過',mode:'no'},{label:`Pay 1F（Water Lv10 可代）→ +${high?2:1}VP`,mode:'vp'},{label:`Pay 1F（Water Lv10 可代）→ +${high?4:2}G`,mode:'g'}],c=await choose(p,`${p.id} Fire Lv6：Contract Turn 後壓力 payoff`,opts,o=>o.mode==='vp'?(high?2:1):o.mode==='g'?(high?2:1):0);if(c.mode!=='no'){const req={F:1},pay=await payRequirement(p,req,{qualifying:false,allowEarthStock:false});if(pay){if(c.mode==='vp')p.vp+=high?2:1;else p.gold+=high?4:2}}}
+};
+
+// Prevent legacy LT comboTag from mutating eligibility inside the same opportunity.
+const _v60PrevCompleteLongTerm=completeLongTerm;
+completeLongTerm=async function(p,slot,req){
+ if(!v60ComboRRActive())return _v60PrevCompleteLongTerm(p,slot,req);
+ const saved=slot?.comboTag;if(slot)slot.comboTag=false;
+ try{return await _v60PrevCompleteLongTerm(p,slot,req)}finally{if(slot)slot.comboTag=saved;p.comboTagged=v60CurrentOpportunity(p)>=2?1:0}
+};
+
+// Record printed COMBO resolution using personal opportunity index.
+const _v60PrevResolveContractAction=resolveContractAction;
+resolveContractAction=async function(p,a){
+ const v0=p.vp,g0=p.gold;const r=await _v60PrevResolveContractAction(p,a);v60RecordComboDecision(p,a,v0,g0);return r;
+};
+
+// T3 current-era LT Aging: +1VP/tick, cap +2VP when EXP E is ON. Legacy T1/T2 cards keep their old caps.
+const _v60PrevAgeGoldLongTerms=ageGoldLongTerms;
+ageGoldLongTerms=function(){
+ if(!S?.experimentFlags?.t3LtAgingCap2)return _v60PrevAgeGoldLongTerms();
+ v60EnsureState();const cur=S.ltEraState?.currentEra||S.stage||1,defaultCap=S.config?.agingCap??4;
+ for(const gs of S.goldLongTerm?.marketSlots||[]){if(gs.usedThisTurn)continue;hydrateGoldLTSlot(gs);const cap=(cur===3&&gs.stage===3)?2:defaultCap,before=gs.aging||0;gs.aging=Math.min(cap,before+1);if(gs.aging!==before){S.telemetry.goldLongTerm.agingTicks++;tlog(`agingTick(${gs.cardId},${before},${gs.aging})`,{eventType:'LongTermAgingTick',cardId:gs.cardId,printedEra:gs.stage,currentEra:cur,cap,experimentalCap2:cap===2})}}
+};
+
+// Contract Round Robin: opportunity count increments once when an active player is legally reached in a circle.
+contractPhase=async function(){
+ v60EnsureState();S.contractRoundRobinOpportunityIndex=Object.fromEntries((S.players||[]).map(p=>[p.id,0]));
+ S.timing.macroStep='CONTRACT';S.timing.window='OPPORTUNITY';for(const slot of S.longTerm.slots)slot.presentAtPhaseStart=true;for(const m of S.machines)if(m.status==='ACTIVE')for(const pt of m.parts)if(!pt.filled){pt.presentAtPhaseStart=true;pt.usedThisPhase=false}
+ while(S.players.some(p=>!p.passedOut)){for(const id of S.initiativeOrder){const p=pById(id);if(p.passedOut)continue;S.timing.activePlayerId=id;v60BeginOpportunity(p);let transitionGuard=0;while(true){const acts=legalContractActions(p),transScore=bestTransitionScore(p),liqScore=bestLiquidationScore(p),showTrans=hasPublicTransition(p)&&(p.type==='HUMAN'||transScore>.75)&&transitionGuard<12,showLiq=liquidationOptions(p).length>0&&(p.type==='HUMAN'||liqScore>.75)&&transitionGuard<12;if(p.type==='AI'){const bestAct=Math.max(...acts.map(a=>scoreContractAction(p,a)));if(showTrans&&transScore>bestAct+.4){transitionGuard++;const ok=await doTransition(p);if(ok)continue}if(showLiq&&liqScore>bestAct+.4){transitionGuard++;const ok=await doLiquidation(p);if(ok)continue}}
+ let c;if(p.type==='AI')c=await chooseContractAI(p,acts);else{const groups=[];for(const a of acts){if(a.kind==='PASS')continue;const key=a.kind==='OT'?`OT:${a.c.id}`:a.kind==='LT'?`LT:${a.slot.id}`:a.kind==='DEALER'?`DEALER:${a.dealer.id}`:`MACHINE:${a.m.id}:${a.part.id}`;let g=groups.find(x=>x.uiKey===key);if(!g){g={label:key,kind:'GROUP',uiKey:key,actions:[]};groups.push(g)}g.actions.push(a)}const ts=showTrans?transitionOptions(p):[],ls=showLiq?liquidationOptions(p):[];const opts=[...groups,{label:'Pass Out',kind:'PASS',uiButton:true,uiButtonLabel:'Pass Out'},...ts.map((o,i)=>({label:o.label,kind:'TRANS',o,transitionSig:`${JSON.stringify(o.pay)}>${o.gain}`,uiKey:transitionOptionKey(i)})),...ls.map((o,i)=>({label:o.label,kind:'LIQ',o,liquidationSig:`${o.sourceA}>${o.gain}`,uiKey:liquidationOptionKey(i)}))];const pick=await visualChoose(p,`${p.id} Contract opportunity #${v60CurrentOpportunity(p)}`,opts,{kind:'CONTRACT',html:`<div class="uiHint"><b>Contract Round Robin：</b>這是 ${playerDisplay(p.id)} 本 Turn 個人第 <b>${v60CurrentOpportunity(p)}</b> 次機會。${v60ComboRRActive()?(v60CurrentOpportunity(p)>=2?' 本機會完成印有 COMBO Reward 的 Contract 可取得該 Bonus。':' 第一次機會即使完成 COMBO Reward 卡也不給 COMBO Bonus。'):''}<br>選定後仍會先進入確認階段；可先做 Public Transition / Element Liquidation。</div>`});if(pick.kind==='TRANS'){transitionGuard++;const ok=await executeTransitionOption(p,pick.o);if(ok)continue}if(pick.kind==='LIQ'){transitionGuard++;const ok=await executeLiquidationOption(p,pick.o);if(ok)continue}if(pick.kind==='PASS')c={kind:'PASS',label:'Pass Out'};else if(pick.kind==='GROUP'){if(pick.actions.length===1)c=pick.actions[0];else{const idOpts=pick.actions.map((a,i)=>{const html=reqIcons(a.req||a.c?.req||{});return {label:html,a,uiButton:true,uiButtonLabel:html,uiKey:`REQID:${i}`}});const idc=await visualChoose(p,'選擇 Requirement Identity / 支付結構',idOpts,{kind:'GENERIC',html:'<div class="uiHint"><b>選擇 Requirement Identity / 支付結構</b><br>請選擇本次要宣告並支付的元素結構。</div>',aiScorer:o=>scoreContractAction(p,o.a)});c=idc.a}}
+ if(c?.kind!=='PASS'&&!(await confirmHumanContractTarget(p,c)))continue;
+ }
+ await resolveContractAction(p,c);if(c?.kind==='PASS'&&v60ComboRRActive()&&v60CurrentOpportunity(p)<2)S.telemetry.comboRoundRobin.passOutBeforeSecond++;break}if(S.gameOver)break}if(S.gameOver)break}
+ await contractPhaseEnd();
+};
+
+// Score compatibility: old evaluators still key off comboTagged, which is now a per-opportunity compatibility shim.
+// No Combo Tag value is awarded; only printed COMBO Reward receives value on opportunity >=2.
+
+const _v60PrevHeldDealerHtml=heldDealerHtml;
+heldDealerHtml=function(p){const h=_v60PrevHeldDealerHtml(p);return v60ComboRRActive()?h.replace(/(?: · )?Combo Tag/g,'').replace(/Combo Tag(?: · )?/g,''):h};
+
+const _v60PrevNewGame=newGame;
+newGame=function(start=true){const r=_v60PrevNewGame(start);if(S){v60EnsureState();S.schemaVersion=V60_SCHEMA;S.version=V60_WEB;S.config.comboRoundRobinPatch=V60_PATCH;tlog(`v6.0 experimental flags locked: ComboRR=${!!S.experimentFlags.comboRoundRobinV01}, T3LTAgingCap2=${!!S.experimentFlags.t3LtAgingCap2}`,{eventType:'V60ExperimentFlags',experimentFlags:clone(S.experimentFlags)});}return r};
+const _v60PrevResumeImportedState=resumeImportedState;
+resumeImportedState=async function(loaded){await _v60PrevResumeImportedState(loaded);v60EnsureState();render()};
+
+const _v60PrevRender=render;
+render=function(){v60EnsureState();_v60PrevRender();if(!S)return;
+ const mini=document.querySelector('.brand .mini');if(mini)mini.textContent='v2.2.10 Web Playtest v6.0 · Combo Round Robin + T3 LT Aging cap2';
+ document.title='元素管道：術式工房 v2.2.10 Web v6.0 Combo Round Robin Test';
+ const n=document.getElementById('interpretation');if(n)n.innerHTML=`<b>v2.2.10 Canonical + Experimental v0.1</b>：正式規則不變。此局：${expFlagsText()} / Combo RR ${S.experimentFlags.comboRoundRobinV01?'ON':'OFF'} / T3 LT Aging cap2 ${S.experimentFlags.t3LtAgingCap2?'ON':'OFF'}。Combo RR ON 時，舊 Combo Tag 完全不參與判定；只有玩家在本 Turn 個人第 2 次或之後的 Contract Round Robin 機會完成印有 COMBO Reward 的 Contract 才取得 Bonus。T3 LT Aging cap2 ON 時，當代 T3 LT Aging 最多 +2VP；跨 Era T1/T2 LT 不變。`;
+ if(v60ComboRRActive())document.querySelectorAll('.tag.combo').forEach(el=>el.style.display='none');
+ const box=document.getElementById('ltMarket');if(box&&S.experimentFlags.t3LtAgingCap2){box.querySelectorAll('.card').forEach((el,i)=>{const gs=S.goldLongTerm?.marketSlots?.[i];if(gs?.stage===3){const mini=el.querySelector('.mini');if(mini)mini.innerHTML=(mini.innerHTML||'').replace(/Aging\s+\d+VP/,`Aging ${gs.aging||0}VP / cap 2`)}})}
+ const tel=document.getElementById('telemetry');if(tel){const c=S.telemetry.comboRoundRobin||{};tel.innerHTML+=`<div class="row"><span class="chip">ComboRR ${S.experimentFlags.comboRoundRobinV01?'ON':'OFF'}</span><span class="chip">Combo eligible ${c.comboRewardEligible||0}</span><span class="chip">Combo paid ${c.comboRewardPaid||0}</span><span class="chip">1st denied ${c.firstOpportunityDenied||0}</span><span class="chip">T3 LT cap2 ${S.experimentFlags.t3LtAgingCap2?'ON':'OFF'}</span></div>`}
+ S.schemaVersion=V60_SCHEMA;S.version=V60_WEB;
+};
+
+// Export event-level experimental state.
+downloadState=function(){v60EnsureState();downloadBlob(`element_pipeline_${S.seed}_T${S.turnNumber}_v2210_v60_${S.experimentFlags.comboRoundRobinV01?'D1':'D0'}${S.experimentFlags.t3LtAgingCap2?'E1':'E0'}.json`,JSON.stringify(S,null,2))};
+downloadLog=function(){v60EnsureState();downloadBlob(`element_pipeline_${S.seed}_log_v2210_v60_${S.experimentFlags.comboRoundRobinV01?'D1':'D0'}${S.experimentFlags.t3LtAgingCap2?'E1':'E0'}.json`,JSON.stringify({rulesVersion:S.rulesVersion,schemaVersion:S.schemaVersion,aiPolicyVersion:S.config?.aiPolicyVersion,seed:S.seed,runId:S.runId,experimentFlags:S.experimentFlags,contractRoundRobinOpportunityIndex:S.contractRoundRobinOpportunityIndex,comboRoundRobinRecords:S.comboRoundRobinRecords,ltPayoutBySource:S.ltPayoutBySource,t3OneTimeCardEvents:S.t3OneTimeCardEvents,oneTimeProgress:S.oneTimeProgressRecords,aiDecisionRecords:S.aiDecisionRecords,actionDecisionRecords:S.actionDecisionRecords,events:S.logs,telemetry:S.telemetry},null,2))};
+
+// Test-default ON for the new experimental switches; applies only to next New / Restart.
+setTimeout(()=>{const d=document.getElementById('expComboRoundRobinV01UI');if(d)d.checked=true;const e=document.getElementById('expT3LtAgingCap2UI');if(e)e.checked=true;},0);
+</script>
+
+
+<script>
+// ===== v6.1 Experimental Hotfix: LT3-M03 fixed 4VP / no COMBO =====
+// Test-only overlay. Canonical remains v2.2.10. Applies only when t3LtVpOnly=ON.
+const V61_SCHEMA='2.2.10-web-6.1-lt3-m03-fixed4-nocombo';
+const V61_WEB='v2.2.10-web-v6.1-lt3-m03-fixed4-nocombo';
+const V61_PATCH='LT3-M03-Fixed4VP-NoCombo-Hotfix-v1.0';
+
+const _v61PrevEffectiveT3LT=v59EffectiveT3LT;
+v59EffectiveT3LT=function(cardId,vpOnly){
+  if(vpOnly && cardId==='LT3-M03'){
+    return {reward:{g:0,vp:4},comboRewardVP:0,effectiveRewardMode:'T3_VP_ONLY_M03_FIXED4_NO_COMBO'};
+  }
+  return _v61PrevEffectiveT3LT(cardId,vpOnly);
+};
+
+const _v61PrevHydrateGoldLTSlot=hydrateGoldLTSlot;
+hydrateGoldLTSlot=function(gs){
+  const x=_v61PrevHydrateGoldLTSlot(gs);if(!x)return x;
+  if(S?.experimentFlags?.t3LtVpOnly && x.cardId==='LT3-M03'){
+    const eff=v59EffectiveT3LT('LT3-M03',true);
+    x.reward=clone(eff.reward);
+    x.comboRewardVP=0;
+    x.comboReward=0;
+    x.comboTag=false;
+    x.effectiveRewardMode=eff.effectiveRewardMode;
+  }
+  return x;
+};
+
+function v61EnsureState(){
+  if(!S)return;
+  v60EnsureState();
+  S.schemaVersion=V61_SCHEMA;S.version=V61_WEB;
+  S.config=S.config||{};S.config.lt3M03Fixed4NoCombo=V61_PATCH;
+  S.experimentFlags=S.experimentFlags||{};
+  S.experimentFlags.lt3M03Fixed4NoCombo=true;
+  for(const gs of S.goldLongTerm?.marketSlots||[])hydrateGoldLTSlot(gs);
+}
+
+const _v61PrevNewGame=newGame;
+newGame=function(start=true){
+  const r=_v61PrevNewGame(start);
+  if(S){v61EnsureState();tlog('v6.1 hotfix active: LT3-M03 VP-only = fixed 4VP, no COMBO',{eventType:'V61LT3M03Hotfix',lt3M03Fixed4NoCombo:true});}
+  return r;
+};
+
+const _v61PrevResumeImportedState=resumeImportedState;
+resumeImportedState=async function(loaded){await _v61PrevResumeImportedState(loaded);v61EnsureState();render()};
+
+const _v61PrevRender=render;
+render=function(){
+  v61EnsureState();_v61PrevRender();if(!S)return;
+  const mini=document.querySelector('.brand .mini');if(mini)mini.textContent='v2.2.10 Web Playtest v6.1 · LT3-M03 fixed 4VP hotfix';
+  document.title='元素管道：術式工房 v2.2.10 Web v6.1 LT3-M03 Hotfix';
+  const n=document.getElementById('interpretation');if(n)n.innerHTML=`<b>v2.2.10 Canonical + Experimental v6.1 Hotfix</b>：正式規則不變。此局：${expFlagsText()} / Combo RR ${S.experimentFlags.comboRoundRobinV01?'ON':'OFF'} / T3 LT Aging cap2 ${S.experimentFlags.t3LtAgingCap2?'ON':'OFF'}。當 LT VP-only ON 時，LT3-M03 固定為 <b>4VP、0G、無 COMBO Reward</b>；無論個人第 1、2、3 次 Contract Round Robin 機會皆相同，Aging 另計且在 cap2 實驗下最多 +2VP。其他有印製 COMBO Reward 的契約仍依 Combo Round Robin 規則處理。`;
+  const box=document.getElementById('ltMarket');if(box&&S.experimentFlags.t3LtVpOnly){
+    const slots=S.goldLongTerm?.marketSlots||[];
+    [...box.children].forEach((el,i)=>{const gs=slots[i];if(gs?.cardId==='LT3-M03'){el.querySelectorAll('.tag.combo').forEach(x=>x.remove());const ok=el.querySelector('.ok');if(ok)ok.innerHTML=`0G 4VP`;}});
+  }
+  const tel=document.getElementById('telemetry');if(tel)tel.innerHTML+=`<div class="row"><span class="chip">M03 fixed4/noCombo ✓</span></div>`;
+  S.schemaVersion=V61_SCHEMA;S.version=V61_WEB;
+};
+
+// Exports include explicit hotfix identity.
+downloadState=function(){v61EnsureState();downloadBlob(`element_pipeline_${S.seed}_T${S.turnNumber}_v2210_v61_${S.experimentFlags.comboRoundRobinV01?'D1':'D0'}${S.experimentFlags.t3LtAgingCap2?'E1':'E0'}.json`,JSON.stringify(S,null,2))};
+downloadLog=function(){v61EnsureState();downloadBlob(`element_pipeline_${S.seed}_log_v2210_v61_${S.experimentFlags.comboRoundRobinV01?'D1':'D0'}${S.experimentFlags.t3LtAgingCap2?'E1':'E0'}.json`,JSON.stringify({rulesVersion:S.rulesVersion,schemaVersion:S.schemaVersion,aiPolicyVersion:S.config?.aiPolicyVersion,seed:S.seed,runId:S.runId,experimentFlags:S.experimentFlags,config:S.config,contractRoundRobinOpportunityIndex:S.contractRoundRobinOpportunityIndex,comboRoundRobinRecords:S.comboRoundRobinRecords,ltPayoutBySource:S.ltPayoutBySource,t3OneTimeCardEvents:S.t3OneTimeCardEvents,oneTimeProgress:S.oneTimeProgressRecords,aiDecisionRecords:S.aiDecisionRecords,actionDecisionRecords:S.actionDecisionRecords,events:S.logs,telemetry:S.telemetry},null,2))};
+
+function v61AssertM03RewardTable(){
+  const on=v59EffectiveT3LT('LT3-M03',true);
+  if(on.reward.g!==0||on.reward.vp!==4||on.comboRewardVP!==0)throw new Error('v6.1 M03 ON mismatch');
+  const off=v59EffectiveT3LT('LT3-M03',false);
+  if(off.reward.g!==4||off.reward.vp!==4||off.comboRewardVP!==3)throw new Error('v6.1 M03 OFF regression');
+  return true;
+}
+v61AssertM03RewardTable();
+</script>
+
 </body></html>
