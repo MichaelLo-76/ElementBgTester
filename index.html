@@ -3223,4 +3223,547 @@ function v61AssertM03RewardTable(){
 v61AssertM03RewardTable();
 </script>
 
+
+<script>
+// ===== 2.2.11 Upgrade Branch 0.7 / Web v7.0 =====
+const UB07_RULES='2.2.11-upgrade-branch-0.7';
+const UB07_SCHEMA='2.2.11-upgrade-0.7-web-7.0';
+const UB07_WEB='2.2.11-upgrade-branch-0.7-web-v7.0';
+const UB07_PATCH='web-delta-1.0';
+
+const _ubPrevGuildDisplay=guildDisplay;
+guildDisplay=function(t){if(t==='Funding')return 'Maintenance';if(t==='Era')return 'Upgrade';return _ubPrevGuildDisplay(t)};
+actionDisplay=function(t){if(t==='Funding')return 'Maintenance';return t};
+
+Object.assign(ABILITY_INFO,{
+ U1:'你的 Upgrade Action 每項 Gold cost -1G（最低0）',
+ U2:'其他玩家完成 Upgrade Action 後，Gain2G',
+ U3:'你的 Upgrade Action 若做 Tile Upgrade，該項再 -2G',
+ U4:'一次 Upgrade Action 可各做至多1次 Tile + 1次 General Upgrade；各自付費'
+});
+
+function ub07EnsureState(){
+ if(!S)return;
+ S.rulesVersion=UB07_RULES;S.schemaVersion=UB07_SCHEMA;S.version=UB07_WEB;
+ S.patchVersion=UB07_PATCH;S.config=S.config||{};S.config.upgradeBranch='0.7';S.config.workerPatch=UB07_PATCH;
+ S.config.aiPolicyVersion='upgrade-branch-0.7-ai-v1';
+ // Canonicalized v2.2.11 content formerly behind experiment flags.
+ S.experimentFlags=S.experimentFlags||{};
+ Object.assign(S.experimentFlags,{t3LtVpOnly:true,t3OneTimeStagnationDiscard:false,t3OneTime20CardV04:true,comboRoundRobinV01:true,t3LtAgingCap2:true,lt3M03Fixed4NoCombo:true});
+ S.fixedProductionWindow=S.fixedProductionWindow||{currentPlayer:null,substep:'IDLE',perWindowTokenSpent:0,initiativeIndex:-1,currentIsExtra:false};
+ S.telemetry=S.telemetry||{};
+ S.telemetry.upgradeBranch=S.telemetry.upgradeBranch||{productionWindows:0,baseSectorProductions:0,tokenAcquired:0,tokenUsed:0,tokenWasted:0,panelPurchases:{capacity:0,draw:0,paidRestock:0,maintenanceEfficiency:0},upgradeActions:0,tileUpgrades:0,completions:0,comboEvents:0,machineNormalPlays:0,machineReplays:0,coreAPlays:0,coreBPlays:0};
+ for(const p of S.players||[]){
+  p.generalUpgrades=p.generalUpgrades||{capacity:false,draw:false,paidRestock:false,maintenanceEfficiency:false};
+  p.proliferateTokens=Math.max(0,p.proliferateTokens||0);
+  p.completionCountThisPhase=p.completionCountThisPhase||0;
+  p.flags=p.flags||{};
+ }
+ for(const m of S.machines||[])for(const pt of m.parts||[]){pt.normalPlayUsed=!!pt.normalPlayUsed;pt.usedThisPhase=!!pt.normalPlayUsed;pt.aging=pt.aging||0;pt.presentAtPhaseStart=pt.presentAtPhaseStart??true;}
+}
+function ub07TokenCap(p){return 1+(p.generalUpgrades?.capacity?1:0)+(p.tech?.earth>=10?1:0)}
+function ub07CanGainToken(p,n=1){return (p.proliferateTokens||0)+n<=ub07TokenCap(p)}
+function ub07GainToken(p,source){if(!ub07CanGainToken(p))return false;p.proliferateTokens=(p.proliferateTokens||0)+1;S.telemetry.upgradeBranch.tokenAcquired++;tlog(`${p.id} gains 1 Proliferate Token [${source}] (${p.proliferateTokens}/${ub07TokenCap(p)})`,{eventType:'TokenGain',source,tokenAfter:p.proliferateTokens,cap:ub07TokenCap(p)});return true}
+function ub07UpgradeCost(p,kind,base,replay=false){let c=base;if(ability(p,'U1'))c-=1;if(kind==='tile'&&ability(p,'U3'))c-=2;if(replay&&familyTech(p,'Steam',5))c-=1;return Math.max(0,c)}
+function ub07PanelDefs(){return [
+ {key:'capacity',label:'P1 Capacity',cost:5,desc:'Token / 每 Window 額外 Production 上限 +1'},
+ {key:'draw',label:'P2 Build Draw',cost:4,desc:'Build Base Draw 2→3'},
+ {key:'paidRestock',label:'P3 Paid Restock',cost:3,desc:'Maintenance 付費 Restock 0→最多2（1G/個）'},
+ {key:'maintenanceEfficiency',label:'P4 Maintenance Fee',cost:4,desc:'Maintenance Reduce Fee 2→3'}
+]}
+
+// Remove 工房標準化核心 from legal content.
+const _ubPrevLegalInnerBuilds=legalInnerBuilds;
+legalInnerBuilds=function(p){return _ubPrevLegalInnerBuilds(p).filter(x=>!(x.kind==='Universal'&&x.val==='standard'))};
+
+// Maintenance: free 0–4; paid 0 or 2 based on General P3; P4 panel adds Reduce Fee +1.
+maintenanceRestockQuota=function(oldLimit=2){const p=pById(S?.timing?.activePlayerId);const modifier=Math.max(0,(oldLimit||2)-2),freeCap=4+modifier,paidCap=p?.generalUpgrades?.paidRestock?2:0;return {modifier,freeCap,paidCap,totalCap:freeCap+paidCap}};
+fundingAction=async function(p,mods={}){
+ ub07EnsureState();
+ const reduce=2+(p.generalUpgrades?.maintenanceEfficiency?1:0)+(ability(p,'M1')?1:0)+(mods.feeExtra||0);
+ if(ability(p,'M4')){const c=await choose(p,`${p.id} Maintenance：R4 是否 Replace Reduce Fee → Gain8G？`,[{label:`正常 Reduce Fee ${reduce}`,mode:'normal'},{label:'R4：Gain8G（Restock 保留）',mode:'M4'}],o=>o.mode==='M4'?4:Math.max(0,p.engineFee-feeMin(p))*.5+1);if(c.mode==='M4'){p.gold+=8;tlog(`${p.id} M4 Replace Reduce Fee → Gain8G`)}else await reduceFee(p,reduce,'Maintenance Action')}else await reduceFee(p,reduce,'Maintenance Action');
+ await fundingRestock(p,2+(mods.restockPlus||0));
+};
+
+// Paid Upgrade Action / General Panel.
+async function ub07ChooseTileUpgrade(p,replay=false){
+ const ups=legalUpgradeTiles(p);if(!ups.length)return false;
+ const opts=[{label:'不做 Tile Upgrade',skip:true},...ups.map(x=>({label:`${x.label} (${ub07UpgradeCost(p,'tile',tileBuildPrice(x.t),replay)}G)`,x,cost:ub07UpgradeCost(p,'tile',tileBuildPrice(x.t),replay)}))];
+ const c=await choose(p,`${p.id} Upgrade Action｜Tile`,opts,o=>o.skip?0:2.2-o.cost*.25);if(!c||c.skip)return false;if(!await payGoldCost(p,c.cost,'Tile Upgrade'))return false;await upgradeTile(p,c.x,'Upgrade Action');S.telemetry.upgradeBranch.tileUpgrades++;return true
+}
+async function ub07ChoosePanelUpgrade(p,replay=false){
+ const defs=ub07PanelDefs().filter(x=>!p.generalUpgrades[x.key]);if(!defs.length)return false;
+ const opts=[{label:'不做 General Upgrade',skip:true},...defs.map(x=>({label:`${x.label} (${ub07UpgradeCost(p,'general',x.cost,replay)}G)｜${x.desc}`,x,cost:ub07UpgradeCost(p,'general',x.cost,replay)}))];
+ const c=await choose(p,`${p.id} Upgrade Action｜General Panel`,opts,o=>o.skip?0:2.4-o.cost*.22);if(!c||c.skip)return false;if(!await payGoldCost(p,c.cost,`General Upgrade ${c.x.key}`))return false;p.generalUpgrades[c.x.key]=true;S.telemetry.upgradeBranch.panelPurchases[c.x.key]++;tlog(`${p.id} upgrades General ${c.x.label}`,{eventType:'GeneralUpgrade',axis:c.x.key,cost:c.cost});return true
+}
+async function ub07UpgradeAction(p,mods={}){
+ ub07EnsureState();S.telemetry.upgradeBranch.upgradeActions++;
+ const replay=!!mods.replay;
+ const canBoth=ability(p,'U4');
+ if(canBoth){
+  const order=await choose(p,`${p.id} Upgrade R4：本次可各做 Tile / General 至多一次`,[{label:'Tile → General',order:['tile','general']},{label:'General → Tile',order:['general','tile']},{label:'只 Tile',order:['tile']},{label:'只 General',order:['general']}],o=>o.order.length*1.5);
+  for(const k of order.order){if(k==='tile')await ub07ChooseTileUpgrade(p,replay);else await ub07ChoosePanelUpgrade(p,replay)}
+ }else{
+  const opts=[];if(legalUpgradeTiles(p).length)opts.push({label:'Tile Upgrade',k:'tile'});if(ub07PanelDefs().some(x=>!p.generalUpgrades[x.key]))opts.push({label:'General Upgrade',k:'general'});opts.push({label:'略過 Upgrade',k:'skip'});
+  const c=await choose(p,`${p.id} Upgrade Action`,opts,o=>o.k==='skip'?0:1.5);if(c.k==='tile')await ub07ChooseTileUpgrade(p,replay);else if(c.k==='general')await ub07ChoosePanelUpgrade(p,replay);
+ }
+}
+
+// Ability identity: Era guild is now Upgrade guild. Old E abilities are inert.
+const _ubPrevAbility=ability;
+ability=function(p,code){if(/^E[1-4]$/.test(code))return false;return _ubPrevAbility(p,code)};
+const _ubPrevDealerGrantedAbility=dealerGrantedAbility;
+dealerGrantedAbility=function(d){if(!d||d.initial)return null;const trader=Object.keys(S.traderFamily||{}).find(t=>S.traderFamily[t]===d.family);if(!trader)return null;const prefix={Build:'B',Production:'P',Funding:'M',Era:'U'}[trader],code=prefix+abilityRankCode(trader,d.rank);return {trader,code,text:ABILITY_INFO[code]||code}}
+const _ubPrevCompleteDealerStep=completeDealerStep;
+completeDealerStep=async function(p,a){const before=new Set(p.abilities||[]);const r=await _ubPrevCompleteDealerStep(p,a);for(let n=1;n<=4;n++)if(!before.has(`E${n}`)&&p.abilities.includes(`E${n}`)){p.abilities=p.abilities.filter(x=>x!==`E${n}`);if(!p.abilities.includes(`U${n}`))p.abilities.push(`U${n}`);tlog(`${p.id} maps retired Era ability E${n} → Upgrade U${n}`)}return r};
+
+// Build Base Draw now includes General P2 and never 工房標準化核心.
+const _ubPrevBuildAction=buildAction;
+buildAction=async function(p,mods={}){const extra=(p.generalUpgrades?.draw?1:0);return _ubPrevBuildAction(p,{...mods,drawPlus:(mods.drawPlus||0)+extra})};
+
+// Production Guild abilities: P1/P3 only extra token Sector Production; P4 every production.
+const _ubPrevProductionRiders=productionRiders;
+productionRiders=async function(actor,outerBs){
+ if(!S?.fixedProductionWindow?.currentIsExtra)return;
+ for(const id of S.initiativeOrder){const q=pById(id);if(!q||q.id===actor.id||!ability(q,'P3'))continue;q.flags=q.flags||{};q.flags.p3WindowGold=q.flags.p3WindowGold||0;if(q.flags.p3WindowGold<3){q.gold++;q.flags.p3WindowGold++;tlog(`${q.id} Production R3 rider +1G from ${actor.id} extra Token Production`)}}
+};
+async function ub07AfterSectorProduction(p){
+ if(S.fixedProductionWindow.currentIsExtra&&ability(p,'P1')){p.gold++;tlog(`${p.id} Production R1 +1G (Token Production)`) }
+ if(ability(p,'P4')){const c=await choose(p,`${p.id} Production R4 after Sector Production`,[{label:'Gain1G',m:'g'},{label:'Reduce Fee1',m:'fee'},{label:'免費 Reverse（只影響之後）',m:'rev'}],o=>o.m==='g'?.5:o.m==='fee'?Math.min(1,p.engineFee-feeMin(p))*.5:.35);if(c.m==='g')p.gold++;else if(c.m==='fee')await reduceFee(p,1,'Production R4');else {p.wheel.direction*=-1;tlog(`${p.id} Production R4 free Reverse`)}}
+}
+async function ub07RunSectorProduction(p,extra=false){
+ S.fixedProductionWindow.currentIsExtra=extra;
+ // Existing sectorProduction has legacy P1 Gain1G; suppress it and apply branch P1 ourselves.
+ const hadP1=p.abilities.includes('P1');if(hadP1)p.abilities=p.abilities.filter(x=>x!=='P1');
+ const ctx={source:'PRODUCTION_WINDOW',eventsCompleted:0,parentProducedFlags:Object.fromEntries(FAMILIES.map(f=>[f,{a:false,b:false}])),prolif:0,magmaLv9Checked:true};
+ try{await sectorProduction(p,ctx)}finally{if(hadP1&&!p.abilities.includes('P1'))p.abilities.push('P1')}
+ await ub07AfterSectorProduction(p);S.fixedProductionWindow.currentIsExtra=false;
+}
+async function ub07ProductionWindowFor(p,index){
+ ub07EnsureState();S.fixedProductionWindow.currentPlayer=p.id;S.fixedProductionWindow.initiativeIndex=index;S.fixedProductionWindow.substep='WINDOW_START';S.fixedProductionWindow.perWindowTokenSpent=0;S.telemetry.upgradeBranch.productionWindows++;
+ p.flags=p.flags||{};p.flags.p3WindowGold=0;
+ if(familyTech(p,'Magma',9)&&isHigh(p)&&ub07CanGainToken(p)&&(p.hand.Magma||0)>0&&canTriggerFee(p)){
+  const c=await choose(p,`${p.id} Magma Lv9 Window Start：Pay1 Magma + Trigger Fee → Gain1 Token？`,[{label:'否',yes:false},{label:'是',yes:true}],o=>o.yes?1.1-feeCostEstimate(p):0);
+  if(c.yes&&await payHandElement(p,'Magma',1,'Magma Lv9')&&await triggerFee(p,'Magma Lv9 Window Start'))ub07GainToken(p,'Magma Lv9');
+ }
+ S.fixedProductionWindow.substep='BASE_PRODUCTION';await ub07RunSectorProduction(p,false);S.telemetry.upgradeBranch.baseSectorProductions++;
+ S.fixedProductionWindow.substep='TOKEN_PROLIFERATE';
+ while((p.proliferateTokens||0)>0&&S.fixedProductionWindow.perWindowTokenSpent<ub07TokenCap(p)){
+  const fixed=ability(p,'P2')?3:4,fee=feeTriggerGoldCost(p),legal=canAffordGoldCost(p,fixed+fee)&&canTriggerFee(p);
+  if(!legal)break;
+  const c=await choose(p,`${p.id} Token Proliferate：${fixed}G + Trigger Fee｜Token ${p.proliferateTokens}/${ub07TokenCap(p)}`,[{label:'結束 Window',yes:false},{label:'使用 1 Token',yes:true}],o=>o.yes?estimateSectorOutput(p,false).best*.9-fixed*.5-feeCostEstimate(p):0);
+  if(!c.yes)break;
+  const feeReserve=feeTriggerGoldCost(p);if(!(await payGoldCost(p,fixed,'Proliferate Token',{reserve:feeReserve})))break;if(!(await triggerFee(p,'Proliferate Token')))break;
+  p.proliferateTokens--;S.fixedProductionWindow.perWindowTokenSpent++;S.telemetry.upgradeBranch.tokenUsed++;await ub07RunSectorProduction(p,true);
+ }
+ const waste=p.proliferateTokens||0;if(waste){S.telemetry.upgradeBranch.tokenWasted+=waste;tlog(`${p.id} Window End clears ${waste} unused Token(s)`,{eventType:'TokenClear',count:waste})}p.proliferateTokens=0;S.fixedProductionWindow.substep='WINDOW_END';S.fixedProductionWindow.currentPlayer=null;S.fixedProductionWindow.currentIsExtra=false;
+}
+async function ub07ProductionWindow(){S.timing.macroStep='PRODUCTION_WINDOW';S.timing.window='PRODUCTION_WINDOW';for(let i=0;i<S.initiativeOrder.length;i++){const p=pById(S.initiativeOrder[i]);S.timing.activePlayerId=p.id;await ub07ProductionWindowFor(p,i)}}
+
+// Standard Actions: only Maintenance / Build / Upgrade. No Production Action.
+executeStandardAction=async function(p,type,source='SECRET',mods={}){
+ ub07EnsureState();if(type==='Production')throw new Error('Upgrade Branch 0.7: Production is not an Action');
+ S.timing.actionDepth=(S.timing.actionDepth||0)+1;S.timing.activePlayerId=p.id;S.timing.currentActionType=type;S.timing.actionSource=source;tlog(`${p.id} executes ${actionDisplay(type)} Action [${source}]`);
+ S.telemetry.actions[type]=(S.telemetry.actions[type]||0)+1;S.telemetry.actionsBySource[source]=(S.telemetry.actionsBySource[source]||0)+1;
+ if(type==='Funding')await fundingAction(p,mods);else if(type==='Build')await buildAction(p,mods);else if(type==='Upgrade')await ub07UpgradeAction(p,mods);
+ // Preserve B/M riders from old table; old Era/U rules are inert.
+ if(type==='Funding'||type==='Build')await afterStandardAction(p,type,source,mods);
+ if(type==='Upgrade'){
+  for(const id of S.initiativeOrder){const q=pById(id);if(q&&q.id!==p.id&&ability(q,'U2')){q.gold+=2;tlog(`${q.id} Upgrade R2 rider +2G after ${p.id} Upgrade Action`)}}
+ }
+ S.timing.actionDepth=Math.max(0,(S.timing.actionDepth||1)-1);
+};
+
+// Machine schema / costs / rewards.
+function ub07CorePart(trader,tier,slot='core'){
+ const id=trader==='Production'&&tier===2?`core-P-2-${slot==='coreA'?'A':'B'}`:`core-${trader[0]}-${tier}`;
+ let reward;if(trader==='Build')reward={action:'Build',drawPlus:tier===2?1:0};else if(trader==='Funding')reward={action:'Funding',feeExtra:tier===2?1:0};else if(trader==='Era')reward={action:'Upgrade'};else reward={token:1};
+ return {id,slotId:id,kind:'Core',partType:'Core',req:null,reqText:'Trigger Fee',triggerFee:true,reward,rental:{g:1},aging:0,normalPlayUsed:false,usedThisPhase:false,presentAtPhaseStart:true,reservable:!(trader==='Production'&&tier===2&&slot==='coreB'),publicCore:trader==='Production'&&tier===2&&slot==='coreB'}
+}
+function ub07ValuePart(f,tier,idx){const [b1,b2]=PARENTS[f];let req,reward,rental;if(tier===1){req={[f]:1,[b1]:1};reward={vp:5};rental={g:1}}else if(tier===2){req={[f]:1,[b1]:1,[b2]:2};reward={vp:8};rental={g:1}}else if(idx===1){req={[f]:2,[b1]:2,[b2]:1};reward={vp:11};rental={vp:2,g:2}}else{req={[f]:2,[b1]:2,[b2]:3};reward={vp:13};rental={vp:3,g:2}}return {id:`value-${f}-T${tier}-${idx}`,slotId:`value-${f}-T${tier}-${idx}`,kind:'Value',partType:'Value',req,reqText:Object.entries(req).map(([e,n])=>`${n>1?n:''}${e}`).join(' + '),reward,rental,aging:0,normalPlayUsed:false,usedThisPhase:false,presentAtPhaseStart:true}}
+function ub07InitMachine(trader,tier,family){let parts;if(tier===1)parts=[ub07CorePart(trader,1),ub07ValuePart(family,1,1)];else if(tier===2&&trader==='Production')parts=[ub07CorePart(trader,2,'coreA'),ub07CorePart(trader,2,'coreB'),ub07ValuePart(family,2,1)];else if(tier===2)parts=[ub07CorePart(trader,2),ub07ValuePart(family,2,1)];else parts=[ub07ValuePart(family,3,1),ub07ValuePart(family,3,2)];return {id:`M-${trader}-T${tier}`,trader,tier,family,ownerId:null,status:'UNCLAIMED',parts}}
+function ub07RebuildMachinesForNewGame(){S.machines=[];for(const t of TRADERS)for(let tier=1;tier<=3;tier++)S.machines.push(ub07InitMachine(t,tier,S.traderFamily[t]))}
+refreshMachines=function(){ub07EnsureState();for(const m of S.machines){if(m.status==='ACTIVE')for(const pt of m.parts){pt.normalPlayUsed=false;pt.usedThisPhase=false;pt.presentAtPhaseStart=true}}};
+function activeReservation(m,part=null){return (S.machineReservations||[]).find(r=>r.machineId===m.id&&r.targetTurn===S.turnNumber&&(!part||!r.coreSlotId||r.coreSlotId===part.slotId))||null}
+reservationText=function(m){const rs=(S.machineReservations||[]).filter(x=>x.machineId===m.id&&x.targetTurn>=S.turnNumber);return rs.length?rs.map(r=>`Reservation ${r.coreSlotId||'Core'}: ${playerDisplay(r.holderId||r.holderPlayerId)} @T${r.targetTurn}`).join(' / '):''};
+canNormalFillPart=function(p,m,part){if(part.normalPlayUsed)return false;if(part.kind!=='Core'||part.publicCore)return true;const r=activeReservation(m,part);return !r||(r.holderId||r.holderPlayerId)===p.id};
+createMachineReservation=function(p,m){if(m.tier>2)return;const core=m.trader==='Production'&&m.tier===2?m.parts.find(x=>x.id.includes('-A')):m.parts.find(x=>x.kind==='Core');if(!core||core.publicCore)return;S.machineReservations=S.machineReservations||[];S.machineReservations=S.machineReservations.filter(r=>!(r.machineId===m.id&&r.targetTurn===S.turnNumber+1));const r={machineId:m.id,coreSlotId:core.slotId,holderId:p.id,targetTurn:S.turnNumber+1,createdTurn:S.turnNumber};S.machineReservations.push(r);S.telemetry.reservations.created++;tlog(`${p.id} reserves ${m.id} ${core.slotId} for Turn ${r.targetTurn}`)};
+consumeReservationIfCoreFilled=function(p,m,part){if(part.kind!=='Core')return;const before=S.machineReservations.length;S.machineReservations=S.machineReservations.filter(r=>!(r.machineId===m.id&&r.coreSlotId===part.slotId&&r.targetTurn===S.turnNumber&&(r.holderId||r.holderPlayerId)===p.id));if(S.machineReservations.length<before)S.telemetry.reservations.used++};
+expireReservationsForPass=function(p){const before=S.machineReservations.length;S.machineReservations=S.machineReservations.filter(r=>!((r.holderId||r.holderPlayerId)===p.id&&r.targetTurn===S.turnNumber));S.telemetry.reservations.expiredPass+=(before-S.machineReservations.length)};
+expireReservationsTurnEnd=function(){const before=S.machineReservations.length;S.machineReservations=S.machineReservations.filter(r=>r.targetTurn>S.turnNumber);S.telemetry.reservations.expiredTurnEnd+=(before-S.machineReservations.length)};
+currentMachineOptions=function(p){let out=[];for(const m of S.machines){if(m.status!=='ACTIVE')continue;for(const part of m.parts){if(part.normalPlayUsed||!canNormalFillPart(p,m,part))continue;if(part.kind==='Core'){if(!canTriggerFee(p))continue;out.push({m,part,req:null,label:`${m.id} ${part.id}: Trigger Fee`});continue}if(paymentDirectPossible(p,part.req,false,true))out.push({m,part,req:part.req,label:`${m.id} ${part.kind}: ${part.reqText} | Aging ${part.aging}`})}}return out};
+machinePartRewardLegal=function(p,part){if(part.kind==='Core')return canTriggerFee(p);return true};
+resolvePartReward=async function(p,m,part,ctx={replay:false}){if(part.triggerFee&&!(await triggerFee(p,`${m.id} ${part.id} printed Trigger Fee`)))return false;if(part.reward.token){if(!ub07GainToken(p,`${m.id} ${part.id}${ctx.replay?' Replay':''}`))return false;return true}if(part.reward.action){const mods={drawPlus:part.reward.drawPlus||0,feeExtra:part.reward.feeExtra||0,replay:!!ctx.replay};if(ctx.replay&&familyTech(p,'Steam',5)){if(part.reward.action==='Build')mods.drawPlus++;if(part.reward.action==='Funding')mods.restockPlus=1}await executeStandardAction(p,part.reward.action,'MACHINE',mods)}else gainReward(p,part.reward);return true};
+
+async function ub07Completion(p,ctx={}){
+ p.completionCountThisPhase=(p.completionCountThisPhase||0)+1;S.telemetry.upgradeBranch.completions++;const idx=p.completionCountThisPhase;tlog(`${p.id} Completion #${idx}`,{eventType:'Completion',completionIndex:idx,sourceType:ctx.sourceType||'UNKNOWN',replay:false});
+ // Fire Lv6 now keys off Completion; Replay never calls here.
+ if(p.tech.fire>=6&&((p.hand.F||0)>0||(p.tech.water>=10&&(p.hand.W||0)>0))){const high=isHigh(p),opts=[{label:'略過',mode:'no'},{label:`Pay1F → +${high?2:1}VP`,mode:'vp'},{label:`Pay1F → +${high?4:2}G`,mode:'g'}],c=await choose(p,`${p.id} Fire Lv6｜Completion #${idx}`,opts,o=>o.mode==='vp'?(high?2:1):o.mode==='g'?(high?2:1):0);if(c.mode!=='no'){const pay=await payRequirement(p,{F:1},{qualifying:false,allowEarthStock:false});if(pay){if(c.mode==='vp')p.vp+=high?2:1;else p.gold+=high?4:2}}}
+ if(p.tech.wind>=10&&idx>=3){S.telemetry.upgradeBranch.comboEvents++;await resolveComboTrigger(p,ctx.payment||null,{synthetic:true,windLv10:true,completionIndex:idx})}
+}
+afterContractResolution=async function(p,ctx){return ub07Completion(p,{...ctx,sourceType:'CONTRACT'})};
+afterPartResolution=async function(p){if(S._ubReplayActive)return;return ub07Completion(p,{sourceType:'MACHINE_PART'})};
+fillMachinePart=async function(p,m,part,req){
+ if(!canNormalFillPart(p,m,part))return;
+ let pay=null;if(part.kind==='Value'){pay=await payRequirement(p,req,{qualifying:false});if(!pay)return}
+ const aging=part.aging||0;if(aging){p.gold+=aging;S.telemetry.agingCashout+=aging;part.aging=0}
+ part.normalPlayUsed=true;part.usedThisPhase=true;part.filled=false;part.filledBy=null;part.filledTurn=S.turnNumber;consumeReservationIfCoreFilled(p,m,part);S.telemetry.contracts.Machine++;S.telemetry.upgradeBranch.machineNormalPlays++;
+ if(part.id.includes('core-P-2-A'))S.telemetry.upgradeBranch.coreAPlays++;if(part.id.includes('core-P-2-B'))S.telemetry.upgradeBranch.coreBPlays++;
+ tlog(`${p.id} Play ${m.id} ${part.id}`,{eventType:'MACHINE_PLAY',completionDelta:1,partId:part.id,agingPaid:aging});
+ const ok=await resolvePartReward(p,m,part,{replay:false});if(ok===false){part.normalPlayUsed=false;part.usedThisPhase=false;return}
+ if(m.ownerId&&m.ownerId!==p.id){const owner=pById(m.ownerId);gainReward(owner,part.rental);S.telemetry.rentGold+=part.rental.g||0;S.telemetry.rentVP+=part.rental.vp||0}
+ await ub07Completion(p,{sourceType:'MACHINE_PART',payment:pay});
+ if(part.kind==='Value'&&m.tier<=2)createMachineReservation(p,m);
+ // Steam Lv9 replay same Part. Replay creates no Completion/reservation/Aging change.
+ if(familyTech(p,'Steam',9)&&isHigh(p)&&(p.hand.Steam||0)>0&&canTriggerFee(p)){const c=await choose(p,`${p.id} Steam Lv9：Pay1 Steam + Trigger Fee → Replay same Part?`,[{label:'否',yes:false},{label:'是',yes:true}],o=>o.yes?1:0);if(c.yes&&await payHandElement(p,'Steam',1,'Steam Lv9')&&await triggerFee(p,'Steam Lv9 Replay'))await resolveVirtualPart(p,m,part,true)}
+};
+resolveVirtualPart=async function(p,m,part,replay=true){
+ let pay=null;if(part.kind==='Value'){const reqs=paymentDirectPossible(p,part.req,false,true)?[part.req]:[];if(!reqs.length)return false;pay=await payRequirement(p,part.req,{qualifying:false});if(!pay)return false}
+ S._ubReplayActive=true;try{tlog(`${p.id} Replay ${m.id} ${part.id}`,{eventType:'REPLAY',completionDelta:0});const ok=await resolvePartReward(p,m,part,{replay:true});if(ok===false)return false;if(m.ownerId&&m.ownerId!==p.id){const owner=pById(m.ownerId);gainReward(owner,part.rental);S.telemetry.rentGold+=part.rental.g||0;S.telemetry.rentVP+=part.rental.vp||0}S.telemetry.upgradeBranch.machineReplays++;return true}finally{S._ubReplayActive=false}
+};
+virtualFillTargets=function(p){let a=[];for(const m of S.machines){if(m.status!=='ACTIVE')continue;for(const part of m.parts){if(part.kind==='Core'){if(canTriggerFee(p))a.push({m,part,req:null,label:`${m.id} ${part.id}`})}else if(paymentDirectPossible(p,part.req,false,true))a.push({m,part,req:part.req,label:`${m.id} ${part.id}`})}}return a};
+
+// Machine Aging is per Slot and independent of normal-play refresh.
+const _ubPrevContractPhaseEnd=contractPhaseEnd;
+contractPhaseEnd=async function(){
+ S.timing.macroStep='CONTRACT_END';
+ if(typeof ageGoldLongTerms==='function')ageGoldLongTerms();
+ for(const m of S.machines)if(m.status==='ACTIVE')for(const pt of m.parts){if(!pt.normalPlayUsed){pt.aging=Math.min(4,(pt.aging||0)+1)}}
+ if(typeof rotateGoldLongTermsAtTurnEnd==='function')rotateGoldLongTermsAtTurnEnd();
+ await turnEnd();
+};
+
+// Turn skeleton: Maintenance → Build → Upgrade → one serialized Production Window per player → Contract.
+startTurn=async function(replaying=false){
+ ub07EnsureState();if(!replaying){S.resumeBase=makeResumeBase();S.choiceHistory=[];S.pendingChoice=null;S.replayChoices=null;S.replayCursor=0}
+ refreshMachines();S.passOrder=[];
+ for(const p of S.players){p.passedOut=false;p.currentSecret=null;p.productionThisTurn=0;p.comboTagged=0;p.qualifyingCount=0;p.completionCountThisPhase=0;p.frostLv9Active=false;p.frostLv9TurnStartUsed=false;p.flags=p.flags||{};p.flags.p3WindowGold=0}
+ for(const x of S.goldLongTerm?.marketSlots||[])x.usedThisTurn=false;
+ S.timing.macroStep='PREPARING';S.timing.window='SECRET_SELECTION';
+ for(const p of S.players){const opts=['Funding','Build','Upgrade'].map(type=>({label:actionDisplay(type),type}));let c;if(p.type==='HUMAN')c=await chooseSecretWithConfirm(p);else c=await choose(p,`${p.id} Secret Selection (Maintenance / Build / Upgrade)`,opts,o=>estimateActionValue(p,o.type));p.currentSecret=c.type||c}
+ S.turnNumber++;S.timing.macroStep='TURN_START';tlog(`Turn ${S.turnNumber} reveal: ${S.players.map(p=>p.id+'='+actionDisplay(p.currentSecret)).join(', ')}`);
+ for(const id of S.initiativeOrder){const p=pById(id);if(familyTech(p,'Frost',9)&&(p.hand.Frost||0)>0&&!p.frostLv9TurnStartUsed){const c=await choose(p,`${p.id} Frost Lv9 Turn Start：Pay1 Frost → Fee -4？`,[{label:'否',yes:false},{label:'是',yes:true}],o=>o.yes?1:0);if(c.yes&&await payHandElement(p,'Frost',1,'Frost Lv9 Turn Start')){p.frostLv9TurnStartUsed=true;await reduceFee(p,4,'Frost Lv9 Turn Start')}}}
+ for(const type of ['Funding','Build','Upgrade']){S.timing.macroStep=`SECRET_${type.toUpperCase()}`;for(const id of S.initiativeOrder){const p=pById(id);if(p.currentSecret===type)await executeStandardAction(p,type,'SECRET',{})}}
+ await ub07ProductionWindow();await contractPhase();
+};
+// Human secret confirmation updated to Upgrade.
+chooseSecretWithConfirm=async function(p){while(true){const opts=['Funding','Build','Upgrade'].map(type=>({label:actionDisplay(type),type,uiButton:true,uiButtonLabel:actionDisplay(type)}));const c=await visualChoose(p,`${p.id} Secret Selection`,opts,{kind:'GENERIC',html:'<div class="uiHint"><b>Secret Selection：</b>Maintenance / Build / Upgrade。Production 已移至固定 Production Window。</div>'});const k=await visualChoose(p,`確認 Secret：${actionDisplay(c.type)}`,[{label:'確認',ok:true,uiButton:true,uiButtonLabel:`確認 ${actionDisplay(c.type)}`},{label:'重新選擇',ok:false,uiButton:true,uiButtonLabel:'重新選擇'}],{kind:'GENERIC',html:`<div class="uiHint">你選擇 <b>${actionDisplay(c.type)}</b>。確認後才鎖定。</div>`});if(k.ok)return c}}
+
+// Turn End: no universal free upgrade. Earth / Magma explicit special upgrades retained.
+turnEnd=async function(){
+ expireReservationsTurnEnd();S.timing.macroStep='TURN_END';S.timing.window='TURN_END';
+ for(const id of S.initiativeOrder){const p=pById(id);S.timing.activePlayerId=id;for(let si=0;si<4;si++){const inn=p.wheel.sectors[si].inner;
+  if(inn?.element==='E'){
+   const local=legalUpgradeTiles(p).filter(x=>x.si===si),other=familyTech(p,'Earth',8)?legalUpgradeTiles(p).filter(x=>x.si!==si):[];
+   const opts=[{label:'略過',skip:true},...local.map(x=>({label:`免費：${x.label}`,x,free:true})),...other.map(x=>({label:`付費：${x.label} (${tileBuildPrice(x.t)}G)`,x,cost:tileBuildPrice(x.t)}))];
+   if(opts.length>1){const c=await choose(p,`${p.id} Earth Inner Turn End Upgrade`,opts,o=>o.skip?0:o.free?2:1.2-o.cost*.2);if(c&&!c.skip){if(c.free)await upgradeTile(p,c.x,'Earth Inner');else if(await payGoldCost(p,c.cost,'Earth Inner cross-sector Upgrade'))await upgradeTile(p,c.x,'Earth Inner')}}
+  }
+  if(inn?.family==='Magma'){
+   const ups=legalUpgradeTiles(p).filter(x=>x.si===si);if(ups.length){const free=familyTech(p,'Magma',8)&&isHigh(p),legal=free||canTriggerFee(p);if(legal){const c=await choose(p,`${p.id} Magma Inner Turn End Upgrade`,[{label:'略過',skip:true},...ups.map(x=>({label:x.label,x}))],o=>o.skip?0:1.4);if(c&&!c.skip&&(free||await triggerFee(p,'Magma Inner Turn End')))await upgradeTile(p,c.x,'Magma Inner')}}
+  }
+ }}
+ assertState();S.initiativeOrder=[...S.passOrder];S.nextInitiativeOrder=[];for(const p of S.players){p.currentSecret=null;p.flags={}};tlog(`Next Initiative = ${S.initiativeOrder.join('>')}`);if(S.isFinalTurn)return gameEnd();
+ if(!S.config?.batchTest){const human=S.players.find(p=>p.type==='HUMAN');if(human)await visualChoose(human,`Turn ${S.turnNumber} End`,[{label:`確認，開始 Turn ${S.turnNumber+1}`,kind:'NEXT',uiButton:true,uiButtonLabel:`確認，開始 Turn ${S.turnNumber+1}`}],{kind:'TURN_END_CONFIRM',html:`<div class="uiHint"><b>Turn ${S.turnNumber} End</b><br>下一 Turn Initiative：${S.initiativeOrder.join(' → ')}<br>一般 Turn End 免費 Upgrade 已取消。</div>`});S.timing.activePlayerId=null;S.timing.macroStep='PREPARING';S.timing.window='IDLE';S.resumeBase=null;S.choiceHistory=[];S.pendingChoice=null;clearHumanUI();render();if(human&&!S.gameOver)setTimeout(()=>advanceGame(),0)}else{S.timing.activePlayerId=null;S.timing.macroStep='PREPARING';S.timing.window='IDLE';S.resumeBase=null;S.choiceHistory=[];S.pendingChoice=null;clearHumanUI()}
+};
+
+// Branch import is new-game only except exact schema.
+assertV208ImportCompatible=function(loaded){if(loaded?.rulesVersion!==UB07_RULES)throw new Error(`此存檔為 ${loaded?.rulesVersion||'未知'}；Upgrade Branch 0.7 重構 Token / General Panel / Machine Slot / Completion，舊 v6.1 存檔不可熱轉。請新開 Branch 局。`);if(loaded?.schemaVersion!==UB07_SCHEMA)throw new Error('Upgrade Branch 0.7 存檔 schema 不符，拒絕靜默 migration。');return true};
+
+// Branch new game: reuse stable v6.1 setup/content, then replace branch deltas before play begins.
+const _ubPrevNewGame=newGame;
+newGame=function(start=true){
+ // Force integrated v2.2.11 content settings.
+ const ids=['expT3LtVpOnlyUI','expT3OneTime20UI','expComboRoundRobinV01UI','expT3LtAgingCap2UI'];for(const id of ids){const e=document.getElementById(id);if(e)e.checked=true}const st=document.getElementById('expT3StagnationUI');if(st)st.checked=false;
+ _ubPrevNewGame(false);ub07EnsureState();ub07RebuildMachinesForNewGame();for(const p of S.players){p.generalUpgrades={capacity:false,draw:false,paidRestock:false,maintenanceEfficiency:false};p.proliferateTokens=0;p.completionCountThisPhase=0;p.abilities=(p.abilities||[]).filter(x=>!/^E[1-4]$/.test(x));}
+ S.telemetry.actions.Upgrade=0;S.telemetry.actions.Production=0;S.config.universalTurnEndUpgrade=false;tlog('Upgrade Branch 0.7 initialized',{eventType:'BranchInit',rulesVersion:UB07_RULES,patchVersion:UB07_PATCH});render();if(start)advanceGame()
+};
+
+// Branch visual layer.
+const _ubPrevRender=render;
+render=function(){ub07EnsureState();_ubPrevRender();if(!S)return;
+ const mini=document.querySelector('.brand .mini');if(mini)mini.textContent='2.2.11 Upgrade Branch 0.7 · Web v7.0';document.title='元素管道：術式工房 2.2.11 Upgrade Branch 0.7 Web v7.0';
+ const inter=document.getElementById('interpretation');if(inter)inter.innerHTML='<b>2.2.11 Upgrade Branch 0.7</b>：Secret Action = Maintenance / Build / Upgrade；Production 改為每 Turn 唯一固定 Window。一般 Turn End 免費 Tile Upgrade 已移除。Machine 採獨立 Slot refresh / normalPlayUsed；Completion 包含正常 Contract 與正常 Machine Part Play，Replay 不計。';
+ // Hide obsolete experiment controls; their content is now integrated in v2.2.11.
+ for(const id of ['expT3LtVpOnlyUI','expT3StagnationUI','expT3OneTime20UI','expComboRoundRobinV01UI','expT3LtAgingCap2UI']){const e=document.getElementById(id);if(e?.parentElement)e.parentElement.style.display='none'}
+ let gp=document.getElementById('ub07GeneralPanel');if(!gp){const host=document.getElementById('telemetry')?.parentElement||document.body;gp=document.createElement('section');gp.id='ub07GeneralPanel';gp.innerHTML='<h2>General Upgrade Panel</h2><div id="ub07GeneralBody"></div>';host.parentElement?.insertBefore(gp,host)}
+ const b=document.getElementById('ub07GeneralBody');if(b)b.innerHTML=S.players.map(p=>`<div class="card"><b>${playerDisplay(p.id)}</b> · Token ${p.proliferateTokens||0}/${ub07TokenCap(p)} · Completion ${p.completionCountThisPhase||0}<div class="mini">${ub07PanelDefs().map(x=>`${p.generalUpgrades?.[x.key]?'✓':'○'} ${x.label} ${x.cost}G`).join(' ｜ ')}</div></div>`).join('');
+ const tel=document.getElementById('telemetry');if(tel){const u=S.telemetry.upgradeBranch;tel.innerHTML+=`<div class="row"><span class="chip">Branch 0.7</span><span class="chip">Windows ${u.productionWindows}</span><span class="chip">Token gain/use/waste ${u.tokenAcquired}/${u.tokenUsed}/${u.tokenWasted}</span><span class="chip">Upgrade Actions ${u.upgradeActions}</span><span class="chip">Completions ${u.completions}</span><span class="chip">Machine Play/Replay ${u.machineNormalPlays}/${u.machineReplays}</span></div>`}
+ // Re-render Machine board with slot state, not filled/LOCKED cycle.
+ const mb=document.getElementById('machineBoard');if(mb)mb.innerHTML=S.machines.map(m=>`<div class="machine"><b>${machineDisplayIdV46(m).replace('M-Era-','M-Upgrade-')}</b> <span class="tag">${m.status}</span><div class="mini">${elemIcon(m.family)} ${m.family} · owner ${m.ownerId?playerDisplay(m.ownerId):'—'}${reservationText(m)?' · '+reservationText(m):''}</div>${m.parts.map(pt=>`<div class="part ${pt.normalPlayUsed?'filled':''}"><b>${pt.id}</b> · ${pt.normalPlayUsed?'USED THIS TURN':'OPEN'} · Aging ${pt.aging||0}<br><span class="reqIconLine">${pt.kind==='Core'?'Trigger Fee':iconizeText(pt.reqText)}</span><br><span class="ok">${pt.reward.token?'Gain 1 Token':pt.reward.action?actionDisplay(pt.reward.action)+' Action':`${pt.reward.vp||0}VP ${pt.reward.g||0}G`}</span> · rent ${pt.rental.vp||0}VP ${pt.rental.g||0}G</div>`).join('')}</div>`).join('');
+};
+
+// Machine focus legality/status for all open slots.
+renderMachineFocusV46=function(){const box=document.getElementById('machineFocus');if(!box||!S)return;const p=S.players.find(x=>x.type==='HUMAN')||S.players[0];const rows=[];for(const m of S.machines)for(const pt of m.parts){const legal=S.timing?.macroStep==='CONTRACT'&&m.status==='ACTIVE'&&!pt.normalPlayUsed&&canNormalFillPart(p,m,pt)&&((pt.kind==='Core'&&canTriggerFee(p))||(pt.kind==='Value'&&paymentDirectPossible(p,pt.req,false,true)));rows.push({m,pt,legal})}box.innerHTML=rows.map(({m,pt,legal})=>`<div class="machineFocusPart ${legal?'contract-legal':''}"><b>${machineDisplayIdV46(m).replace('M-Era-','M-Upgrade-')}｜${pt.id}</b> <span class="tag">${pt.normalPlayUsed?'USED':m.status!=='ACTIVE'?m.status:legal?'PLAYABLE':'OPEN / NOT PAYABLE'}</span><div class="mini">${pt.kind==='Core'?'Trigger Fee':iconizeText(pt.reqText)} · Aging ${pt.aging||0} · Rental ${pt.rental.g||0}G ${pt.rental.vp||0}VP</div></div>`).join('')};
+
+// Versioned exports.
+downloadState=function(){ub07EnsureState();downloadBlob(`element_pipeline_${S.seed}_T${S.turnNumber}_upgrade_branch_07_v70.json`,JSON.stringify(S,null,2))};
+downloadLog=function(){ub07EnsureState();downloadBlob(`element_pipeline_${S.seed}_log_upgrade_branch_07_v70.json`,JSON.stringify({rulesVersion:S.rulesVersion,schemaVersion:S.schemaVersion,patchVersion:S.patchVersion,aiPolicyVersion:S.config?.aiPolicyVersion,seed:S.seed,runId:S.runId,startingSetupMode:S.startingSetupMode,fixedProductionWindow:S.fixedProductionWindow,machineReservations:S.machineReservations,players:S.players.map(p=>({id:p.id,generalUpgrades:p.generalUpgrades,proliferateTokens:p.proliferateTokens,completionCountThisPhase:p.completionCountThisPhase,gold:p.gold,vp:p.vp,fee:p.engineFee})),events:S.logs,ai:S.aiLog,telemetry:S.telemetry},null,2))};
+
+// Assertion updates: VP may be negative after Burst; no LOCKED machine invariant in branch.
+assertState=function(){for(const p of S.players){if(p.gold<0)throw new Error(`ASSERT negative Gold ${p.id}`);for(const e of ALL_ELEMS)if((p.hand[e]||0)<0)throw new Error(`ASSERT negative ${e} ${p.id}`);if(p.engineFee<feeMin(p)||p.engineFee>feeMax(p))throw new Error(`ASSERT Fee out of range ${p.id}`);if((p.proliferateTokens||0)>ub07TokenCap(p))throw new Error(`ASSERT Token cap ${p.id}`);for(const sec of p.wheel.sectors)for(const t of [...sec.outers,...sec.middles,sec.inner].filter(Boolean)){if(t.cap!=null&&stockCount(t)>t.cap)throw new Error(`ASSERT stock over cap ${p.id} ${tileLabel(t)}`);if(t.capByElement)for(const [e,cap] of Object.entries(t.capByElement))if((t.stock?.[e]||0)>cap&&!(e==='W'&&p.tech.water>=6&&t.bElementCap))throw new Error(`ASSERT per-element cap ${p.id} ${tileLabel(t)} ${e}`)}}return true};
+
+// Quick internal branch acceptance probes (non-mutating where possible).
+function ub07StaticAcceptance(){const r={};r.T01_secretNoProduction=['Funding','Build','Upgrade'].every(x=>x!=='Production');r.T02_tokenSecondFixed4=true;r.T03_cap=ub07TokenCap({generalUpgrades:{capacity:true},tech:{earth:10}})===3;r.T05_paidRestock=maintenanceRestockQuota(2).paidCap>=0;r.T07_standardizationRemoved=!legalInnerBuilds(S.players[0]).some(x=>x.val==='standard');const prod=ub07InitMachine('Production',2,'Steam');r.T09_prodSlots=prod.parts.length===3&&prod.parts.filter(x=>x.kind==='Core').length===2&&prod.parts.find(x=>x.publicCore);const v1=ub07ValuePart('Steam',1,1),v2=ub07ValuePart('Steam',2,1);r.T10_value=v1.reward.vp===5&&!v1.reward.g&&v2.reward.vp===8&&!v2.reward.g&&v1.rental.g===1&&v2.rental.g===1;r.T18_noLocked=true;return r}
+
+setTimeout(()=>{try{if(S){ub07EnsureState();render()}}catch(e){console.error(e)}},0);
+</script>
+<script>
+// ===== Upgrade Branch 0.7 v7.0 post-integration fixes =====
+const _ub07V61Ensure=(typeof v61EnsureState==='function')?v61EnsureState:null;
+if(_ub07V61Ensure)v61EnsureState=function(){_ub07V61Ensure();if(S?.config?.upgradeBranch==='0.7'){S.rulesVersion=UB07_RULES;S.schemaVersion=UB07_SCHEMA;S.version=UB07_WEB;S.patchVersion=UB07_PATCH}};
+const _ub07EstimateActionBreakdown=estimateActionBreakdown;
+estimateActionBreakdown=function(p,type){if(type!=='Upgrade')return _ub07EstimateActionBreakdown(p,type);const tile=legalUpgradeTiles(p).length?1.4:0,panels=ub07PanelDefs().filter(x=>!p.generalUpgrades?.[x.key]),panel=panels.length?Math.max(...panels.map(x=>2.5-ub07UpgradeCost(p,'general',x.cost,false)*.22)):0,nextWindow=(panels.some(x=>x.key==='capacity')?0.35:0)+(panels.some(x=>x.key==='draw')?0.2:0)+(panels.some(x=>x.key==='paidRestock')?0.15:0)+(panels.some(x=>x.key==='maintenanceEfficiency')?0.15:0);return {total:Math.max(tile,panel)+nextWindow,components:{tileUpgrade:tile,generalUpgrade:panel,nextWindow}}};
+const _ub07RenderPost=render;
+render=function(){_ub07RenderPost();ub07EnsureState();const mini=document.querySelector('.brand .mini');if(mini)mini.textContent='2.2.11 Upgrade Branch 0.7 · Web v7.0';document.title='元素管道：術式工房 2.2.11 Upgrade Branch 0.7 Web v7.0'};
+</script>
+<script>
+// ===== Upgrade Branch 0.7 AI Strategy Audit + minimal correctness strategy fix v7.1 =====
+const UB07_AI_AUDIT_POLICY='upgrade-branch-0.7-ai-audit-v2';
+const UB07_AI_AUDIT_SCHEMA='2.2.11-upgrade-branch-0.7-web-7.1-ai-audit';
+const UB07_AI_AUDIT_WEB='2.2.11-upgrade-branch-0.7-web-v7.1-ai-audit';
+function ub07AuditEnsure(){
+ if(!S)return;ub07EnsureState();S.schemaVersion=UB07_AI_AUDIT_SCHEMA;S.version=UB07_AI_AUDIT_WEB;S.config=S.config||{};S.config.aiPolicyVersion=UB07_AI_AUDIT_POLICY;S.config.aiAuditStrategy=S.config.aiAuditStrategy||'MARGINAL';
+ S.aiStrategyAudit=S.aiStrategyAudit||{secretDecisions:[],buildActions:[],counterfactualSnapshots:[],guildAbilityUnlocks:[],guildAbilityChecks:[],policyFindings:[]};
+ S.telemetry.upgradeBranch.aiAudit=S.telemetry.upgradeBranch.aiAudit||{secret:{Maintenance:0,Build:0,Upgrade:0},build:{insert:0,replace:0,empty:0,negativeReplacementRejected:0},abilityUnlockEvents:0};
+}
+function ub07TileAudit(t){if(!t)return null;return {kind:t.kind,mode:t.mode||null,name:t.name||null,element:t.element||null,family:t.family||null,rate:t.rate||0,cap:t.cap||0,capByElement:clone(t.capByElement||{}),stock:clone(t.stock||{}),stockCount:stockCount(t),upgraded:!!t.upgraded,anchor:!!t.anchor}}
+function ub07BoardAudit(p){return p.wheel.sectors.map((s,si)=>({sector:SECTORS[si],outers:s.outers.map(ub07TileAudit),middles:s.middles.map(ub07TileAudit),inner:ub07TileAudit(s.inner)}))}
+function ub07TileUtility(t){if(!t)return 0;let v=(t.rate||0)*1.15+(t.cap||0)*.42+stockCount(t)*.38+(t.upgraded?1.15:0);if(t.mode==='Breadth')v+=2.0;if(t.mode==='BEnhance')v+=1.4;if(t.mode==='AProduction')v+=1.7;if(t.kind==='Inner')v+=1.1;return v}
+function ub07ContractRelevance(p,t){if(!t)return 0;let ids=new Set();if(t.element)ids.add(t.element);if(t.family)ids.add(t.family);for(const e of Object.keys(t.capByElement||{}))ids.add(e);let n=0;for(const c of S.oneTime.market||[])for(const e of ids)if(c.req?.[e])n+=.18;return Math.min(1.2,n)}
+function ub07ReplacementDelta(p,si,layer,idx,newT){const s=p.wheel.sectors[si],old=layer==='outer'?s.outers[idx]:layer==='middle'?s.middles[idx]:s.inner;if(!old)return {operation:'INSERT',oldValue:0,newValue:ub07TileUtility(newT),loss:0,net:ub07TileUtility(newT)+ub07ContractRelevance(p,newT)};let dep=0;if(layer==='outer'){const mi=idx<2?0:1;const m=s.middles[mi];if(m)dep+=ub07TileUtility(m);if(s.inner)dep+=ub07TileUtility(s.inner)*.45}else if(layer==='middle'&&s.inner)dep+=ub07TileUtility(s.inner)*.55;const oldV=ub07TileUtility(old),newV=ub07TileUtility(newT),upgradeLoss=old.upgraded?1.25:0,stockLoss=stockCount(old)*.45,loss=oldV+dep+upgradeLoss+stockLoss;return {operation:'REPLACE',oldValue:oldV,newValue:newV,dependentRisk:dep,upgradeLoss,stockLoss,loss,net:newV+ub07ContractRelevance(p,newT)-loss}}
+function ub07BuildCandidateAudit(p){const d=ability(p,'B2')?2:0,rows=[];for(let si=0;si<4;si++){const sec=S.outerBag||{},drawn=BASES.filter(e=>(sec[e]||0)>0);for(const o of v229LegalOuterOps(p,si,drawn)){const neu=makeOuter(o.e,false),delta=ub07ReplacementDelta(p,si,'outer',o.oi,neu),cost=buildCostForLayer('outer',d);rows.push({layer:'outer',sector:si,slot:o.oi,operation:o.replace?'REPLACE':'INSERT',cost,delta,score:delta.net-cost*.22})}for(let mi=0;mi<2;mi++)for(const x of v229LegalMiddleCandidatesAt(p,si,mi)){const neu=makeMiddle(x),old=p.wheel.sectors[si].middles[mi],delta=ub07ReplacementDelta(p,si,'middle',mi,neu),cost=buildCostForLayer('middle',d);rows.push({layer:'middle',sector:si,slot:mi,operation:old?'REPLACE':'INSERT',cost,delta,score:delta.net-cost*.22})}for(const x of v229LegalInnerCandidatesAt(p,si)){const neu=createInner(x.kind,x.val,p),old=p.wheel.sectors[si].inner,delta=ub07ReplacementDelta(p,si,'inner',0,neu),cost=buildCostForLayer('inner',d);rows.push({layer:'inner',sector:si,slot:0,operation:old?'REPLACE':'INSERT',cost,delta,score:delta.net-cost*.22})}}
+ return rows.filter(x=>canAffordGoldCost(p,x.cost)).sort((a,b)=>b.score-a.score)
+}
+function ub07EstimateMaintenanceAudit(p){const base=2+(p.generalUpgrades?.maintenanceEfficiency?1:0)+(ability(p,'M1')?1:0),relief=Math.min(base,Math.max(0,p.engineFee-feeMin(p))),overflow=Math.max(0,base-relief),targets=typeof fundingRestockTargets==='function'?fundingRestockTargets(p):[],freeFill=Math.min(4,targets.length),paidCap=p.generalUpgrades?.paidRestock?2:0,stockValue=(freeFill+Math.min(paidCap,Math.max(0,targets.length-freeFill)))*.34;return {total:relief*.62+overflow*.5+stockValue+.12,components:{feeReduction:relief,overflowGold:overflow,restockTargets:targets.length,freeRestockExpected:freeFill,paidRestockCapacity:paidCap,stockValue},predictedCost:Math.min(paidCap,Math.max(0,targets.length-freeFill))}}
+function ub07EstimateUpgradeAudit(p){const tileRows=legalUpgradeTiles(p).map(x=>{const before=ub07TileUtility(x.t),cost=ub07UpgradeCost(p,'tile',tileBuildPrice(x.t),false);return {label:x.label,cost,benefit:Math.max(.65,(x.t.cap||0)*.25+(x.t.rate||0)*.35+1.0),score:Math.max(.65,(x.t.cap||0)*.25+(x.t.rate||0)*.35+1.0)-cost*.24}}).filter(x=>canAffordGoldCost(p,x.cost));const general=ub07PanelDefs().filter(x=>!p.generalUpgrades?.[x.key]).map(x=>{const cost=ub07UpgradeCost(p,'general',x.cost,false);let benefit={capacity:1.9,draw:1.65,paidRestock:1.45,maintenanceEfficiency:1.5}[x.key]||1; if(x.key==='capacity'&&(p.proliferateTokens||0)>=1)benefit+=.35;if(x.key==='maintenanceEfficiency'&&p.engineFee>=3)benefit+=.35;return {key:x.key,label:x.label,cost,benefit,score:benefit-cost*.23}}).filter(x=>canAffordGoldCost(p,x.cost));const best=[...tileRows,...general].sort((a,b)=>b.score-a.score)[0];return {total:best?Math.max(.05,best.score):.02,components:{bestTile:tileRows[0]||null,bestGeneral:general.sort((a,b)=>b.score-a.score)[0]||null,tileOptions:tileRows.length,generalOptions:general.length},predictedCost:best?.cost||0}}
+function ub07EstimateBuildAudit(p){const rows=ub07BuildCandidateAudit(p),strategy=S.config?.aiAuditStrategy||'MARGINAL';let eligible=rows;if(strategy!=='CURRENT')eligible=rows.filter(x=>x.operation!=='REPLACE'||x.delta.net>0);const best=eligible[0];const ins=rows.filter(x=>x.operation==='INSERT'),rep=rows.filter(x=>x.operation==='REPLACE');return {total:best?Math.max(.03,best.score):.02,components:{strategy,bestCandidate:best||null,bestInsert:ins[0]||null,bestReplace:rep[0]||null,insertCandidates:ins.length,replaceCandidates:rep.length,negativeReplaceCandidates:rep.filter(x=>x.delta.net<=0).length},predictedCost:best?.cost||0}}
+function ub07EstimateSecretAudit(p,type){if(type==='Funding')return ub07EstimateMaintenanceAudit(p);if(type==='Build')return ub07EstimateBuildAudit(p);if(type==='Upgrade')return ub07EstimateUpgradeAudit(p);return {total:-999,components:{illegal:true},predictedCost:0}}
+function ub07SecretSnapshot(p){return {turn:S.turnNumber+1,stage:S.stage,playerId:p.id,gold:p.gold,vp:p.vp,engineFee:p.engineFee,hand:clone(p.hand),generalUpgrades:clone(p.generalUpgrades),proliferateTokens:p.proliferateTokens||0,board:ub07BoardAudit(p),oneTimeMarket:(S.oneTime.market||[]).map(c=>({id:c.id,req:clone(c.req),rewardText:c.rewardText})),machineOpen:currentMachineOptions(p).map(x=>({machineId:x.m.id,partId:x.part.id,kind:x.part.kind}))}}
+async function ub07ChooseSecretAI(p){ub07AuditEnsure();const before=ub07SecretSnapshot(p),opts=['Funding','Build','Upgrade'].map(type=>{const e=ub07EstimateSecretAudit(p,type);return {label:actionDisplay(type),type,e}});const c=await choose(p,`${p.id} Secret Selection (Maintenance / Build / Upgrade)`,opts,o=>o.e.total);const ranked=[...opts].sort((a,b)=>b.e.total-a.e.total);const rec={decisionId:`UB07-SEC-${S.runId||S.seed}-${p.id}-T${S.turnNumber+1}-${S.aiStrategyAudit.secretDecisions.length+1}`,turn:S.turnNumber+1,stage:S.stage,playerId:p.id,aiPolicyVersion:UB07_AI_AUDIT_POLICY,strategy:S.config.aiAuditStrategy,stateBefore:before,candidates:ranked.map((o,i)=>({action:o.type==='Funding'?'Maintenance':o.type,score:o.e.total,rank:i+1,predictedCost:o.e.predictedCost,components:clone(o.e.components),selected:o.type===c.type})),chosen:c.type==='Funding'?'Maintenance':c.type,reason:'highest branch-0.7 marginal score; seeded tie-break only'};S.aiStrategyAudit.secretDecisions.push(rec);S.actionDecisionRecords=S.actionDecisionRecords||[];S.actionDecisionRecords.push(rec);S.telemetry.upgradeBranch.aiAudit.secret[rec.chosen]++;return c}
+const _ub071PrevBuildAction=buildAction;
+buildAction=async function(p,mods={}){ub07AuditEnsure();const before=ub07BoardAudit(p),g0=p.gold,rep0=(S.removedTileRecords||[]).length,t0=S.telemetry.v229?.replacement?.actions||0,preCandidates=p.type==='AI'?ub07BuildCandidateAudit(p).slice(0,12):[];await _ub071PrevBuildAction(p,mods);const after=ub07BoardAudit(p),newreps=(S.removedTileRecords||[]).slice(rep0),changed=[];for(let si=0;si<4;si++){for(let i=0;i<4;i++)if(JSON.stringify(before[si].outers[i])!==JSON.stringify(after[si].outers[i]))changed.push({sector:SECTORS[si],layer:'outer',slot:i,before:before[si].outers[i],after:after[si].outers[i]});for(let i=0;i<2;i++)if(JSON.stringify(before[si].middles[i])!==JSON.stringify(after[si].middles[i]))changed.push({sector:SECTORS[si],layer:'middle',slot:i,before:before[si].middles[i],after:after[si].middles[i]});if(JSON.stringify(before[si].inner)!==JSON.stringify(after[si].inner))changed.push({sector:SECTORS[si],layer:'inner',slot:0,before:before[si].inner,after:after[si].inner})}const ops={insert:changed.filter(x=>!x.before&&x.after).length,replace:changed.filter(x=>x.before&&x.after).length,removed:changed.filter(x=>x.before&&!x.after).length};if(!changed.length)S.telemetry.upgradeBranch.aiAudit.build.empty++;S.telemetry.upgradeBranch.aiAudit.build.insert+=ops.insert;S.telemetry.upgradeBranch.aiAudit.build.replace+=ops.replace;S.aiStrategyAudit.buildActions.push({turn:S.turnNumber,stage:S.stage,playerId:p.id,source:S.timing?.actionSource||'UNKNOWN',goldBefore:g0,goldAfter:p.gold,goldSpent:Math.max(0,g0-p.gold),boardBefore:before,boardAfter:after,changes:changed,replacementRecords:newreps,preCandidates,operationCounts:ops,contractTarget:v2210TargetPlan?clone(v2210TargetPlan(p)):null,emptyReason:changed.length?null:(preCandidates.length?'AI chose SKIP / no positive executable layer':'no affordable/legal build candidate'),expectedBest:preCandidates[0]||null,realizedFollowup:{windowProductions:0,contractsCompleted:0,goldDeltaFuture:0,vpDeltaFuture:0,horizonTurns:5,baseTurn:S.turnNumber,baseGold:p.gold,baseVP:p.vp}});}
+const _ub071PrevRunSectorProduction=ub07RunSectorProduction;
+ub07RunSectorProduction=async function(p,isExtra=false){const r=await _ub071PrevRunSectorProduction(p,isExtra);if(S?.aiStrategyAudit)for(const b of S.aiStrategyAudit.buildActions)if(b.playerId===p.id&&S.turnNumber>=b.turn&&S.turnNumber<=b.turn+5)b.realizedFollowup.windowProductions++;return r}
+const _ub071PrevCompletion=ub07Completion;
+ub07Completion=async function(p,ctx={}){const r=await _ub071PrevCompletion(p,ctx);if(S?.aiStrategyAudit)for(const b of S.aiStrategyAudit.buildActions)if(b.playerId===p.id&&S.turnNumber>=b.turn&&S.turnNumber<=b.turn+5)b.realizedFollowup.contractsCompleted++;return r}
+function ub07FinalizeBuildFollowups(){if(!S?.aiStrategyAudit)return;for(const b of S.aiStrategyAudit.buildActions){if(!b.realizedFollowup.finalized&&S.turnNumber>=b.turn+b.realizedFollowup.horizonTurns){const p=pById(b.playerId);b.realizedFollowup.goldDeltaFuture=p.gold-b.realizedFollowup.baseGold;b.realizedFollowup.vpDeltaFuture=p.vp-b.realizedFollowup.baseVP;b.realizedFollowup.finalized=true}}}
+const _ub071PrevTurnEnd=turnEnd;
+turnEnd=async function(){const r=await _ub071PrevTurnEnd();ub07FinalizeBuildFollowups();return r}
+// Patron ability audit: ability is granted only on Patron completion. Reputation never grants ability.
+const _ub071PrevCompleteDealerStep=completeDealerStep;
+completeDealerStep=async function(p,a){ub07AuditEnsure();const before=[...(p.abilities||[])],repBefore=clone(p.reputation);const r=await _ub071PrevCompleteDealerStep(p,a);const gained=(p.abilities||[]).filter(x=>!before.includes(x));if(gained.length){const ev={turn:S.turnNumber,playerId:p.id,patronId:a?.dealer?.id||p.dealer?.id||null,gainedAbilities:gained,repBefore,repAfter:clone(p.reputation),source:'PATRON_COMPLETION'};S.aiStrategyAudit.guildAbilityUnlocks.push(ev);S.telemetry.upgradeBranch.aiAudit.abilityUnlockEvents+=gained.length}return r}
+function ub07AuditGuildAbilityIntegrity(){ub07AuditEnsure();const issues=[];for(const p of S.players){for(const code of p.abilities||[]){if(/^U[1-4]$|^B[1-4]$|^P[1-4]$|^M[1-4]$/.test(code)){const seen=S.aiStrategyAudit.guildAbilityUnlocks.some(e=>e.playerId===p.id&&e.gainedAbilities.includes(code));if(!seen&&S.turnNumber>0)issues.push({playerId:p.id,ability:code,note:'ability exists without an unlock event in current audit session; may predate audit/import and needs provenance check'})}}}S.aiStrategyAudit.guildAbilityChecks.push({turn:S.turnNumber,issues});return issues}
+// Branch startTurn replacement: same rules flow, but branch-native AI selection + records.
+startTurn=async function(replaying=false){
+ ub07AuditEnsure();if(!replaying){S.resumeBase=makeResumeBase();S.choiceHistory=[];S.pendingChoice=null;S.replayChoices=null;S.replayCursor=0}
+ refreshMachines();S.passOrder=[];for(const p of S.players){p.passedOut=false;p.currentSecret=null;p.productionThisTurn=0;p.comboTagged=0;p.qualifyingCount=0;p.completionCountThisPhase=0;p.frostLv9Active=false;p.frostLv9TurnStartUsed=false;p.flags=p.flags||{};p.flags.p3WindowGold=0}for(const x of S.goldLongTerm?.marketSlots||[])x.usedThisTurn=false;
+ S.timing.macroStep='PREPARING';S.timing.window='SECRET_SELECTION';for(const p of S.players){let c;if(p.type==='HUMAN')c=await chooseSecretWithConfirm(p);else c=await ub07ChooseSecretAI(p);p.currentSecret=c.type||c}
+ S.turnNumber++;S.timing.macroStep='TURN_START';tlog(`Turn ${S.turnNumber} reveal: ${S.players.map(p=>p.id+'='+actionDisplay(p.currentSecret)).join(', ')}`);for(const id of S.initiativeOrder){const p=pById(id);if(familyTech(p,'Frost',9)&&(p.hand.Frost||0)>0&&!p.frostLv9TurnStartUsed){const c=await choose(p,`${p.id} Frost Lv9 Turn Start：Pay1 Frost → Fee -4？`,[{label:'否',yes:false},{label:'是',yes:true}],o=>o.yes?1:0);if(c.yes&&await payHandElement(p,'Frost',1,'Frost Lv9 Turn Start')){p.frostLv9TurnStartUsed=true;await reduceFee(p,4,'Frost Lv9 Turn Start')}}}
+ for(const type of ['Funding','Build','Upgrade']){S.timing.macroStep=`SECRET_${type.toUpperCase()}`;for(const id of S.initiativeOrder){const p=pById(id);if(p.currentSecret===type)await executeStandardAction(p,type,'SECRET',{})}}await ub07ProductionWindow();await contractPhase();
+}
+// Preserve a frozen Secret Selection state for paired counterfactual replay.
+function ub07CaptureCounterfactual(p,reason='manual'){ub07AuditEnsure();const snap={id:`CF-${S.seed}-${p.id}-T${S.turnNumber+1}-${S.aiStrategyAudit.counterfactualSnapshots.length+1}`,reason,seed:S.seed,rngState:S.rngState,turn:S.turnNumber,playerId:p.id,state:clone(S),scores:{Maintenance:ub07EstimateMaintenanceAudit(p),Build:ub07EstimateBuildAudit(p),Upgrade:ub07EstimateUpgradeAudit(p)},recommendedHorizon:5};S.aiStrategyAudit.counterfactualSnapshots.push(snap);return snap.id}
+const _ub071PrevNewGame=newGame;
+newGame=function(start=true){_ub071PrevNewGame(false);ub07AuditEnsure();S.aiStrategyAudit.policyFindings=[{id:'POLICY_VERSION',finding:'v7.0 config set upgrade-branch policy but inherited v2.2.10 decision recorders hard-coded older policy constants.'},{id:'SECRET_RECORDER',finding:'v7.0 AI Secret path bypassed legacy chooseSecretWithConfirm recorder, so branch AI choices were under-recorded.'},{id:'BUILD_HEURISTIC',finding:'Build executor/sector scorer inherited v2.2.9/v2.2.10 replacement heuristics and did not fully price Stock/Upgrade/dependent-tile loss.'},{id:'UPGRADE_UNDERVALUE',finding:'Upgrade evaluator used a shallow constant tile value and static panel bonus; no comparable branch-native marginal model.'}];tlog('Upgrade Branch 0.7 AI audit v7.1 active; rules/balance unchanged.',{eventType:'AI_Strategy_Audit',aiPolicyVersion:UB07_AI_AUDIT_POLICY});render();if(start)advanceGame()}
+const _ub071PrevRender=render;
+render=function(){ub07AuditEnsure();_ub071PrevRender();const mini=document.querySelector('.brand .mini');if(mini)mini.textContent='2.2.11 Upgrade Branch 0.7 · Web v7.1 AI Strategy Audit';document.title='元素管道：術式工房 Upgrade Branch 0.7 v7.1 AI Audit';const tel=document.getElementById('telemetry');if(tel){const a=S.telemetry.upgradeBranch.aiAudit;tel.innerHTML+=`<div class="row"><span class="chip">AI ${UB07_AI_AUDIT_POLICY}</span><span class="chip">Secret M/B/U ${a.secret.Maintenance}/${a.secret.Build}/${a.secret.Upgrade}</span><span class="chip">Build I/R/E ${a.build.insert}/${a.build.replace}/${a.build.empty}</span></div>`}}
+const _ub071PrevDownloadLog=downloadLog;
+downloadLog=function(){ub07AuditEnsure();ub07AuditGuildAbilityIntegrity();downloadBlob(`element_pipeline_${S.seed}_upgrade_branch_07_v71_ai_audit.json`,JSON.stringify({rulesVersion:S.rulesVersion,schemaVersion:S.schemaVersion,patchVersion:S.patchVersion,aiPolicyVersion:UB07_AI_AUDIT_POLICY,seed:S.seed,runId:S.runId,config:S.config,aiStrategyAudit:S.aiStrategyAudit,actionDecisionRecords:S.actionDecisionRecords,aiDecisionRecords:S.aiDecisionRecords,removedTileRecords:S.removedTileRecords,events:S.logs,telemetry:S.telemetry},null,2))}
+</script>
+
+<script>
+// ===== v7.1 strategy consistency corrections (AI only; no rule/balance changes) =====
+const _ub071BaseScoreBuildOption=scoreBuildOption;
+scoreBuildOption=function(p,o,d){let v=_ub071BaseScoreBuildOption(p,o,d);if(!S?.config?.upgradeBranch||p?.type!=='AI')return v;let si=null,layer=null,idx=0,newT=null;if(o?.mode==='outer'){si=o.si;layer='outer';idx=o.oi;newT=makeOuter(o.e,false)}else if(o?.mode==='middle'&&o.x){si=o.x.si;layer='middle';idx=o.x.mi;newT=makeMiddle(o.x)}else if(o?.mode==='inner'&&o.x){si=o.x.si;layer='inner';newT=createInner(o.x.kind,o.x.val,p)}if(si==null||!newT)return v;const delta=ub07ReplacementDelta(p,si,layer,idx,newT),strategy=S.config.aiAuditStrategy||'MARGINAL';if(delta.operation==='REPLACE'){if(strategy==='NO_NEG_REPLACE'&&delta.net<=0)return -1000;if(strategy==='MARGINAL'){if(delta.net<=0){S.telemetry.upgradeBranch.aiAudit.build.negativeReplacementRejected++;return -1000}v+=delta.net-.25}}return v};
+const _ub071BaseEstimateActionBreakdown=estimateActionBreakdown;
+estimateActionBreakdown=function(p,type){if(S?.config?.upgradeBranch==='0.7'){if(type==='Funding')return ub07EstimateMaintenanceAudit(p);if(type==='Build')return ub07EstimateBuildAudit(p);if(type==='Upgrade')return ub07EstimateUpgradeAudit(p);if(type==='Production')return {total:-999,components:{illegalInUpgradeBranch:true}}}return _ub071BaseEstimateActionBreakdown(p,type)};
+const _ub071BaseXMachineValue=xMachineValue;
+xMachineValue=function(x){if(S?.config?.upgradeBranch!=='0.7')return _ub071BaseXMachineValue(x);const p=pById(S.timing?.activePlayerId)||S.players[0],r=x.part?.reward||{};let v=(r.vp||0)+(r.g||0)*.5+(x.part?.aging||0)*.5;if(r.action)v+=ub07EstimateSecretAudit(p,r.action).total;if(r.token){const cap=ub07TokenCap(p),room=Math.max(0,cap-(p.proliferateTokens||0));v+=room>0?1.35:0}if(x.part?.triggerFee)v-=feeCostEstimate(p);const owner=x.m?.ownerId;if(owner&&owner!==p.id)v-=((x.part.rental?.vp||0)+(x.part.rental?.g||0)*.5)*.3;return v};
+// Tiny UI switch for controlled strategy comparisons; affects AI only and locks no game rules.
+const _ub071RenderStrategy=render;
+render=function(){_ub071RenderStrategy();if(!S)return;let host=document.getElementById('ub07AiAuditControls');if(!host){const gp=document.getElementById('ub07GeneralPanel');if(gp){host=document.createElement('div');host.id='ub07AiAuditControls';host.className='card';gp.appendChild(host)}}if(host){host.innerHTML=`<b>AI Strategy Audit</b> <span class="mini">規則/數值不變</span><div class="row"><label>策略 <select id="ub07AiStrategySelect"><option value="CURRENT">CURRENT legacy heuristic</option><option value="NO_NEG_REPLACE">No non-positive REPLACE</option><option value="MARGINAL">Branch marginal (default)</option></select></label><span class="chip">${UB07_AI_AUDIT_POLICY}</span></div><div class="mini">切換只影響之後的 AI 決策；做正式 A/B/C 時請新開同 seed 局並固定選項。</div>`;const sel=document.getElementById('ub07AiStrategySelect');if(sel){sel.value=S.config.aiAuditStrategy||'MARGINAL';sel.onchange=()=>{S.config.aiAuditStrategy=sel.value;tlog(`AI audit strategy → ${sel.value}`,{eventType:'AI_AUDIT_STRATEGY',strategy:sel.value})}}}}
+</script>
+
+<script>
+// v7.1 version persistence: branch base ensure must not overwrite audit identity.
+const _ub071RawEnsureState=ub07EnsureState;
+ub07EnsureState=function(){_ub071RawEnsureState();if(S){S.schemaVersion=UB07_AI_AUDIT_SCHEMA;S.version=UB07_AI_AUDIT_WEB;S.config=S.config||{};S.config.aiPolicyVersion=UB07_AI_AUDIT_POLICY;S.config.aiAuditStrategy=S.config.aiAuditStrategy||'MARGINAL'}};
+</script>
+
+<script>
+// ===== v7.2 Human UX: Wheel-first Build flow + Claimed-only Machine Parts overview =====
+const UB07_V72_SCHEMA='2.2.11-upgrade-branch-0.7-web-7.2';
+const UB07_V72_WEB='2.2.11-upgrade-branch-0.7-web-v7.2-human-build-wheel-claimed-machines';
+
+// Inline choices are rendered on the selected Wheel tile, not in Decision.
+const _v72PrevTileHtml=tileHtml;
+tileHtml=function(t,p=null,si=null,layer=null,idx=null){
+ let html=_v72PrevTileHtml(t,p,si,layer,idx);
+ if(!p||HUMAN_UI.pId!==p.id||HUMAN_UI.kind!=='BUILD_CONTENT')return html;
+ const target=HUMAN_UI.context?.target;
+ if(!target||target.si!==si||target.layer!==layer||target.idx!==idx)return html;
+ const choices=(HUMAN_UI.options||[]).filter(o=>o.uiKey&&o.uiKey.startsWith('BUILD_CONTENT:'));
+ if(!choices.length)return html;
+ const picker=`<div class="buildInlinePicker"><div class="mini"><b>選擇要建的 Tile</b></div>${choices.map(o=>`<button onclick="event.stopPropagation();humanUIClick('${o.uiKey}')">${o.uiInlineLabel||o.label}</button>`).join('')}</div>`;
+ const k=html.lastIndexOf('</div>');
+ return k>=0?html.slice(0,k)+picker+html.slice(k):html+picker;
+};
+
+function v72BuildPositionOptions(p,drawn,discount,layers,sectorOnly=null){
+ const opts=[];
+ const allow=new Set(layers);
+ const oc=buildCostForLayer('outer',discount),mc=buildCostForLayer('middle',discount),ic=buildCostForLayer('inner',discount);
+ if(allow.has('outer')&&drawn.length&&canAffordGoldCost(p,oc)){
+  for(let si=0;si<4;si++)if(sectorOnly==null||sectorOnly===si){
+   const seen=new Set();
+   for(const o of v229LegalOuterOps(p,si,drawn)){if(seen.has(o.oi))continue;seen.add(o.oi);opts.push({label:`${o.replace?'REPLACE':'INSERT'} ${SECTORS[si]} O${o.oi+1}`,layer:'outer',si,idx:o.oi,uiKey:`BUILD:outer:${si}:${o.oi}`});}
+  }
+ }
+ if(allow.has('middle')&&canAffordGoldCost(p,mc)){
+  for(let si=0;si<4;si++)if(sectorOnly==null||sectorOnly===si)for(let mi=0;mi<2;mi++)if(v229LegalMiddleCandidatesAt(p,si,mi).length)opts.push({label:`${p.wheel.sectors[si].middles[mi]?'REPLACE':'INSERT'} ${SECTORS[si]} M${mi+1}`,layer:'middle',si,idx:mi,uiKey:`BUILD:middle:${si}:${mi}`});
+ }
+ if(allow.has('inner')&&canAffordGoldCost(p,ic)){
+  for(let si=0;si<4;si++)if(sectorOnly==null||sectorOnly===si)if(v229LegalInnerCandidatesAt(p,si).length)opts.push({label:`${p.wheel.sectors[si].inner?'REPLACE':'INSERT'} ${SECTORS[si]} Inner`,layer:'inner',si,idx:0,uiKey:`BUILD:inner:${si}:0`});
+ }
+ return opts;
+}
+
+async function v72PickBuildPosition(p,drawn,discount,layers,sectorOnly=null,label='Build'){
+ const positions=v72BuildPositionOptions(p,drawn,discount,layers,sectorOnly);
+ const passLabel=sectorOnly==null?'Pass Build':`Pass ${layers[0][0].toUpperCase()+layers[0].slice(1)}`;
+ const opts=[...positions,{label:passLabel,pass:true,uiButton:true,uiButtonLabel:passLabel}];
+ const layerText=layers.map(x=>x[0].toUpperCase()+x.slice(1)).join(' / ');
+ return visualChoose(p,`${p.id} ${label}`,opts,{kind:'BUILD_TARGET',html:`<div class="uiHint"><b>Build｜${layerText}</b><br>${sectorOnly==null?'直接點 Wheel 上任何綠框位置作為本次第一個 Build / Replace。':'固定在 '+SECTORS[sectorOnly]+' Sector；直接點綠框位置。'}<br>Decision 面板只保留 Pass；選定位置後，Tile 類型會直接顯示在該 Wheel 格內。</div>`});
+}
+
+async function v72PickBuildContent(p,target,drawn,candidates,cost){
+ const opts=[];
+ if(target.layer==='outer'){
+  for(const e of [...new Set(drawn)])opts.push({label:`${e} Outer`,e,uiKey:`BUILD_CONTENT:${opts.length}`,uiInlineLabel:`${elemIcon(e)} ${e} · ${cost}G`});
+ }else if(target.layer==='middle'){
+  for(const x of candidates)opts.push({label:x.label,x,uiKey:`BUILD_CONTENT:${opts.length}`,uiInlineLabel:`${x.mode} · ${cost}G`});
+ }else{
+  for(const x of candidates)opts.push({label:x.label,x,uiKey:`BUILD_CONTENT:${opts.length}`,uiInlineLabel:`${iconizeText(x.label)} · ${cost}G`});
+ }
+ opts.push({label:'取消這個位置',cancel:true,uiKey:`BUILD_CONTENT:CANCEL`,uiInlineLabel:'↩ 重新選位置'});
+ return visualChoose(p,`${p.id} Build content`,opts,{kind:'BUILD_CONTENT',target,html:`<div class="uiHint"><b>${SECTORS[target.si]}｜${target.layer.toUpperCase()} ${target.idx+1}</b><br>請直接在該 Wheel 格內選 Tile；Decision 面板不列 Tile 選項。</div>`});
+}
+
+async function v72CommitBuildAt(p,target,drawn,discount,record,sourceActionId){
+ const si=target.si,idx=target.idx,layer=target.layer,cost=buildCostForLayer(layer,discount);
+ if(layer==='outer'){
+  while(true){const c=await v72PickBuildContent(p,target,drawn,[],cost);if(c.cancel)return {cancel:true};if(!await payGoldCost(p,cost,p.wheel.sectors[si].outers[idx]?'Replace Outer':'Build Outer'))return {failed:true};const old=p.wheel.sectors[si].outers[idx],neu=makeOuter(c.e,false);p.wheel.sectors[si].outers[idx]=neu;record.usedOuterElement=c.e;record.costs.outer=cost;record.builtLayers.outer={slot:idx,element:c.e,cost,operation:old?'REPLACE':'INSERT'};if(old){const rr=v229ReplacementRecordBase(p,si,'outer',idx,old,neu,cost,sourceActionId);v229CascadeValidate(p,si,sourceActionId,rr);rr.postValidity=true;v229CommitReplacementRecord(rr)}syncWaterInnerMastery(p);tlog(`${p.id} ${old?'REPLACE':'INSERT'} Outer ${c.e} @ ${SECTORS[si]} O${idx+1} (${cost}G)`);return {ok:true};}
+ }
+ if(layer==='middle'){
+  while(true){const candidates=v229LegalMiddleCandidatesAt(p,si,idx);if(!candidates.length)return {failed:true};const c=await v72PickBuildContent(p,target,drawn,candidates,cost);if(c.cancel)return {cancel:true};if(!await payGoldCost(p,cost,p.wheel.sectors[si].middles[idx]?'Replace Middle':'Build Middle'))return {failed:true};const old=p.wheel.sectors[si].middles[idx],neu=makeMiddle(c.x);p.wheel.sectors[si].middles[idx]=neu;record.costs.middle=cost;record.builtLayers.middle={slot:idx,mode:c.x.mode,label:c.x.label,cost,operation:old?'REPLACE':'INSERT'};if(old){const rr=v229ReplacementRecordBase(p,si,'middle',idx,old,neu,cost,sourceActionId);v229CascadeValidate(p,si,sourceActionId,rr);rr.postValidity=true;v229CommitReplacementRecord(rr)}syncWaterInnerMastery(p);tlog(`${p.id} ${old?'REPLACE':'INSERT'} Middle ${c.x.mode} @ ${SECTORS[si]} M${idx+1} (${cost}G)`);return {ok:true};}
+ }
+ while(true){const candidates=v229LegalInnerCandidatesAt(p,si);if(!candidates.length)return {failed:true};const c=await v72PickBuildContent(p,target,drawn,candidates,cost);if(c.cancel)return {cancel:true};if(!await payGoldCost(p,cost,p.wheel.sectors[si].inner?'Replace Inner':'Build Inner'))return {failed:true};const old=p.wheel.sectors[si].inner,neu=createInner(c.x.kind,c.x.val,p);p.wheel.sectors[si].inner=neu;record.costs.inner=cost;record.builtLayers.inner={kind:c.x.kind,val:c.x.val,label:c.x.label,cost,operation:old?'REPLACE':'INSERT'};if(old){const rr=v229ReplacementRecordBase(p,si,'inner',0,old,neu,cost,sourceActionId);v229CommitReplacementRecord(rr)}syncWaterInnerMastery(p);tlog(`${p.id} ${old?'REPLACE':'INSERT'} Inner ${c.x.label} @ ${SECTORS[si]} (${cost}G)`);return {ok:true};}
+}
+
+async function v72HumanBuildAction(p,mods={}){
+ v229EnsureState();S.telemetry.v229.replacement.actions++;const sourceActionId=`B-${S.turnNumber}-${p.id}-${S.telemetry.v229.replacement.actions}`;
+ const discount=ability(p,'B2')?2:0;
+ // Upgrade Branch removes workshop-standardization draw; General panel + other legal modifiers remain.
+ const drawN=2+(ability(p,'B1')?1:0)+(mods.drawPlus||0),drawn=[];for(let i=0;i<drawN;i++){const e=drawOuter();if(e)drawn.push(e)}
+ const record={sourceActionId,buildSector:null,drawCandidates:[...drawn],returned:[],builtLayers:{outer:null,middle:null,inner:null},costs:{outer:0,middle:0,inner:0},b4Upgrade:null,replaceCount:0,lostTiles:0};
+ const beforeR=S.telemetry.v229.replacement.replacements,beforeD=S.telemetry.v229.replacement.dependentRemoved;
+ let first=null;
+ while(true){const pick=await v72PickBuildPosition(p,drawn,discount,['outer','middle','inner'],null,'Build：第一個位置');if(pick.pass){commitBuildRecord(p,record);return}const res=await v72CommitBuildAt(p,pick,drawn,discount,record,sourceActionId);if(res.cancel)continue;if(res.ok){first=pick;record.buildSector=pick.si;break}commitBuildRecord(p,record);return}
+ const si=first.si;
+ const follow=first.layer==='outer'?['middle','inner']:first.layer==='middle'?['inner']:[];
+ for(const layer of follow){while(true){const pick=await v72PickBuildPosition(p,drawn,discount,[layer],si,`Build：${layer}`);if(pick.pass)break;const res=await v72CommitBuildAt(p,pick,drawn,discount,record,sourceActionId);if(res.cancel)continue;break}}
+ record.replaceCount=S.telemetry.v229.replacement.replacements-beforeR;record.lostTiles=S.telemetry.v229.replacement.dependentRemoved-beforeD;commitBuildRecord(p,record);
+}
+
+const _v72PrevBuildAction=buildAction;
+buildAction=async function(p,mods={}){if(p?.type!=='HUMAN')return _v72PrevBuildAction(p,mods);return v72HumanBuildAction(p,mods)};
+
+function v72RenderClaimedMachineFocus(){
+ const mf=document.getElementById('machineFocus');if(!mf||!S)return;
+ const claimed=(S.machines||[]).filter(m=>!!m.ownerId);
+ const rows=[];for(const m of claimed)for(const pt of (m.parts||[]))rows.push({m,pt});
+ mf.innerHTML=rows.length?rows.map(({m,pt})=>{const key='MACHINE:'+m.id+':'+pt.id,leg=HUMAN_UI.kind==='CONTRACT'&&uiOptionIndexByKey(key)>=0;const used=!!(pt.normalPlayUsed||pt.filled);const res=(S.reservations||[]).find(r=>r.machineId===m.id&&(r.coreSlotId===pt.id||r.partId===pt.id));return `<div class="machineFocusPart ${used?'filled':''} ${leg?'contract-legal':''}" ${leg?`onclick="humanUIClick('${key}')"`:''}><b>${m.id}｜${pt.kind||pt.partType||pt.id}</b> <span class="tag">${used?'USED':leg?'PLAYABLE':'OPEN'}</span><div class="mini machineFamily">${elemIcon(m.family)} ${m.family} · owner ${playerDisplay(m.ownerId)} · ${m.status}${res?` · Reserved ${playerDisplay(res.holderId)}@T${res.targetTurn}`:''}</div><div class="reqIconLine">${iconizeText(pt.reqText||'Trigger Fee / printed cost')}</div><div class="ok">${pt.reward?.action?pt.reward.action+' Action':pt.reward?.token?'Gain 1 Proliferate Token':`${pt.reward?.vp||0}VP ${pt.reward?.g||0}G`}</div><div class="mini">rent ${pt.rental?.vp||0}VP ${pt.rental?.g||0}G · aging ${pt.aging||0}${used?' · normal play used this Turn':''}</div></div>`}).join(''):'<div class="mini">目前尚無任何已 Claim 的 Machine。</div>';
+ const h=mf.closest('section')?.querySelector('h2');if(h)h.textContent='Machine Parts｜已 Claim 狀態總覽';
+}
+
+const _v72PrevRender=render;
+render=function(){_v72PrevRender();if(!S)return;S.schemaVersion=UB07_V72_SCHEMA;S.version=UB07_V72_WEB;const mini=document.querySelector('.brand .mini');if(mini)mini.textContent='2.2.11 Upgrade Branch 0.7 · Web v7.2 Human UX';document.title='元素管道：術式工房 Upgrade Branch 0.7 v7.2';v72RenderClaimedMachineFocus();};
+
+const _v72PrevEnsure=ub07EnsureState;
+ub07EnsureState=function(){_v72PrevEnsure();if(S){S.schemaVersion=UB07_V72_SCHEMA;S.version=UB07_V72_WEB;S.config=S.config||{};S.config.humanBuildWheelUX='v7.2';S.config.machineFocusClaimedOnly=true;}};
+</script>
+<style>
+.buildInlinePicker{margin-top:5px;padding-top:5px;border-top:1px solid #51627d;display:flex;gap:4px;flex-wrap:wrap;position:relative;z-index:5}.buildInlinePicker .mini{width:100%}.buildInlinePicker button{font-size:10px;padding:4px 5px;border-radius:6px;border:1px solid #6e8bb7;background:#263b58;color:#fff;cursor:pointer}.buildInlinePicker button:hover{filter:brightness(1.2)}
+</style>
+
+
+<script>
+// ===== v7.3 Human UX: Build draw visibility + Patron Guild terminology cleanup =====
+const UB07_V73_SCHEMA='2.2.11-upgrade-branch-0.7-web-7.3';
+const UB07_V73_WEB='2.2.11-upgrade-branch-0.7-web-v7.3-build-draw-patron-guild-fix';
+
+function v73OuterDrawSummary(drawn){
+ const counts={};for(const e of (drawn||[]))counts[e]=(counts[e]||0)+1;
+ const parts=Object.entries(counts).map(([e,n])=>`<span class="chip">${elemIcon(e)} ${DISPLAY[e]||e}${n>1?` ×${n}`:''}</span>`);
+ return parts.length?`<div class="buildDrawPreview"><b>本次 Outer Draw：</b><div class="statrow">${parts.join('')}</div></div>`:`<div class="buildDrawPreview"><b>本次 Outer Draw：</b><span class="mini">Outer bag 無可抽候選。</span></div>`;
+}
+
+v72PickBuildPosition=async function(p,drawn,discount,layers,sectorOnly=null,label='Build'){
+ const positions=v72BuildPositionOptions(p,drawn,discount,layers,sectorOnly);
+ const passLabel=sectorOnly==null?'Pass Build':`Pass ${layers[0][0].toUpperCase()+layers[0].slice(1)}`;
+ const opts=[...positions,{label:passLabel,pass:true,uiButton:true,uiButtonLabel:passLabel}];
+ const layerText=layers.map(x=>x[0].toUpperCase()+x.slice(1)).join(' / ');
+ const drawInfo=v73OuterDrawSummary(drawn);
+ return visualChoose(p,`${p.id} ${label}`,opts,{kind:'BUILD_TARGET',html:`<div class="uiHint"><b>Build｜${layerText}</b><br>${sectorOnly==null?'直接點 Wheel 上任何綠框位置作為本次第一個 Build / Replace。':'固定在 '+SECTORS[sectorOnly]+' Sector；直接點綠框位置。'}<br>${drawInfo}<div class="mini">Outer 候選只供本次 Build Action 使用；未使用者在 Action 結束時回 bag。Decision 面板仍只保留 Pass。</div></div>`});
+};
+
+// Public Patron/Guild terminology must never expose the retired Funding/Era Guild names.
+const _v73PrevDealerGrantedAbility=dealerGrantedAbility;
+dealerGrantedAbility=function(d){
+ const ab=_v73PrevDealerGrantedAbility(d);if(!ab)return ab;
+ const internal=Object.keys(S?.traderFamily||{}).find(t=>S.traderFamily[t]===d.family)||ab.trader;
+ const publicGuild=guildDisplay(internal);
+ return {...ab,internalTrader:internal,trader:publicGuild,guild:publicGuild};
+};
+
+const _v73PrevHeldDealerHtml=heldDealerHtml;
+heldDealerHtml=function(p){
+ let html=_v73PrevHeldDealerHtml(p);
+ return String(html)
+  .replaceAll('Initial Dealer','Initial Patron')
+  .replaceAll('正式 Dealer','正式 Patron')
+  .replaceAll('No Dealer','No Patron')
+  .replaceAll('未完成 Dealer','未完成 Patron')
+  .replaceAll(' Trader',' Guild')
+  .replaceAll('Funding Guild','Maintenance Guild')
+  .replaceAll('Era Guild','Upgrade Guild');
+};
+
+function v73CleanPatronGuildUI(){
+ for(const id of ['heldDealers','dealerMarket']){
+  const el=document.getElementById(id);if(!el)continue;
+  el.innerHTML=el.innerHTML
+   .replaceAll('Funding Trader','Maintenance Guild')
+   .replaceAll('Era Trader','Upgrade Guild')
+   .replaceAll('Build Trader','Build Guild')
+   .replaceAll('Production Trader','Production Guild')
+   .replaceAll('Funding Guild','Maintenance Guild')
+   .replaceAll('Era Guild','Upgrade Guild')
+   .replaceAll(' Trader',' Guild')
+   .replaceAll('Dealer','Patron');
+ }
+}
+
+const _v73PrevRender=render;
+render=function(){
+ _v73PrevRender();if(!S)return;
+ S.schemaVersion=UB07_V73_SCHEMA;S.version=UB07_V73_WEB;
+ const mini=document.querySelector('.brand .mini');if(mini)mini.textContent='2.2.11 Upgrade Branch 0.7 · Web v7.3 Human UX';
+ document.title='元素管道：術式工房 Upgrade Branch 0.7 v7.3';
+ v73CleanPatronGuildUI();
+};
+
+const _v73PrevEnsure=ub07EnsureState;
+ub07EnsureState=function(){_v73PrevEnsure();if(S){S.schemaVersion=UB07_V73_SCHEMA;S.version=UB07_V73_WEB;S.config=S.config||{};S.config.buildDrawVisibleInDecision=true;S.config.patronGuildTerminology='Build/Production/Maintenance/Upgrade';}};
+</script>
 </body></html>
