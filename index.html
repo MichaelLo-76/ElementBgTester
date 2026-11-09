@@ -3,12 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>元素管道：術式工房｜Project × Programming Branch 0.25 Web Prototype</title>
+<title>元素管道：術式工房｜Project × Programming Branch 0.25 Web Prototype v0.4</title>
 <style>
 :root{--bg:#0e1117;--panel:#171b24;--panel2:#202635;--line:#344056;--text:#eef3ff;--muted:#9facbf;--accent:#7fb7ff;--good:#8be9a8;--warn:#ffd166;--bad:#ff7b7b;--chip:#273148;--purple:#9b87f5}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,-apple-system,"Segoe UI","Noto Sans TC",sans-serif}
 button,input,select,textarea{font:inherit}.top{position:sticky;top:0;z-index:30;background:#0b0e13;border-bottom:1px solid var(--line);padding:9px 12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}.brand{font-weight:800;font-size:16px}.mini{font-size:11px;color:var(--muted)}.pill{padding:4px 8px;background:var(--chip);border:1px solid var(--line);border-radius:999px}.btn,.top button,.top input{background:#263149;color:var(--text);border:1px solid #40506b;border-radius:8px;padding:7px 10px;cursor:pointer}.btn:disabled,button:disabled{opacity:.4;cursor:not-allowed}.btn.primary{background:#245ea8}.btn.good{background:#246b45}.btn.warn{background:#7c5b13}.btn.bad{background:#7b2e34}.layout{display:grid;grid-template-columns:minmax(0,1fr) 360px;min-height:calc(100vh - 58px)}main{padding:12px;min-width:0}.side{border-left:1px solid var(--line);background:#111620;padding:10px;position:sticky;top:58px;height:calc(100vh - 58px);overflow:auto}.section{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:12px}.section h2,.section h3{margin:0 0 8px}.row{display:flex;gap:7px;align-items:center;flex-wrap:wrap}.grid4{display:grid;grid-template-columns:repeat(4,minmax(235px,1fr));gap:8px;overflow:auto}.player{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:9px;min-width:235px}.player.human{border-color:#5f8bc9}.player.active{outline:2px solid var(--accent)}.statrow{display:flex;gap:4px;flex-wrap:wrap;margin:5px 0}.chip{background:#283247;border:1px solid #3c4b65;border-radius:6px;padding:2px 6px}.chip.Water{background:#183a64}.chip.Fire{background:#5f2727}.chip.Earth{background:#4e4121}.chip.Wind{background:#264d47}.chip.comp{background:#4b315f}.market{display:grid;grid-template-columns:repeat(auto-fit,minmax(205px,1fr));gap:8px}.card{background:#202737;border:1px solid #3b4860;border-radius:10px;padding:8px;min-width:0}.card h4{margin:0 0 4px}.card.legal{outline:2px solid var(--good);cursor:pointer}.card.used{opacity:.55}.tag{font-size:10px;padding:2px 5px;border-radius:5px;background:#39455e;margin-left:4px}.tag.guild{background:#274f67}.tag.project{background:#493b6e}.tag.blocker{background:#6a302f}.tag.ready{background:#245b42}.tag.used{background:#6a4730}.notice{border-left:3px solid var(--warn);padding:6px 8px;background:#2d291b;color:#ffe9a6;border-radius:5px}.ok{color:var(--good)}.badtext{color:var(--bad)}.muted{color:var(--muted)}
-.decision{border:1px solid #47658e;background:#172338;border-radius:10px;padding:10px}.decision h3{margin:0 0 6px}.options{display:flex;gap:6px;flex-wrap:wrap}.options button{background:#28466f;color:white;border:1px solid #4c6f9e;border-radius:8px;padding:7px 9px;cursor:pointer}.options button.free{background:#5a3d77}.log{font:11px/1.38 ui-monospace,SFMono-Regular,Consolas,monospace;white-space:pre-wrap;max-height:330px;overflow:auto;background:#0b0f16;padding:7px;border-radius:7px}.table{width:100%;border-collapse:collapse;font-size:12px}.table th,.table td{border:1px solid #37445b;padding:4px;text-align:left}.wheelGallery{display:grid;grid-template-columns:repeat(auto-fit,minmax(500px,1fr));gap:10px}.wheelCard{background:#151c28;border:1px solid #34435c;border-radius:10px;padding:8px}.wheelgrid{display:grid;grid-template-columns:1fr 1fr;gap:7px}.sector{background:#121a27;border:1px solid #34435c;border-radius:9px;padding:6px;min-width:0}.sector.prod{outline:2px solid var(--good)}.sectorHead{display:flex;justify-content:space-between;gap:5px;align-items:center}.tiles{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:5px}.tile{background:#263248;border:1px solid #40516e;border-radius:7px;padding:4px;font-size:10px;min-height:46px}.tile.empty{opacity:.45;border-style:dashed}.tile.up{box-shadow:inset 0 0 0 1px var(--warn)}.inner{grid-column:1/span 2}.projectList{display:grid;gap:4px;margin-top:5px}.proj{background:#1a2230;border:1px solid #35435b;border-radius:7px;padding:5px}.proj button{font-size:11px;padding:3px 5px}.machineGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:7px}.machine{background:#1c2633;border:1px solid #40516e;border-radius:9px;padding:7px}.slot{padding:5px;margin-top:4px;background:#283449;border-radius:6px}.slot.frozen{outline:2px solid #9bd4ff}.program{display:flex;gap:3px;flex-wrap:wrap}.program .chip{background:#323a54}.testpass{color:var(--good)}.testfail{color:var(--bad)}.testwarn{color:var(--warn)}
+.decision{border:1px solid #47658e;background:#172338;border-radius:10px;padding:10px}.decision h3{margin:0 0 6px}.options{display:flex;gap:6px;flex-wrap:wrap}.options button{background:#28466f;color:white;border:1px solid #4c6f9e;border-radius:8px;padding:7px 9px;cursor:pointer}.options button.free{background:#5a3d77}.log{font:11px/1.38 ui-monospace,SFMono-Regular,Consolas,monospace;white-space:pre-wrap;max-height:330px;overflow:auto;background:#0b0f16;padding:7px;border-radius:7px}.table{width:100%;border-collapse:collapse;font-size:12px}.table th,.table td{border:1px solid #37445b;padding:4px;text-align:left}.wheelGallery{display:grid;grid-template-columns:repeat(auto-fit,minmax(500px,1fr));gap:10px}.wheelCard{background:#151c28;border:1px solid #34435c;border-radius:10px;padding:8px}.wheelgrid{display:grid;grid-template-columns:1fr 1fr;gap:7px}.sector{background:#121a27;border:1px solid #34435c;border-radius:9px;padding:6px;min-width:0}.sector.prod{outline:2px solid var(--good)}.sectorHead{display:flex;justify-content:space-between;gap:5px;align-items:center}.tiles{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:5px}.tile{background:#263248;border:1px solid #40516e;border-radius:7px;padding:4px;font-size:10px;min-height:46px}.tile.empty{opacity:.45;border-style:dashed}.tile.up{box-shadow:inset 0 0 0 1px var(--warn)}
+.tile.wheelPick{opacity:1;cursor:pointer;outline:3px solid #7ee787;box-shadow:0 0 0 2px rgba(126,231,135,.18),0 0 14px rgba(126,231,135,.35)}
+.tile.wheelPick:hover{transform:translateY(-1px);filter:brightness(1.18)}
+.tile.wheelPickOuter{outline-color:#58a6ff}
+.tile.wheelPickUpgrade{outline-color:#f2cc60}
+.wheelCard.wheelActive{border-color:#7ee787;box-shadow:0 0 0 1px rgba(126,231,135,.25)}.inner{grid-column:1/span 2}.projectList{display:grid;gap:4px;margin-top:5px}.proj{background:#1a2230;border:1px solid #35435b;border-radius:7px;padding:5px}.proj button{font-size:11px;padding:3px 5px}.machineGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:7px}.machine{background:#1c2633;border:1px solid #40516e;border-radius:9px;padding:7px}.slot{padding:5px;margin-top:4px;background:#283449;border-radius:6px}.slot.frozen{outline:2px solid #9bd4ff}.program{display:flex;gap:3px;flex-wrap:wrap}.program .chip{background:#323a54}.testpass{color:var(--good)}.testfail{color:var(--bad)}.testwarn{color:var(--warn)}
 @media(max-width:1100px){.layout{grid-template-columns:1fr}.side{position:static;height:auto;border-left:0;border-top:1px solid var(--line)}.grid4{grid-template-columns:repeat(2,minmax(230px,1fr))}.wheelGallery{grid-template-columns:1fr}}
 @media(max-width:620px){.grid4{grid-template-columns:1fr}.wheelgrid{grid-template-columns:1fr}}
 
@@ -21,12 +26,11 @@ button,input,select,textarea{font:inherit}.top{position:sticky;top:0;z-index:30;
 </head>
 <body>
 <div class="top">
-  <div class="brand">元素管道：術式工房 <span class="mini">Project × Programming Branch 0.25 · Web Prototype v0.3 · 4AI Auto Run</span></div>
+  <div class="brand">元素管道：術式工房 <span class="mini">Project × Programming Branch 0.25 · Web Prototype v0.4 · UX / Programming Fix</span></div>
   <span id="turnPill" class="pill"></span><span id="eraPill" class="pill"></span><span id="phasePill" class="pill"></span>
   <label class="mini">Seed <input id="seedInput" value="250109" size="8"></label>
   <button id="newBtn" class="btn primary">New Game</button>
   <button id="autoBtn" class="btn warn">4AI 10-Turn Test</button>
-  <button id="testsBtn" class="btn">AT-01～28</button>
   <button id="exportStateBtn" class="btn">Export State</button>
   <button id="exportLogBtn" class="btn">Export Log</button>
 </div>
@@ -52,10 +56,9 @@ button,input,select,textarea{font:inherit}.top{position:sticky;top:0;z-index:30;
   <div class="section"><h3>Project Market｜7 格 Time Cost 1 / 1 / 1 / 2 / 2 / 3 / 3</h3><div id="projectMarket" class="market"></div></div>
   <div class="section"><h3>Contract Market｜Guild 由展示位置決定</h3><div id="contractMarket" class="market"></div></div>
   <div class="section"><h3>Patron Market</h3><div id="patronMarket" class="market"></div></div>
-  <div class="section"><h3>Machine Slots｜T1 3 Rep / T2 5 Rep；無 T3 / Core / Aging / Reservation</h3><div id="machines" class="machineGrid"></div></div>
+  <div class="section"><h3>Machine Slots｜T1 3 Rep / T2 5 Rep；操作均需 ⚙️；無 T3 / Core / Aging / Reservation</h3><div id="machines" class="machineGrid"></div></div>
   <div class="section"><h3>Players</h3><div id="players" class="grid4"></div></div>
   <div class="section"><h3>Sector Wheels</h3><div id="wheels" class="wheelGallery"></div></div>
-  <div class="section"><h3>Prototype Diagnostics / Acceptance</h3><div id="tests"></div></div>
 </main>
 <aside class="side">
   <div id="decision" class="decision"><h3>Decision</h3><div class="mini">按 New Game 開始。</div></div>
@@ -73,7 +76,7 @@ const ALL=[...BASES,...COMPOUNDS];
 const GUILDS=['Production','Build','Upgrade','Research'];
 const ACTIONS=['Research','Build','Upgrade','Funding'];
 const TIME_COST=[1,1,1,2,2,3,3];
-const ICON={Water:'💧',Fire:'🔥',Earth:'🪨',Wind:'🌪️',Steam:'♨️',Magma:'🌋',Sandstorm:'🏜️',Frost:'❄️'};
+const ICON={Water:'💧',Fire:'🔥',Earth:'🍃',Wind:'🌪️',Steam:'♨️',Magma:'🌋',Sandstorm:'⏳',Frost:'❄️'};
 const SECTOR_ABBR={Water:'W',Fire:'F',Earth:'E',Wind:'Wi'};
 const FAM=DATA.families;
 const PROJECT_DEF=Object.fromEntries(DATA.projectDefs.map(x=>[x.key,x]));
@@ -81,11 +84,12 @@ const CONTRACT_DEF=Object.fromEntries(DATA.contracts.map(x=>[x.id,x]));
 const RULE_GAPS=[
  {level:'RESOLVED',text:'0.25 後續訂正：Compound 共通 S1/S2 各 Family 各 1 張，共 8 張；Prototype Project Deck 由 146 修正為 154 張。'},
  {level:'INTERPRETATION',text:'Research Time Cost 在 0.25 被要求逐張支付且無總預算，但未定義獨立 Time 資源；本 Prototype 逐張記錄 adjusted Time Cost telemetry，不創建新資源或拒絕取牌。'},
- {level:'INHERITED',text:'Outer/Middle/Inner 正常 Build Gold cost 與 Tile Upgrade Gold cost 在 0.25 摘要未重列；Prototype 沿用舊網頁 2/4/6G 作可測基準，並在 event log 標記 inheritedBaseline=true。'},
+ {level:'PATCHED',text:'Outer/Middle/Inner 正常 Build Gold cost 仍沿用既有基準；Tile Upgrade Gold cost 已正式修正為一律 0G。'},
  {level:'PARTIAL',text:'127 種 Project 定義與 154 張實體牌庫全部載入；高互動 Tap/攻擊 Project 的 runtime 先實作核心子集，其餘仍顯示卡面並在使用時標記 RULE_ASSERTION_FAILURE，而不偷偷改成別的效果。'}
 ];
 
 let S=null, FLOW=false, DECISION=null;
+let WHEEL_UI_ACTIVE=false,WHEEL_INTERACTION=null;
 
 function clone(x){return JSON.parse(JSON.stringify(x))}
 function xmur3(str){let h=1779033703^str.length;for(let i=0;i<str.length;i++){h=Math.imul(h^str.charCodeAt(i),3432918353);h=h<<13|h>>>19}return function(){h=Math.imul(h^h>>>16,2246822507);h=Math.imul(h^h>>>13,3266489909);return (h^=h>>>16)>>>0}}
@@ -95,20 +99,159 @@ function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(rand()*(i+1
 function sum(o){return Object.values(o||{}).reduce((a,b)=>a+(+b||0),0)}
 function eraOfTurn(t){return t<=4?1:t<=7?2:3}
 function elemLine(obj){return ALL.filter(e=>(obj?.[e]||0)>0).map(e=>`${ICON[e]}${obj[e]}`).join(' ')||'—'}
+function uiText(s){
+ let t=String(s??'');
+ // Common action icon.
+ t=t.replace(/齒輪/g,'⚙️').replace(/\bGear\b/g,'⚙️');
+ // Full element names in player-facing Project text.
+ const names=[
+   ['Sandstorm','⏳'],['Water','💧'],['Fire','🔥'],['Earth','🍃'],['Wind','🌪️'],
+   ['Steam','♨️'],['Magma','🌋'],['Frost','❄️']
+ ];
+ for(const [name,icon] of names)t=t.replace(new RegExp('\\b'+name+'\\b','g'),icon);
+ // Compact legacy Base abbreviations when used as quantities/payments, e.g. 2W / 1F / 3E / 2Wi.
+ t=t.replace(/(\d+\+?)\s*Wi\b/g,'$1🌪️')
+    .replace(/(\d+\+?)\s*W\b/g,'$1💧')
+    .replace(/(\d+\+?)\s*F\b/g,'$1🔥')
+    .replace(/(\d+\+?)\s*E\b/g,'$1🍃');
+ return t;
+}
+function projectDisplayEffect(d,inst=null){
+ if(!d)return '—';
+
+ // Common Production Project cards: expand the generic template into the
+ // actual printed element(s) on this physical card.
+ if(d.category==='Production'){
+   const map={W:'Water',F:'Fire',E:'Earth',Wi:'Wind'};
+   const elems=String(d.printed||'').split('/').map(x=>map[x]||x);
+   const icons=elems.map(e=>ICON[e]||e);
+   const t=Number(d.tech||0);
+
+   // Tech 1/3/5: choose one of the two printed Base faces.
+   if(t===1 || t===3 || t===5){
+     const amount={1:1,3:2,5:3}[t]||1;
+     if(inst?.selectedElement){
+       const e=inst.selectedElement;
+       return `已選 ${ICON[e]||e} 面；每個 Production Phase Start：+${amount}${ICON[e]||e}`;
+     }
+     return `安裝時選擇 ${icons.join(' / ')} 其中一面；每個 Production Phase Start：+${amount} 所選元素`;
+   }
+
+   // Tech 2/4/6: a single printed Base, with Sector / Global modes.
+   if(t===2 || t===4 || t===6){
+     const sector={2:2,4:4,6:6}[t]||0;
+     const global={2:1,4:2,6:3}[t]||0;
+     const e=elems[0], ic=ICON[e]||e;
+     if(inst?.mode==='Sector')return `Sector Mode：每次該 Sector Production Snapshot +${sector}${ic}`;
+     if(inst?.mode==='Global')return `Global Mode：每個 Production Phase Start +${global}${ic}`;
+     return `安裝時二選一｜Sector Mode：每次該 Sector Production Snapshot +${sector}${ic}｜Global Mode：每個 Production Phase Start +${global}${ic}`;
+   }
+ }
+
+ // Family-specific Compound S1/S2 templates: spell out the actual family
+ // and parent elements instead of generic "該 Compound / Parent Base".
+ if(d.category==='Compound Template'){
+   const fam=d.family;
+   const parents=d.parents||FAM[fam]||[];
+   const fic=ICON[fam]||fam;
+   const p1=ICON[parents[0]]||parents[0];
+   const p2=ICON[parents[1]]||parents[1];
+   if(d.template==='S1' || /S1$/i.test(d.id||'')){
+     if(inst?.mode==='Sector')return `Sector Mode：每次對應 Sector Production +2${fic}`;
+     if(inst?.mode==='Global')return `Global Mode：每個 Production Phase Start +1${fic}`;
+     return `安裝時二選一｜Sector Mode：每次對應 Sector Production +2${fic}｜Global Mode：每個 Production Phase Start +1${fic}`;
+   }
+   if(d.template==='S2' || /S2$/i.test(d.id||'')){
+     if(inst?.mode==='Sector')return `Sector Mode：每次對應 Sector Production 合計 +2 Parent Base（${p1}/${p2} 任意分配）`;
+     if(inst?.mode==='Global')return `Global Mode：Tap，支付 ${p1}+${p2} → +1${fic}；單次 Tap 可做 1～2 組`;
+     return `安裝時二選一｜Sector Mode：每次對應 Sector Production 合計 +2 Parent Base（${p1}/${p2} 任意分配）｜Global Mode：Tap，支付 ${p1}+${p2} → +1${fic}；單次 Tap 可做 1～2 組`;
+   }
+ }
+
+ return uiText(d.effect);
+}
+
+function projectSetupOptionText(inst){
+ const d=projectDefFromInstance(inst);
+ return `${d.id}｜${d.category}
+TP Gate：${projectTpGateText(d)}
+Install：${d.installCost}G｜Base Fee：${d.baseFee>=0?'+':''}${d.baseFee}
+${projectDisplayEffect(d,inst)}`;
+}
+
+function projectTpGateText(d){
+ if(!d)return '—';
+ if(d.category==='Base Unique'){
+   return `${ICON[d.baseElement]||d.baseElement} TP ≥ ${d.tpGate}`;
+ }
+ if(d.category==='Breadth'){
+   const n=d.allBaseTpGate||0;
+   return `${ICON.Water}${ICON.Fire}${ICON.Earth}${ICON.Wind} 各 TP ≥ ${n}`;
+ }
+ if(d.category==='Compound Unique'){
+   const ps=FAM[d.family]||[];
+   const g=d.parentGate||[];
+   return `${ICON[ps[0]]||ps[0]} TP ≥ ${g[0]??'?'} ＋ ${ICON[ps[1]]||ps[1]} TP ≥ ${g[1]??'?'}`;
+ }
+ if(d.category==='Compound Template'){
+   const ps=d.parents||[];
+   const g=d.parentGate||[];
+   return `${ICON[ps[0]]||ps[0]} TP ≥ ${g[0]??'?'} ＋ ${ICON[ps[1]]||ps[1]} TP ≥ ${g[1]??'?'}`;
+ }
+ if(d.category==='Production'){
+   const elems=String(d.printed||'').split('/').map(x=>({W:'Water',F:'Fire',E:'Earth',Wi:'Wind'}[x]||x));
+   if(d.tech%2===1){
+     return `${elems.map(e=>ICON[e]||e).join(' / ')}：選定面之對應 TP ≥ ${d.tech}`;
+   }
+   return `${ICON[elems[0]]||elems[0]} TP ≥ ${d.tech}`;
+ }
+ return '無 TP 需求';
+}
+function actionRankEffect(action,rank){
+ const idx=Math.max(1,Math.min(3,rank));
+ if(action==='Research')return `基本取得 1 張 Project；每次取牌 Time Cost −${idx===1?2:idx===2?1:0}；本 Phase 可合法安裝任意張 Project。`;
+ if(action==='Build')return idx===1?'最多建造 3 張；Build Draw +1。':idx===2?'最多建造 2 張；Build Draw +1。':'最多建造 2 張。';
+ if(action==='Funding')return `Gain ${idx===1?9:idx===2?6:3}G。`;
+ if(action==='Upgrade')return idx===1?'同一 Sector 最多 Upgrade 2 Tiles；完成後額外取得該 Sector +1 TP。':idx===2?'同一 Sector 最多 Upgrade 2 Tiles。':'Upgrade 1 Tile。';
+ return '';
+}
 function log(msg,data={}){if(!S)return;const ev={n:S.logs.length+1,turn:S.turn,phase:S.phase,msg,...data};S.logs.push(ev);if(S.logs.length>5000)S.logs.shift();if(!S.autoMode)renderLog()}
 function diagnostic(type,message,data={}){S.diagnostics.push({type,message,turn:S.turn,phase:S.phase,...data});log(`${type}: ${message}`,{eventType:type,...data})}
 function player(id){return S.players.find(p=>p.id===id)}
 function ability(p,g,r){return !!p.abilities[`${g}:R${r}`]}
-function isHigh(p){return p.fee>=5}
-function isLow(p){return p.fee<=2}
+function feeRate(position){
+ position=Math.max(1,Math.floor(Number(position)||1));
+ if(position<=4)return 1;
+ if(position<=7)return 2;
+ if(position<=9)return 3;
+ if(position<=11)return 4;
+ return position-7;
+}
+function feePaidGold(p,position=p.fee){return Math.min(feeRate(position),paidFeeCap(p))}
+function isHigh(p){return feeRate(p.fee)>=5}
+function isLow(p){return feeRate(p.fee)<=2}
 function isHuman(p){return p.type==='HUMAN'}
 function goldCanPay(p,n){return p.gold>=n}
 function payGold(p,n,why='cost'){n=Math.max(0,n|0);if(p.gold<n)return false;p.gold-=n;log(`${p.id} pays ${n}G (${why})`,{eventType:'PAY_GOLD',playerId:p.id,amount:n,why});return true}
 function gainElem(p,e,n=1){p.hand[e]=(p.hand[e]||0)+n;log(`${p.id} gains ${n} ${e}`,{eventType:'GAIN_ELEMENT',playerId:p.id,element:e,amount:n})}
 function spendElem(p,e,n=1){if((p.hand[e]||0)<n)return false;p.hand[e]-=n;return true}
-function adjustFee(p,d,why='effect'){p.fee=Math.max(1,p.fee+d);log(`${p.id} Fee ${d>=0?'+':''}${d} → ${p.fee} (${why})`,{eventType:'FEE_MOVE',playerId:p.id,delta:d,fee:p.fee,why})}
+function adjustFee(p,d,why='effect'){
+ const before=p.fee;
+ p.fee=Math.max(1,Math.floor(p.fee+d));
+ log(`${p.id} Fee Position ${d>=0?'+':''}${d}: P${before}→P${p.fee} (${feeRate(before)}G→${feeRate(p.fee)}G) (${why})`,{eventType:'FEE_MOVE',playerId:p.id,delta:d,feePosition:p.fee,feeRate:feeRate(p.fee),why})
+}
 function paidFeeCap(p){let cap=Infinity;if(hasInstalled(p,'project:F-06'))cap=Math.min(cap,10);if(hasInstalled(p,'project:F-09')||hasInstalled(p,'project:F-11'))cap=Math.min(cap,5);return cap}
-async function gear(p,source='Gear'){const startFee=p.fee,cost=Math.min(startFee,paidFeeCap(p));if(!payGold(p,cost,source))return false;const high=startFee>=5,low=startFee<=2;p.fee++;log(`${p.id} Gear ${source}: paid ${cost}G, Fee ${startFee}→${p.fee}`,{eventType:'GEAR',playerId:p.id,source,startFee,cost,high,low});await triggerGearProjects(p,{source,startFee,high,low});return true}
+async function gear(p,source='Gear'){
+ const startPosition=Math.max(1,Math.floor(p.fee));
+ const startRate=feeRate(startPosition);
+ const cost=feePaidGold(p,startPosition);
+ if(!payGold(p,cost,source))return false;
+ const high=startRate>=5,low=startRate<=2;
+ p.fee=startPosition+1;
+ log(`${p.id} ⚙️ ${source}: paid ${cost}G, Fee P${startPosition}(${startRate}G)→P${p.fee}(${feeRate(p.fee)}G)`,{eventType:'GEAR',playerId:p.id,source,startPosition,startRate,paidGold:cost,paidFeeCap:paidFeeCap(p),endPosition:p.fee,endRate:feeRate(p.fee),high,low});
+ await triggerGearProjects(p,{source,startPosition,startRate,paidGold:cost,high,low});
+ return true
+}
 
 function projectDefFromInstance(inst){return PROJECT_DEF[inst.definitionKey]}
 function hasInstalled(p,key){return p.installed.some(x=>x.definitionKey===key)}
@@ -216,9 +359,17 @@ function refillProjectMarket(){
  for(let i=0;i<7;i++)if(!S.projectMarket[i]){const c=drawProject('MARKET_REFILL',1)[0];if(!c)break;S.projectMarket[i]=c}
 }
 function refreshProjectMarket(){
- const first=S.projectMarket[0];
- if(first){S.projectDiscard.push(first);log(`Project Market retires ${projectDefFromInstance(first).id}`,{eventType:'PROJECT_MARKET_RETIRE',instanceId:first.instanceId})}
- const surv=S.projectMarket.slice(1).filter(Boolean);S.projectMarket=[...surv,...Array(7-surv.length).fill(null)];refillProjectMarket();
+ // Turn 2–10: retire the oldest surviving market card, not merely slot 1.
+ const oldestIndex=S.projectMarket.findIndex(Boolean);
+ if(oldestIndex>=0){
+   const oldest=S.projectMarket[oldestIndex];
+   S.projectDiscard.push(oldest);
+   log(`Project Market retires oldest surviving ${projectDefFromInstance(oldest).id}`,{eventType:'PROJECT_MARKET_RETIRE',instanceId:oldest.instanceId,marketIndex:oldestIndex});
+   S.projectMarket[oldestIndex]=null;
+ }
+ const surv=S.projectMarket.filter(Boolean);
+ S.projectMarket=[...surv,...Array(7-surv.length).fill(null)];
+ refillProjectMarket();
 }
 function takeProjectMarket(index,p,rank,source='RESEARCH'){
  const inst=S.projectMarket[index];if(!inst)return null;
@@ -344,13 +495,21 @@ function initialSetupDeal(){
 async function setupGame(){
  S.phase='SETUP';S.timing='SETUP';
  const temp=initialSetupDeal();
+ // v0.6: Turn 1 R1 Contract assignment is public setup information.
+ // Create the actual Contract Market state BEFORE the first setup render so
+ // starting Project decisions see the exact R1/Guild assignment that will be used.
+ S.contracts.current=contractCardsForTurn(1);
+ S.contracts.setupTurn1Locked=true;
+ S.contracts.previewTurn=2;
+ S.contracts.preview=contractCardsForTurn(2);
+ render(); // Project Market + actual Turn 1 Contract Market + locked Turn 2 preview are visible before starting-hand keep decisions.
  for(const p of S.players){
    const max=Math.floor(p.gold/3);
    let keep=[];
    if(p.type==='AI'){
      keep=temp[p.id].slice().sort((a,b)=>projectScore(p,projectDefFromInstance(b))-projectScore(p,projectDefFromInstance(a))).slice(0,Math.min(2,max));
    }else{
-     keep=await chooseMany(p,`${p.id} 起始 Project：市場已公開；每保留 1 張支付 3G（最多 ${max} 張）`,temp[p.id].map(x=>({label:`${projectDefFromInstance(x).id}｜${projectDefFromInstance(x).effect}`,inst:x})),max);
+     keep=await chooseMany(p,`${p.id} 起始 Project：市場與 Turn 1 Contract 已公開；每保留 1 張支付 3G（最多 ${max} 張）`,temp[p.id].map(x=>({label:projectSetupOptionText(x),inst:x})),max);
    }
    for(const x of keep){p.gold-=3;p.projectHand.push(x);log(`${p.id} keeps setup ${projectDefFromInstance(x).id} (-3G)`,{eventType:'SETUP_PROJECT_KEEP'})}
    temp[p.id]=temp[p.id].filter(x=>!keep.some(k=>k.instanceId===x.instanceId));
@@ -364,7 +523,7 @@ async function setupGame(){
    }
  }
  for(let i=0;i<4;i++){const c=S.patronDeck.shift();if(c)S.patronMarket.push(c)}
- S.contracts.current=contractCardsForTurn(1);
+ log(`Turn 1 R1 Contract assignment locked at Setup: ${S.contracts.current.map(c=>`${c.guild}→${c.id}`).join(', ')}`,{eventType:'SETUP_R1_CONTRACTS',assignments:clone(S.contracts.current)});
  log(`Family↔Guild: ${Object.entries(S.familyGuild).map(([f,g])=>`${f}→${g}`).join(', ')}`,{eventType:'SETUP_FAMILY_GUILD',mapping:clone(S.familyGuild)});
  log(`Era Goals: E1 ${goalName(S.eraGoals[0])}; E2 ${goalName(S.eraGoals[1])}`,{eventType:'SETUP_ERA_GOALS'});
  render();
@@ -372,6 +531,29 @@ async function setupGame(){
 function contractCardsForTurn(t){
  const ids=S.contracts.schedule[t]||[];const gs=shuffle(GUILDS.slice());
  return ids.map((id,i)=>({id,guild:gs[i],used:Array(CONTRACT_DEF[id].slots.length).fill(null)}));
+}
+function prepareContractsForTurn(t){
+ // Current Contract Market is promoted from the preview the players saw last turn.
+ if(t===1 && S.contracts.setupTurn1Locked){
+   // keep setup-locked R1 assignment
+ }else if(S.contracts.previewTurn===t && Array.isArray(S.contracts.preview)){
+   S.contracts.current=S.contracts.preview;
+   log(`Contract Preview promoted to Turn ${t} Current`,{eventType:'CONTRACT_PREVIEW_PROMOTE',turn:t,assignments:clone(S.contracts.current)});
+ }else{
+   S.contracts.current=contractCardsForTurn(t);
+ }
+ // Immediately lock the next-turn preview. If Setup already locked the same
+ // preview (notably Turn 1 -> Turn 2), preserve it exactly.
+ if(t<10){
+   if(!(S.contracts.previewTurn===t+1 && Array.isArray(S.contracts.preview) && S.contracts.preview.length)){
+     S.contracts.previewTurn=t+1;
+     S.contracts.preview=contractCardsForTurn(t+1);
+     log(`Turn ${t+1} Contract Preview locked`,{eventType:'CONTRACT_PREVIEW_LOCK',turn:t+1,assignments:clone(S.contracts.preview)});
+   }
+ }else{
+   S.contracts.previewTurn=null;
+   S.contracts.preview=[];
+ }
 }
 function goalName(g){return `${g.axis} ${g.kind}`}
 
@@ -388,13 +570,17 @@ async function newGame(allAI=false){
 async function runGame(){
  while(!S.gameOver&&S.turn<=10){
    S.era=eraOfTurn(S.turn);S.phase='TURN_START';S.timing='TURN_FREE';log(`=== Turn ${S.turn} / Era ${S.era} ===`,{eventType:'TURN_START'});
+   // Public pre-programming information must be finalized before secret Action programming.
    if(S.turn>=2)refreshProjectMarket();
+   prepareContractsForTurn(S.turn);
    for(const p of S.players){p.completedContractIdsThisTurn=[];p.passOrder=null;for(const x of p.installed)x.tapped=false;
      for(const x of p.installed)if(projectDefFromInstance(x).id==='N-03')x.markers=(x.markers||0)+1;
      if(ability(p,'Production',4))p.prolif++;
    }
-   S.contracts.current=contractCardsForTurn(S.turn);
    resetTurnMachines(false);
+   S.phase='PROGRAMMING';S.timing='TURN_FREE';
+   log(`Pre-Programming public state ready: Project Market ${S.projectMarket.filter(Boolean).length}/7; Current Contracts ${S.contracts.current.length}; Next Preview ${(S.contracts.preview||[]).length}`,{eventType:'PRE_PROGRAM_PUBLIC_STATE',turn:S.turn,projectMarketCount:S.projectMarket.filter(Boolean).length,currentContractCount:S.contracts.current.length,previewTurn:S.contracts.previewTurn,previewContractCount:(S.contracts.preview||[]).length});
+   render(); // show refreshed Project Market + Current/Next Contract before the first human programs actions
    await programActions();
    for(let rank=1;rank<=3;rank++){S.phase=`PROGRAM_${rank}`;for(const pid of S.initiative){const p=player(pid);const action=p.program[rank-1];await executeProgrammedAction(p,action,rank)}}
    S.phase='FEE_RESET';for(const p of S.players)feeReset(p);
@@ -408,20 +594,38 @@ async function runGame(){
  render();
 }
 function resetTurnMachines(endTurn=true){for(const m of S.machines)if(m.ownerId){m.used=false;m.frozenBy=null}if(endTurn)log('All claimed Machine slots Ready / unfrozen',{eventType:'MACHINE_RESET'})}
-function feeReset(p){const base=sum(Object.fromEntries(p.installed.map((x,i)=>[i,projectDefFromInstance(x).baseFee||0])));p.fee=Math.max(1,5+base);log(`${p.id} Fee Reset → ${p.fee}`,{eventType:'FEE_RESET',playerId:p.id,printedBaseFee:base})}
+function feeReset(p){const base=sum(Object.fromEntries(p.installed.map((x,i)=>[i,projectDefFromInstance(x).baseFee||0])));p.fee=Math.max(1,Math.floor(5+base));log(`${p.id} Fee Reset → P${p.fee} (${feeRate(p.fee)}G)`,{eventType:'FEE_RESET',playerId:p.id,printedBaseFee:base,feePosition:p.fee,feeRate:feeRate(p.fee)})}
 
 async function programActions(){
  S.phase='PROGRAMMING';S.timing='TURN_FREE';
  for(const p of S.players){
    if(p.type==='AI')p.program=aiProgram(p);
-   else{
-     const perms=[];for(const a of ACTIONS)for(const b of ACTIONS)if(b!==a)for(const c of ACTIONS)if(c!==a&&c!==b)perms.push([a,b,c]);
-     const x=await choose(p,'秘密排定三個不同 Programmed Actions（第1→第3順位）',perms.map(v=>({label:v.join(' → '),v})),o=>programScore(p,o.v),{allowFree:true});
-     p.program=x.v;
-   }
+   else p.program=await chooseProgramSequence(p);
    log(`${p.id} programs ${p.program.join(' > ')}`,{eventType:'PROGRAM_ACTIONS',playerId:p.id,actions:p.program.slice()});
  }
  render();
+}
+function chooseProgramSequence(p){
+ return new Promise(resolve=>{
+   const box=document.getElementById('decision');
+   const selected=[null,null,null];
+   const renderProgramming=()=>{
+     const current=selected.findIndex(x=>!x);
+     const rank=current<0?3:current+1;
+     const used=new Set(selected.filter(Boolean));
+     const rows=[1,2,3].map(r=>{
+       const a=selected[r-1];
+       return `<div class="progRank ${a?'chosen':''}" style="border:1px solid #40516e;border-radius:9px;padding:8px;margin:6px 0;background:${a?'#1e344b':'#171d29'}"><div class="row"><b>順位 ${r}</b>${a?`<span class="chip">${a}</span><button class="btn" data-clear-rank="${r}">取消／重選</button>`:'<span class="muted">尚未選擇</span>'}</div>${a?`<div class="mini" style="margin-top:4px">${actionRankEffect(a,r)}</div>`:''}</div>`;
+     }).join('');
+     const options=current<0?'':ACTIONS.filter(a=>!used.has(a)).map(a=>`<button data-program-action="${a}" style="text-align:left;min-width:220px"><b>${a}</b><br><span class="mini">${actionRankEffect(a,rank)}</span></button>`).join('');
+     box.innerHTML=`<h3>${p.id}｜秘密排定 Programmed Actions</h3><div class="mini">依順位逐一點選三個不同 Action。已選順位可取消；取消較前順位時，後續順位也會一併清除，避免重複 Action。</div>${rows}${current<0?'<div class="notice ok">三個順位已選完；確認後才鎖定。</div>':`<div style="margin-top:8px"><b>選擇順位 ${rank}</b><div class="options" style="margin-top:6px">${options}</div></div>`}<div style="margin-top:9px" class="row"><button id="programConfirm" class="btn primary" ${current<0?'':'disabled'}>確認暗排</button><button id="programClearAll" class="btn">全部清除</button></div>`;
+     box.querySelectorAll('[data-program-action]').forEach(b=>b.onclick=()=>{selected[current]=b.dataset.programAction;renderProgramming()});
+     box.querySelectorAll('[data-clear-rank]').forEach(b=>b.onclick=()=>{const i=+b.dataset.clearRank-1;for(let k=i;k<3;k++)selected[k]=null;renderProgramming()});
+     box.querySelector('#programClearAll').onclick=()=>{selected.fill(null);renderProgramming()};
+     box.querySelector('#programConfirm').onclick=()=>{if(selected.every(Boolean)){DECISION=null;resolve(selected.slice())}};
+   };
+   renderProgramming();
+ });
 }
 function aiProgram(p){
  const scored=ACTIONS.map(a=>({a,s:actionValue(p,a)})).sort((x,y)=>y.s-x.s);
@@ -532,7 +736,80 @@ function makeInner(o,p){const s=p.wheel.sectors[o.si],inner={kind:'Inner',type:o
  if(o.type==='CompoundInner')s.compoundSlots.push(o.family);
  return inner
 }
+
+function wheelTargetKey(si,kind,i=0){return `${si}:${kind}:${i}`}
+function stopWheelInteraction(){WHEEL_UI_ACTIVE=false;WHEEL_INTERACTION=null}
+function renderWheelSide(html){document.getElementById('decision').innerHTML=html}
+function beginWheelInteraction(p,targets,onPick){
+ WHEEL_UI_ACTIVE=true;WHEEL_INTERACTION={playerId:p.id,targets,onPick};renderWheels();
+}
+function groupedMiddleSpots(p){
+ const m=new Map();
+ for(const o of legalMiddleOptions(p)){const k=wheelTargetKey(o.si,'Middle',o.mi);if(!m.has(k))m.set(k,{si:o.si,mi:o.mi,options:[]});m.get(k).options.push(o)}
+ return m;
+}
+function groupedInnerSpots(p){
+ const m=new Map();
+ for(const o of legalInnerOptions(p)){const k=wheelTargetKey(o.si,'Inner',0);if(!m.has(k))m.set(k,{si:o.si,options:[]});m.get(k).options.push(o)}
+ return m;
+}
+async function humanBuildPick(p,drawn,usedDraw,built,maxBuild,extraOuter,extraOuterUsed){
+ let selected=drawn.findIndex((e,i)=>!usedDraw.includes(i));if(selected<0)selected=null;
+ return await new Promise(resolve=>{
+   const refresh=()=>{
+     const canBase=built<maxBuild,canExtra=extraOuterUsed<extraOuter,targets=new Map();
+     if(selected!==null&&!usedDraw.includes(selected)&&(canBase||canExtra)&&p.gold>=tileCost('Outer',p)){
+       for(const slot of outerSlots(p))targets.set(wheelTargetKey(slot.si,'Outer',slot.oi),{kind:'Outer',slot});
+     }
+     if(canBase&&p.gold>=tileCost('Middle',p))for(const [k,v] of groupedMiddleSpots(p))targets.set(k,{kind:'MiddleSpot',...v});
+     if(canBase&&p.gold>=Math.max(0,6-buildDiscount(p)))for(const [k,v] of groupedInnerSpots(p))targets.set(k,{kind:'InnerSpot',...v});
+     const outerBtns=drawn.map((e,i)=>{
+       const used=usedDraw.includes(i),sel=i===selected;
+       return `<button data-draw="${i}" ${used?'disabled':''} class="${sel?'good':''}" style="min-width:96px;text-align:center"><b>${ICON[e]||e} ${e}</b><br><span class="mini">${used?'已建造':sel?'已選擇':'點選'}</span></button>`;
+     }).join('');
+     renderWheelSide(`<h3>${p.id}｜Build</h3>
+       <div class="mini">先在右側選本次抽到的 Outer，再直接點 Wheel 上發亮的位置。藍框＝Outer；綠框＝合法 Middle / Inner。</div>
+       <div style="margin:8px 0"><b>Drawn Outer</b><div class="options" style="margin-top:6px">${outerBtns||'<span class="muted">沒有 Outer</span>'}</div></div>
+       <div class="mini">一般建造 ${Math.min(built,maxBuild)}/${maxBuild}${extraOuter?`｜R3 額外 Outer ${extraOuterUsed}/${extraOuter}`:''}｜Outer ${tileCost('Outer',p)}G｜Middle ${tileCost('Middle',p)}G｜Inner ${Math.max(0,6-buildDiscount(p))}G</div>
+       <div class="row" style="margin-top:9px"><button id="wheelBuildEnd" class="btn">結束 Build</button></div>`);
+     document.querySelectorAll('#decision [data-draw]').forEach(b=>b.onclick=()=>{const i=+b.dataset.draw;if(!usedDraw.includes(i)){selected=selected===i?null:i;refresh()}});
+     document.getElementById('wheelBuildEnd').onclick=()=>{stopWheelInteraction();resolve({done:true});renderWheels()};
+     beginWheelInteraction(p,targets,target=>{stopWheelInteraction();resolve(target.kind==='Outer'?{...target,drawIndex:selected}:target)});
+   };
+   refresh();
+ });
+}
+async function humanBuildPhase(p,rank){
+ let maxBuild=rank===1?3:2;
+ let baseDraw=2+(rank<=2?1:0)+(ability(p,'Build',3)?1:0)+(p.wheel.sectors.some(s=>s.inner?.type==='UniversalBuildDraw')?1:0);
+ let extraOuter=ability(p,'Build',3)?1:0;
+ const drawn=drawOuterN(baseDraw,'BUILD_PHASE');let built=0,extraOuterUsed=0,usedDraw=[];
+ render();
+ while(built<maxBuild+extraOuter){
+   const c=await humanBuildPick(p,drawn,usedDraw,built,maxBuild,extraOuter,extraOuterUsed);if(!c||c.done)break;
+   if(c.kind==='Outer'){
+     if(c.drawIndex===null||c.drawIndex===undefined||usedDraw.includes(c.drawIndex))continue;
+     const extra=built>=maxBuild;if(extra&&extraOuterUsed>=extraOuter)continue;
+     if(payGold(p,tileCost('Outer',p),'Build Outer')){
+       p.wheel.sectors[c.slot.si].outers[c.slot.oi]={kind:'Outer',element:drawn[c.drawIndex],upgraded:false,marker:null,anchor:false};
+       usedDraw.push(c.drawIndex);if(extra)extraOuterUsed++;else built++;
+       log(`${p.id} builds ${drawn[c.drawIndex]} Outer at ${c.slot.label}`,{eventType:'BUILD_TILE',kind:'Outer',inheritedBaseline:true});
+     }
+   }else if(c.kind==='MiddleSpot'){
+     let o=c.options[0];
+     if(c.options.length>1){const picked=await choose(p,'選擇這個 Middle 格的建造類型',c.options.map(x=>({label:`${x.label} (${tileCost('Middle',p)}G)`,o:x})),x=>buildOptionScore(p,{kind:'Middle',o:x.o}),{allowFree:false});o=picked.o}
+     if(o&&payGold(p,tileCost('Middle',p),'Build Middle')){p.wheel.sectors[o.si].middles[o.mi]=makeMiddle(o);built++;log(`${p.id} builds ${o.label}`,{eventType:'BUILD_TILE',kind:'Middle',inheritedBaseline:true})}
+   }else if(c.kind==='InnerSpot'){
+     let o=c.options[0];
+     if(c.options.length>1){const picked=await choose(p,'選擇這個 Inner 格的建造類型',c.options.map(x=>({label:`${x.label} (${Math.max(0,6-buildDiscount(p))}G)`,o:x})),x=>buildOptionScore(p,{kind:'Inner',o:x.o}),{allowFree:false});o=picked.o}
+     if(o&&payGold(p,Math.max(0,6-buildDiscount(p)),'Build Inner')){p.wheel.sectors[o.si].inner=makeInner(o,p);built++;log(`${p.id} builds ${o.label}`,{eventType:'BUILD_TILE',kind:'Inner',inheritedBaseline:true})}
+   }
+   render();
+ }
+ stopWheelInteraction();returnOuters(drawn.filter((e,i)=>!usedDraw.includes(i)));render();
+}
 async function buildPhase(p,rank){
+ if(p.type==='HUMAN')return humanBuildPhase(p,rank);
  let maxBuild=rank===1?3:2,baseDraw=2+(rank<=2?1:0)+(ability(p,'Build',3)?1:0)+(p.wheel.sectors.some(s=>s.inner?.type==='UniversalBuildDraw')?1:0);
  let extraOuter=ability(p,'Build',3)?1:0;
  const drawn=drawOuterN(baseDraw,'BUILD_PHASE');let built=0,extraOuterUsed=0,usedDraw=[];
@@ -575,9 +852,9 @@ async function specialOuterBuild(p,drawN,maxBuild,source,canMulti){
 function legalUpgradeTiles(p,kindFilter=null){
  const out=[];p.wheel.sectors.forEach((s,si)=>{s.outers.forEach((t,i)=>{if(t&&!t.upgraded&&(!kindFilter||kindFilter==='Outer'))out.push({si,kind:'Outer',i,t,label:`${s.anchor} O${i+1}`})});s.middles.forEach((t,i)=>{if(t&&!t.upgraded&&(!kindFilter||kindFilter==='Middle'))out.push({si,kind:'Middle',i,t,label:`${s.anchor} M${i+1}`})})});return out
 }
-function upgradeCost(x){return x.kind==='Outer'?2:4}
+function upgradeCost(x){return 0}
 async function applyUpgrade(p,x,source='Upgrade',free=false,programmed=false){
- if(!x?.t||x.t.upgraded)return false;const cost=free?0:upgradeCost(x);if(!free&&!payGold(p,cost,`${source} Upgrade`))return false;x.t.upgraded=true;
+ if(!x?.t||x.t.upgraded)return false;const cost=0;x.t.upgraded=true;
  log(`${p.id} upgrades ${x.label}${free?' free':` ${cost}G`}`,{eventType:'UPGRADE_TILE',playerId:p.id,target:x.label,source,cost,inheritedBaseline:!free});
  if(programmed&&ability(p,'Upgrade',2)&&x.t.mode!=='Breadth'){
    const possible=tileProducedElements(p,x.si,x.t);if(possible.length){const e=await chooseElement(p,possible,'Upgrade Guild R2：取得升級後可產元素');if(e)gainElem(p,e,1)}
@@ -587,10 +864,36 @@ async function applyUpgrade(p,x,source='Upgrade',free=false,programmed=false){
 async function specialUpgrade(p,kind,free,source){
  const opts=legalUpgradeTiles(p,kind);if(!opts.length)return false;const c=await choose(p,source,opts.map(x=>({label:x.label,x})),o=>2,{allowFree:false});return applyUpgrade(p,c.x,source,free,false)
 }
+
+async function humanUpgradePick(p,opts,done,maxTotal){
+ return await new Promise(resolve=>{
+   const targets=new Map();for(const x of opts)targets.set(wheelTargetKey(x.si,x.kind,x.i),{kind:'Upgrade',x});
+   renderWheelSide(`<h3>${p.id}｜Upgrade ${done+1}/${maxTotal}</h3><div class="mini">合法可升級的 Tile 已在 Wheel 上以黃色高亮。直接點 Tile；右側不再列位置清單。</div><div class="mini" style="margin-top:6px">Tile Upgrade：一律 0G</div><div class="row" style="margin-top:9px"><button id="wheelUpgradeEnd" class="btn">結束 Upgrade</button></div>`);
+   document.getElementById('wheelUpgradeEnd').onclick=()=>{stopWheelInteraction();resolve({done:true});renderWheels()};
+   beginWheelInteraction(p,targets,target=>{stopWheelInteraction();resolve(target)});
+ });
+}
+async function humanUpgradePhase(p,rank){
+ let base=rank<=2?2:1,extra=(ability(p,'Upgrade',3)?1:0)+(ability(p,'Upgrade',4)?1:0),baseSector=null,upgradedSectors=new Set(),done=0,total=base+extra;
+ render();
+ while(done<total){
+   let opts=legalUpgradeTiles(p);
+   if(done<base&&rank<=2&&baseSector!==null)opts=opts.filter(x=>x.si===baseSector);
+   if(!opts.length)break;
+   const c=await humanUpgradePick(p,opts,done,total);if(!c||c.done)break;
+   if(done<base&&rank<=2&&baseSector===null)baseSector=c.x.si;
+   if(await applyUpgrade(p,c.x,'Programmed Upgrade',false,true)){done++;upgradedSectors.add(c.x.si)}
+   render();
+ }
+ stopWheelInteraction();
+ if(rank===1)for(const si of upgradedSectors)await giveSectorTP(p,si,1,'Upgrade rank1');
+ render();
+}
 async function upgradePhase(p,rank){
+ if(p.type==='HUMAN')return humanUpgradePhase(p,rank);
  let base=rank<=2?2:1,extra=(ability(p,'Upgrade',3)?1:0)+(ability(p,'Upgrade',4)?1:0),baseSector=null,upgradedSectors=new Set(),done=0;
  while(done<base+extra){
-   let opts=legalUpgradeTiles(p).filter(x=>p.gold>=upgradeCost(x));
+   let opts=legalUpgradeTiles(p);
    if(done<base && rank<=2 && baseSector!==null)opts=opts.filter(x=>x.si===baseSector);
    if(!opts.length)break;
    const c=await choose(p,`${p.id} Upgrade ${done+1}/${base+extra}`, [{label:'結束 Upgrade',done:true},...opts.map(x=>({label:`${x.label} (${upgradeCost(x)}G)`,x}))],o=>o.done?0:upgradeScore(p,o.x),{allowFree:true});
@@ -619,7 +922,7 @@ function tileProducedElements(p,si,t){
 
 async function productionPhase(p){
  S.timing='PRODUCTION_REVERSE';
- const rev=p.type==='AI'?{yes:false}:await choose(p,`${p.id} Production Phase｜Reverse?`,[{label:'不 Reverse',yes:false},{label:`Reverse（Gear ${Math.min(p.fee,paidFeeCap(p))}G）`,yes:true}],o=>o.yes?productionRouteValue(p,true)-productionRouteValue(p,false):0,{allowFree:true});
+ const rev=p.type==='AI'?{yes:false}:await choose(p,`${p.id} Production Phase｜Reverse?`,[{label:'不 Reverse',yes:false},{label:`Reverse（Gear ${feePaidGold(p)}G）`,yes:true}],o=>o.yes?productionRouteValue(p,true)-productionRouteValue(p,false):0,{allowFree:true});
  if(rev.yes&&await gear(p,'Reverse'))p.wheel.direction*=-1;
  S.timing='PRODUCTION_START';await productionPhaseStart(p);
  const tokenCount=p.prolif;p.prolif=0;const maxS=Math.min(4,1+tokenCount);
@@ -629,10 +932,10 @@ async function productionPhase(p){
    if(k>0){
      let paid=false;
      if(ability(p,'Production',3)){
-       const c=await choose(p,`${p.id} 額外 Sector #${k+1}：Gear 或 Production R3 固定2G`,[{label:`Gear (${Math.min(p.fee,paidFeeCap(p))}G)`,mode:'GEAR'},{label:'固定 2G（不執行 Gear）',mode:'R3'},{label:'停止後續生產',mode:'STOP'}],o=>o.mode==='STOP'?0:o.mode==='R3'?2.2:1.8,{allowFree:true});
+       const c=await choose(p,`${p.id} 額外 Sector #${k+1}：Gear 或 Production R3 固定2G`,[{label:`Gear (${feePaidGold(p)}G)`,mode:'GEAR'},{label:'固定 2G（不執行 Gear）',mode:'R3'},{label:'停止後續生產',mode:'STOP'}],o=>o.mode==='STOP'?0:o.mode==='R3'?2.2:1.8,{allowFree:true});
        if(c.mode==='STOP')break;if(c.mode==='R3')paid=payGold(p,2,'Production Guild R3');else paid=await gear(p,'Extra Sector Production');
      }else{
-       const c=await choose(p,`${p.id} 額外 Sector #${k+1}`,[{label:`支付 Gear (${Math.min(p.fee,paidFeeCap(p))}G)`,yes:true},{label:'停止',yes:false}],o=>o.yes?2:0,{allowFree:true});
+       const c=await choose(p,`${p.id} 額外 Sector #${k+1}`,[{label:`支付 Gear (${feePaidGold(p)}G)`,yes:true},{label:'停止',yes:false}],o=>o.yes?2:0,{allowFree:true});
        if(!c.yes)break;paid=await gear(p,'Extra Sector Production');
      }
      if(!paid)break;
@@ -758,7 +1061,7 @@ async function postProductionWindow(p){
  // Earth post-production taps are made available as free projects in a dedicated window.
  if(p.type==='AI'){
    const e11=p.installed.find(x=>projectDefFromInstance(x).id==='E-11'&&!x.tapped);
-   if(e11&&p.hand.Earth>=4&&p.gold>=Math.min(p.fee,paidFeeCap(p)))await useProject(p,e11);
+   if(e11&&p.hand.Earth>=4&&p.gold>=feePaidGold(p))await useProject(p,e11);
    return;
  }
  while(tapReadyProjects(p).some(x=>['E-01','E-02','E-03','E-05','E-11'].includes(projectDefFromInstance(x).id))){
@@ -792,7 +1095,7 @@ function availableContractActions(p){
  return out
 }
 function availableMachineActions(p){
- return S.machines.filter(m=>m.ownerId&&!m.used&&(!m.frozenBy||m.frozenBy===p.id)&&p.gold>=Math.min(p.fee,paidFeeCap(p))).map(m=>({type:'MACHINE',m,label:`${m.id} (${m.effect})`}))
+ return S.machines.filter(m=>m.ownerId&&!m.used&&(!m.frozenBy||m.frozenBy===p.id)&&p.gold>=feePaidGold(p)).map(m=>({type:'MACHINE',m,label:`${m.id} (${m.effect})`}))
 }
 async function contractPhase(){
  S.passSequence=[];const active=new Set(S.initiative);
@@ -1014,7 +1317,7 @@ async function useProject(p,inst){
  log(`${p.id} uses ${id}`,{eventType:'PROJECT_USE',playerId:p.id,projectId:id});render();
 }
 async function useFreeProject(p){
- const opts=tapReadyProjects(p).map(x=>({label:`${projectDefFromInstance(x).id}｜${projectDefFromInstance(x).effect}`,inst:x}));
+ const opts=tapReadyProjects(p).map(x=>{const d=projectDefFromInstance(x);return {label:`${d.id}｜${projectDisplayEffect(d,x)}`,inst:x}});
  if(!opts.length)return;const c=await choose(p,'選擇可用的 Project Tap',opts,o=>1,{allowFree:false});if(c)await useProject(p,c.inst)
 }
 
@@ -1033,14 +1336,14 @@ function chooseMany(p,promptText,opts,max){
  if(p.type==='AI')return Promise.resolve(opts.slice(0,Math.min(max,2)).map(x=>x.inst));
  return new Promise(resolve=>{
    const box=document.getElementById('decision');let selected=new Set();
-   const rer=()=>{box.innerHTML=`<h3>${promptText}</h3><div class="mini">已選 ${selected.size}/${max}</div><div class="options">${opts.map((o,i)=>`<button data-i="${i}" class="${selected.has(i)?'good':''}">${o.label}</button>`).join('')}</div><div style="margin-top:8px"><button id="multiConfirm" class="btn primary">確認</button></div>`;
+   const rer=()=>{box.innerHTML=`<h3>${promptText}</h3><div class="mini">已選 ${selected.size}/${max}</div><div class="options">${opts.map((o,i)=>`<button data-i="${i}" class="${selected.has(i)?'good':''}" style="white-space:pre-line;text-align:left">${uiText(o.label)}</button>`).join('')}</div><div style="margin-top:8px"><button id="multiConfirm" class="btn primary">確認</button></div>`;
      box.querySelectorAll('[data-i]').forEach(b=>b.onclick=()=>{const i=+b.dataset.i;if(selected.has(i))selected.delete(i);else if(selected.size<max)selected.add(i);rer()});box.querySelector('#multiConfirm').onclick=()=>resolve([...selected].map(i=>opts[i].inst))};rer()
  })
 }
 function renderDecision(){
  const box=document.getElementById('decision');if(!DECISION){box.innerHTML='<h3>Decision</h3><div class="mini">AI 或系統正在處理。</div>';return}
  const {p,promptText,opts,resolve,settings}=DECISION;
- box.innerHTML=`<h3>${promptText}</h3><div class="mini">${p.id}｜${p.gold}G｜Fee ${p.fee}</div><div class="options">${opts.map((o,i)=>`<button data-i="${i}">${o.label}</button>`).join('')}</div>${settings.allowFree!==false&&tapReadyProjects(p).length?'<div style="margin-top:8px"><button id="freeProject" class="btn free">使用可用 Project（不消耗目前選項）</button></div>':''}`;
+ box.innerHTML=`<h3>${promptText}</h3><div class="mini">${p.id}｜${p.gold}G｜Fee P${p.fee}｜Rate ${feeRate(p.fee)}G</div><div class="options">${opts.map((o,i)=>`<button data-i="${i}">${uiText(o.label)}</button>`).join('')}</div>${settings.allowFree!==false&&tapReadyProjects(p).length?'<div style="margin-top:8px"><button id="freeProject" class="btn free">使用可用 Project（不消耗目前選項）</button></div>':''}`;
  box.querySelectorAll('[data-i]').forEach(b=>b.onclick=()=>{const o=opts[+b.dataset.i];DECISION=null;resolve(o);renderDecision()});
  const fp=box.querySelector('#freeProject');if(fp)fp.onclick=async()=>{await useFreeProject(p);render();renderDecision()};
 }
@@ -1049,30 +1352,49 @@ function renderDecision(){
 function render(force=false){
  if(!S)return;if(S.autoMode&&!S.gameOver&&!force)return;document.getElementById('turnPill').textContent=`Turn ${S.turn}/10`;document.getElementById('eraPill').textContent=`Era ${eraOfTurn(S.turn)}`;document.getElementById('phasePill').textContent=S.phase;
  document.getElementById('status').innerHTML=`<div class="row"><b>Seed ${S.seed}</b><span class="chip">Initiative ${S.initiative.join('→')}</span><span class="chip">Outer Bag ${sum(S.outerBag)}/64</span><span class="chip">Project Deck ${S.projectDeck.length}</span><span class="chip">Discard ${S.projectDiscard.length}</span><span class="chip">${S.testStatus}</span></div><div class="mini">Family↔Guild：${Object.entries(S.familyGuild).map(([f,g])=>`${f}→${g}`).join('｜')}　Era1 ${goalName(S.eraGoals[0])}｜Era2 ${goalName(S.eraGoals[1])}</div>`;
- renderProjectMarket();renderContracts();renderPatrons();renderMachines();renderPlayers();renderWheels();renderLog();if(!DECISION)renderDecision()
+ renderProjectMarket();renderContracts();renderPatrons();renderMachines();renderPlayers();renderWheels();renderLog();if(!DECISION&&!WHEEL_UI_ACTIVE)renderDecision()
 }
 function renderProjectMarket(){
  document.getElementById('projectMarket').innerHTML=S.projectMarket.map((x,i)=>x?projectCardHtml(x,i):`<div class="card"><h4>Slot ${i+1}</h4><div class="muted">空位｜Turn 中不即補</div></div>`).join('')
 }
 function projectCardHtml(inst,i){
- const d=projectDefFromInstance(inst);return `<div class="card"><h4>${d.id}<span class="tag project">${d.category}</span></h4><div class="mini">Time Cost ${TIME_COST[i]}｜Install ${d.installCost}G｜Base Fee ${d.baseFee>=0?'+':''}${d.baseFee}</div><div>${d.effect}</div><div class="mini">instance ${inst.instanceId}｜${d.status||''}</div></div>`
+ const d=projectDefFromInstance(inst);return `<div class="card"><h4>${d.id}<span class="tag project">${d.category}</span></h4><div class="mini">Time Cost ${TIME_COST[i]}｜Install ${d.installCost}G｜Base Fee ${d.baseFee>=0?'+':''}${d.baseFee}</div><div class="mini"><b>TP Gate：</b>${projectTpGateText(d)}</div><div>${projectDisplayEffect(d,inst)}</div><div class="mini">instance ${inst.instanceId}｜${d.status||''}</div></div>`
+}
+function contractCardHtml(c,preview=false){
+ const d=CONTRACT_DEF[c.id];
+ return `<div class="card ${preview?'previewCard':''}"><h4>${c.id}<span class="tag guild">${c.guild}</span>${preview?'<span class="tag">NEXT</span>':''}</h4><div>${elemLine(d.req)}</div>${d.slots.map((r,i)=>`<div class="slot ${!preview&&c.used[i]?'used':''}">#${i+1} ${r.vp}VP + ${r.gold}G ${r.tpChoices.length?'+ TP '+r.tpChoices.join('/') : ''} ${i<2?'+1 Rep':'0 Rep'} ${!preview&&c.used[i]?`｜${c.used[i]}`:''}</div>`).join('')}</div>`;
 }
 function renderContracts(){
- document.getElementById('contractMarket').innerHTML=S.contracts.current.map(c=>{const d=CONTRACT_DEF[c.id];return `<div class="card"><h4>${c.id}<span class="tag guild">${c.guild}</span></h4><div>${elemLine(d.req)}</div>${d.slots.map((r,i)=>`<div class="slot ${c.used[i]?'used':''}">#${i+1} ${r.vp}VP + ${r.gold}G ${r.tpChoices.length?'+ TP '+r.tpChoices.join('/') : ''} ${i<2?'+1 Rep':'0 Rep'} ${c.used[i]?`｜${c.used[i]}`:''}</div>`).join('')}</div>`}).join('')
+ const current=(S.contracts.current||[]).map(c=>contractCardHtml(c,false)).join('');
+ const preview=(S.contracts.preview||[]).length
+   ? `<div style="grid-column:1/-1;margin-top:8px"><div class="sectionTitle"><b>Next Turn Contract Preview｜Turn ${S.contracts.previewTurn}</b></div><div class="mini">這四張已鎖定；下一回合直接升格為 Current，不會重新抽／重新分配 Guild。</div></div>`+(S.contracts.preview||[]).map(c=>contractCardHtml(c,true)).join('')
+   : '';
+ document.getElementById('contractMarket').innerHTML=current+preview;
 }
 function renderPatrons(){
- document.getElementById('patronMarket').innerHTML=S.patronMarket.map(x=>`<div class="card"><h4>${x.family} Rank ${x.rank}</h4><div class="mini">完成 → ${S.familyGuild[x.family]} Guild R${x.rank}</div><div>${FAM[x.family].join(' + ')} family template</div></div>`).join('')
+ document.getElementById('patronMarket').innerHTML=S.patronMarket.map(x=>`<div class="card"><h4>${ICON[x.family]||''} ${x.family} Rank ${x.rank}</h4><div class="mini">完成 → ${S.familyGuild[x.family]} Guild R${x.rank}</div><div>${FAM[x.family].join(' + ')} family template</div></div>`).join('')
 }
 function renderMachines(){
  const groups={};for(const m of S.machines)(groups[`${m.guild} T${m.tier}`]??=[]).push(m);
- document.getElementById('machines').innerHTML=Object.entries(groups).map(([k,ms])=>`<div class="machine"><b>${k}</b><div class="mini">Owner ${ms[0].ownerId||'Unclaimed'}</div>${ms.map(m=>`<div class="slot ${m.used?'used':''} ${m.frozenBy?'frozen':''}">${m.id}<br>${m.effect}｜Gear required｜Rent ${m.rent}G<br>${m.used?'USED':'READY'} ${m.frozenBy?`Frozen:${m.frozenBy}`:''}</div>`).join('')}</div>`).join('')
+ document.getElementById('machines').innerHTML=Object.entries(groups).map(([k,ms])=>`<div class="machine"><b>${k}</b><div class="mini">Owner ${ms[0].ownerId||'Unclaimed'}</div>${ms.map(m=>`<div class="slot ${m.used?'used':''} ${m.frozenBy?'frozen':''}">${m.id}<br>${uiText(m.effect)}｜⚙️ required｜Rent ${m.rent}G<br>${m.used?'USED':'READY'} ${m.frozenBy?`Frozen:${m.frozenBy}`:''}</div>`).join('')}</div>`).join('')
 }
 function renderPlayers(){
- document.getElementById('players').innerHTML=S.players.map(p=>`<div class="player ${p.type==='HUMAN'?'human':''}"><b>${p.id} ${p.type==='HUMAN'?'👤':'🤖'}</b><div class="statrow"><span class="chip">${p.gold}G</span><span class="chip">${p.vp}VP</span><span class="chip">Fee ${p.fee}</span><span class="chip">Token ${p.prolif}</span></div><div class="program">${p.program.map((a,i)=>`<span class="chip">${i+1}.${a}</span>`).join('')}</div><div class="mini">TP ${BASES.map(e=>`${e[0]}:${p.tp[e]}`).join(' ')}<br>Rep ${GUILDS.map(g=>`${g[0]}:${p.rep[g]}`).join(' ')}<br>Hand ${elemLine(p.hand)}<br>Research Time telemetry ${p.researchTimeSpent}</div><div class="projectList"><b>Project Hand ${p.projectHand.length}</b>${p.projectHand.slice(0,6).map(x=>`<span class="mini">${projectDefFromInstance(x).id}</span>`).join(' ')}${p.projectHand.length>6?' …':''}<br><b>Installed ${p.installed.length}</b>${p.installed.map(x=>`<div class="proj">${projectDefFromInstance(x).id}${x.tapped?' [Tapped]':''}<br><span class="mini">${projectDefFromInstance(x).effect}</span></div>`).join('')}</div><div class="mini">Patron ${p.initialPatron.done?'Initial✓':`Initial I${p.initialPatron.step+1}`} ${p.patrons.map(x=>`${x.family}R${x.rank} C${x.step+1}`).join(', ')||''}<br>Abilities ${Object.keys(p.abilities).filter(k=>p.abilities[k]).join(', ')||'—'}</div></div>`).join('')
+ document.getElementById('players').innerHTML=S.players.map(p=>`<div class="player ${p.type==='HUMAN'?'human':''}"><b>${p.id} ${p.type==='HUMAN'?'👤':'🤖'}</b><div class="statrow"><span class="chip">${p.gold}G</span><span class="chip">${p.vp}VP</span><span class="chip">Fee P${p.fee}｜${feeRate(p.fee)}G</span><span class="chip">Token ${p.prolif}</span></div><div class="program">${p.program.map((a,i)=>`<span class="chip" title="${actionRankEffect(a,i+1)}">${i+1}.${a}</span>`).join('')}</div><div class="mini">TP ${BASES.map(e=>`${ICON[e]}:${p.tp[e]}`).join(' ')}<br>Rep ${GUILDS.map(g=>`${g[0]}:${p.rep[g]}`).join(' ')}<br>Hand ${elemLine(p.hand)}<br>Research Time telemetry ${p.researchTimeSpent}</div><div class="projectList"><b>Project Hand ${p.projectHand.length}</b>${p.projectHand.length?p.projectHand.map(x=>{const d=projectDefFromInstance(x);return `<div class="proj"><b>${d.id}</b> <span class="tag project">${d.category}</span><br><span class="mini"><b>TP Gate：</b>${projectTpGateText(d)}｜Install ${d.installCost}G｜Base Fee ${d.baseFee>=0?'+':''}${d.baseFee}</span><br><span class="mini">${projectDisplayEffect(d,x)}</span></div>`}).join(''):'<div class="mini">—</div>'}<b>Installed ${p.installed.length}</b>${p.installed.map(x=>{const d=projectDefFromInstance(x);return `<div class="proj"><b>${d.id}</b>${x.tapped?' [Tapped]':''}<br><span class="mini"><b>TP Gate：</b>${projectTpGateText(d)}｜Install ${d.installCost}G｜Base Fee ${d.baseFee>=0?'+':''}${d.baseFee}</span><br><span class="mini">${projectDisplayEffect(d,x)}</span></div>`}).join('')}</div><div class="mini">Patron ${p.initialPatron.done?'Initial✓':`Initial I${p.initialPatron.step+1}`} ${p.patrons.map(x=>`${x.family}R${x.rank} C${x.step+1}`).join(', ')||''}<br>Abilities ${Object.keys(p.abilities).filter(k=>p.abilities[k]).join(', ')||'—'}</div></div>`).join('')
 }
-function tileHtml(t,label){if(!t)return `<div class="tile empty">${label}<br>empty</div>`;let txt=t.kind==='Outer'?`${ICON[t.element]} ${t.element}`:t.kind==='Middle'?`${t.mode}${t.family?' '+t.family:''}`:`${t.type}${t.element?' '+t.element:''}${t.family?' '+t.family:''}`;return `<div class="tile ${t.upgraded?'up':''}">${label}<br>${txt}${t.upgraded?' ★':''}${t.marker?`<br>⚠ ${t.marker}`:''}</div>`}
+function tileHtml(t,label,key=null){
+ const target=key&&WHEEL_INTERACTION?.targets?.get(key);
+ const pickClass=target?` wheelPick ${target.kind==='Outer'?'wheelPickOuter':target.kind==='Upgrade'?'wheelPickUpgrade':''}`:'';
+ const data=target?` data-wheel-key="${key}"`:'';
+ if(!t)return `<div class="tile empty${pickClass}"${data}>${label}<br>${target?.kind==='Outer'?'點此建造 Outer':'empty'}</div>`;
+ let txt=t.kind==='Outer'?`${ICON[t.element]} ${t.element}`:t.kind==='Middle'?`${t.mode}${t.family?' '+t.family:''}`:`${t.type}${t.element?' '+t.element:''}${t.family?' '+t.family:''}`;
+ return `<div class="tile ${t.upgraded?'up':''}${pickClass}"${data}>${label}<br>${txt}${t.upgraded?' ★':''}${t.marker?`<br>⚠ ${t.marker}`:''}${target?.kind==='Upgrade'?'<br><b>點此升級</b>':''}</div>`
+}
 function renderWheels(){
- document.getElementById('wheels').innerHTML=S.players.map(p=>`<div class="wheelCard"><div class="row"><b>${p.id}</b><span class="chip">Pointer ${BASES[p.wheel.pointer]} ${p.wheel.direction===1?'↻':'↺'}</span></div><div class="wheelgrid">${p.wheel.sectors.map((s,si)=>`<div class="sector"><div class="sectorHead"><b>${s.anchor}</b><span class="mini">${s.identities.join('/')}</span></div><div class="tiles">${s.outers.map((t,i)=>tileHtml(t,`O${i+1}`)).join('')}${s.middles.map((t,i)=>tileHtml(t,`M${i+1}`)).join('')}${tileHtml(s.inner,'Inner').replace('class="tile','class="tile inner')}</div></div>`).join('')}</div></div>`).join('')
+ document.getElementById('wheels').innerHTML=S.players.map(p=>{
+   const active=WHEEL_INTERACTION?.playerId===p.id;
+   return `<div class="wheelCard ${active?'wheelActive':''}"><div class="row"><b>${p.id}</b><span class="chip">Pointer ${BASES[p.wheel.pointer]} ${p.wheel.direction===1?'↻':'↺'}</span></div><div class="wheelgrid">${p.wheel.sectors.map((s,si)=>`<div class="sector"><div class="sectorHead"><b>${ICON[s.anchor]} ${s.anchor}</b><span class="mini">${s.identities.join('/')}</span></div><div class="tiles">${s.outers.map((t,i)=>tileHtml(t,`O${i+1}`,active?wheelTargetKey(si,'Outer',i):null)).join('')}${s.middles.map((t,i)=>tileHtml(t,`M${i+1}`,active?wheelTargetKey(si,'Middle',i):null)).join('')}${tileHtml(s.inner,'Inner',active?wheelTargetKey(si,'Inner',0):null).replace('class="tile','class="tile inner')}</div></div>`).join('')}</div></div>`;
+ }).join('');
+ document.querySelectorAll('[data-wheel-key]').forEach(el=>el.onclick=()=>{const target=WHEEL_INTERACTION?.targets?.get(el.dataset.wheelKey);if(target&&WHEEL_INTERACTION?.onPick)WHEEL_INTERACTION.onPick(target)});
 }
 function renderLog(){const e=document.getElementById('log');if(!e||!S)return;e.textContent=S.logs.slice(-250).map(x=>`#${x.n} T${x.turn} ${x.phase}｜${x.msg}`).join('\n');e.scrollTop=e.scrollHeight}
 function renderGaps(){document.getElementById('gaps').innerHTML=RULE_GAPS.map(x=>`<div class="notice"><b>${x.level}</b>｜${x.text}</div>`).join('')}
@@ -1113,13 +1435,10 @@ function runAcceptance(){
    ok('AT-27',repRankPoints([5,5,3,0]).join(',')==='5,5,2,0','tie points floor / Rep0 no rank');
    createState('AT28',true);const h1=stableStringify({goals:S.eraGoals,map:S.familyGuild,schedule:S.contracts.schedule,deck:S.projectDeck.map(x=>x.instanceId).slice(0,20)});createState('AT28',true);const h2=stableStringify({goals:S.eraGoals,map:S.familyGuild,schedule:S.contracts.schedule,deck:S.projectDeck.map(x=>x.instanceId).slice(0,20)});ok('AT-28',h1===h2,'same seed deterministic setup');
  }catch(e){results.push({id:'EXCEPTION',status:'FAIL',detail:String(e)})}
- S=old;renderTestResults(results);return results
+ S=old;const failed=results.filter(x=>x.status!=='PASS');if(failed.length)console.error('Acceptance failures',failed);return results
 }
-function renderTestResults(r){document.getElementById('tests').innerHTML=`<div class="mini">Acceptance micro-tests are deterministic rule/schema checks; they do not replace full 10-turn scenario coverage.</div><table class="table"><tr><th>ID</th><th>Status</th><th>Detail</th></tr>${r.map(x=>`<tr><td>${x.id}</td><td class="${x.status==='PASS'?'testpass':'testfail'}">${x.status}</td><td>${x.detail}</td></tr>`).join('')}</table>`}
-
 document.getElementById('newBtn').onclick=()=>newGame(false);
 document.getElementById('autoBtn').onclick=()=>newGame(true);
-document.getElementById('testsBtn').onclick=()=>runAcceptance();
 document.getElementById('exportStateBtn').onclick=()=>S&&downloadJson(`pp025_state_T${S.turn}_${S.seed}.json`,JSON.parse(JSON.stringify(S,(k,v)=>k==='_rng'?undefined:v)));
 document.getElementById('exportLogBtn').onclick=()=>S&&downloadJson(`pp025_log_T${S.turn}_${S.seed}.json`,{version:S.version,schemaVersion:S.schemaVersion,seed:S.seed,testStatus:S.testStatus,diagnostics:S.diagnostics,logs:S.logs});
 renderGaps();runAcceptance();
@@ -1163,5 +1482,209 @@ document.getElementById('autoBtn').onclick=()=>{document.getElementById('autoSee
 })();
 
 </script>
+
+<script>
+(function(){
+'use strict';
+const V05='2.2.11-project-programming-branch-0.25-web-v0.5-setup-r1-visible';
+
+function pp05FmtReq(req){
+  if(!req) return '—';
+  if(typeof req==='string') return req;
+  if(Array.isArray(req)) return req.map(pp05FmtReq).join(' + ');
+  if(typeof req==='object'){
+    return Object.entries(req).map(([k,v])=>`${v>1?v+' ':''}${typeof elemIcon==='function'?elemIcon(k):k}`).join(' + ');
+  }
+  return String(req);
+}
+function pp05FmtReward(r){
+  if(!r) return '—';
+  if(typeof r==='string') return r;
+  if(Array.isArray(r)) return r.map(pp05FmtReward).join(' + ');
+  const out=[];
+  if(r.vp) out.push(`${r.vp}VP`);
+  if(r.gold) out.push(`${r.gold}G`);
+  if(r.tpChoice) out.push(`1 ${Array.isArray(r.tpChoice)?r.tpChoice.join('/') : r.tpChoice} TP`);
+  if(r.tp) out.push(`${r.tp} TP`);
+  return out.length?out.join(' + '):JSON.stringify(r);
+}
+function pp05R1Assignments(){
+  // Prefer live turn-1 displayed contracts if already initialized.
+  const pools = [];
+  if(window.S){
+    if(Array.isArray(S.contracts?.display)) pools.push(...S.contracts.display);
+    if(Array.isArray(S.contractDisplay)) pools.push(...S.contractDisplay);
+    if(Array.isArray(S.currentContracts)) pools.push(...S.currentContracts);
+  }
+  const live = pools.filter(Boolean).slice(0,4);
+  if(live.length===4) return live;
+
+  // Fall back to canonical R1 definitions + current guild assignment map.
+  const defsObj = window.CONTRACT_DEFS || window.CONTRACTS || window.contractDefs || {};
+  const ids=['R1-01','R1-02','R1-03','R1-04'];
+  const defs=ids.map(id=>{
+    if(Array.isArray(defsObj)) return defsObj.find(x=>x.id===id || x.key===id);
+    return defsObj[id] || defsObj[`contract:${id}`];
+  }).filter(Boolean);
+  return defs;
+}
+function pp05GuildForIndex(i,c){
+  return c?.guild || c?.displayGuild || c?.slotGuild ||
+    (Array.isArray(window.S?.guildOrder) ? S.guildOrder[i] : null) ||
+    ['Production','Build','Upgrade','Research'][i];
+}
+function pp05RenderSetupContracts(){
+  const host = document.getElementById('setupR1ContractsV05');
+  if(!host) return;
+  const cards = pp05R1Assignments();
+  if(!cards.length){
+    host.innerHTML='<div class="mini">Turn 1 Contract 尚未初始化。</div>';
+    return;
+  }
+  host.innerHTML = cards.map((c,i)=>{
+    const guild=pp05GuildForIndex(i,c);
+    const req=pp05FmtReq(c.requirement||c.req||c.cost);
+    const slots=c.slots||c.rewards||c.rewardSlots||[];
+    const slotText = Array.isArray(slots)
+      ? slots.map((s,si)=>`<div><b>Slot ${si+1}</b>：${pp05FmtReward(s)}</div>`).join('')
+      : '';
+    return `<div class="card" style="padding:10px">
+      <div style="font-weight:800">${guild}｜${c.id||c.key||'R1 Contract'}</div>
+      <div class="mini">需求：${req}</div>
+      <div class="mini" style="margin-top:5px">${slotText||'獎勵依卡面'}</div>
+    </div>`;
+  }).join('');
+}
+function pp05InjectSetupContracts(){
+  if(document.getElementById('setupR1ContractsWrapV05')) return;
+  const market = document.getElementById('setupProjectMarket') ||
+                 document.querySelector('[data-setup-market]') ||
+                 [...document.querySelectorAll('h3,h2,b,strong')].find(x=>/Project Market/i.test(x.textContent||''))?.parentElement;
+  const decision = document.getElementById('decision') || document.querySelector('.decision');
+  const wrap=document.createElement('div');
+  wrap.id='setupR1ContractsWrapV05';
+  wrap.style.margin='12px 0';
+  wrap.innerHTML=`<div class="sectionTitle" style="font-weight:900;margin-bottom:6px">Turn 1 Contract 分配</div>
+    <div class="mini" style="margin-bottom:8px">Setup 選起始 Project 時即可查看本局第一輪四個 Guild 展示位與 R1 Contract。</div>
+    <div id="setupR1ContractsV05" class="grid"></div>`;
+  if(market?.parentNode) market.parentNode.insertBefore(wrap, market.nextSibling);
+  else if(decision?.parentNode) decision.parentNode.insertBefore(wrap, decision);
+  else document.body.prepend(wrap);
+  pp05RenderSetupContracts();
+}
+
+const prevRender = window.render;
+if(typeof prevRender==='function'){
+  window.render=function(){
+    const r=prevRender.apply(this,arguments);
+    try{
+      const inSetup = !window.S || S.turn===0 || /setup/i.test(String(S.phase||''));
+      if(inSetup){
+        pp05InjectSetupContracts();
+        pp05RenderSetupContracts();
+      }else{
+        document.getElementById('setupR1ContractsWrapV05')?.remove();
+      }
+    }catch(e){ console.error('v0.5 setup R1 display',e); }
+    return r;
+  };
+}
+
+const prevNewGame=window.newGame;
+if(typeof prevNewGame==='function'){
+  window.newGame=function(){
+    const r=prevNewGame.apply(this,arguments);
+    setTimeout(()=>{try{pp05InjectSetupContracts();pp05RenderSetupContracts();}catch(e){}},0);
+    return r;
+  };
+}
+
+window.PP025_WEB_VERSION=V05;
+document.title='元素管道：術式工房 Project × Programming Branch 0.25 v0.5';
+})();
+</script>
+
+
+<script>
+(function(){
+  window.PP025_WEB_VERSION='2.2.11-project-programming-branch-0.25-web-v0.6-setup-contract-market-state-fix';
+  document.title='元素管道：術式工房 Project × Programming Branch 0.25 v0.6';
+})();
+</script>
+
+
+<script>
+(function(){
+ window.PP025_WEB_VERSION='2.2.11-project-programming-branch-0.25-web-v0.7-project-tp-gate-icons';
+ document.title='元素管道：術式工房 Project × Programming Branch 0.25 v0.7';
+})();
+</script>
+
+
+<script>
+(function(){
+ window.PP025_WEB_VERSION='2.2.11-project-programming-branch-0.25-web-v0.8-setup-project-details-expanded-cards';
+ document.title='元素管道：術式工房 Project × Programming Branch 0.25 v0.8';
+})();
+</script>
+
+
+<script>
+(function(){
+ window.PP025_WEB_VERSION='2.2.11-project-programming-branch-0.25-web-v0.9-wheel-direct-build-upgrade';
+ document.title='元素管道：術式工房 Project × Programming Branch 0.25 v0.9';
+})();
+</script>
+
+
+<script>
+(function(){
+  const FEE_PATCH_VERSION='0.25 Fee Trail Missing Canonical Data Patch';
+  function runFeeTrailCanonicalTests(){
+    const errors=[];
+    const assertEq=(name,a,b)=>{if(a!==b)errors.push(`${name}: got ${a}, expected ${b}`)};
+    [[1,1],[4,1],[5,2],[7,2],[8,3],[9,3],[10,4],[11,4],[12,5],[20,13]]
+      .forEach(([p,r])=>assertEq(`feeRate(P${p})`,feeRate(p),r));
+    assertEq('position 0 clamps to P1',feeRate(0),1);
+    assertEq('decimal position floors to integer',feeRate(5.9),2);
+    assertEq('P100 has no upper-trail clamp',feeRate(100),93);
+    assertEq('P20 capped payment example',Math.min(feeRate(20),5),5);
+    assertEq('P20 pressure uses uncapped rate',feeRate(20)>=5,true);
+    window.__PP025_FEE_TEST__={patch:FEE_PATCH_VERSION,passed:errors.length===0,errors};
+    if(errors.length)console.error('[PP0.25 Fee Trail Canonical Test FAIL]',errors);
+    else console.info('[PP0.25 Fee Trail Canonical Test PASS]');
+    return window.__PP025_FEE_TEST__;
+  }
+  window.runFeeTrailCanonicalTests=runFeeTrailCanonicalTests;
+  window.PP025_WEB_VERSION='2.2.11-project-programming-branch-0.25-web-v0.10-fee-trail-canonical-patch';
+  document.title='元素管道：術式工房 Project × Programming Branch 0.25 v0.10';
+  setTimeout(runFeeTrailCanonicalTests,0);
+})();
+</script>
+
+
+<script>
+(function(){
+ window.PP025_WEB_VERSION='2.2.11-project-programming-branch-0.25-web-v0.11-preprogram-market-next-contract-preview';
+ document.title='元素管道：術式工房 Project × Programming Branch 0.25 v0.11';
+})();
+</script>
+
+
+<script>
+(function(){
+ const errs=[];
+ const ae=(n,a,b)=>{if(a!==b)errs.push(`${n}: ${a} != ${b}`)};
+ ae('Outer upgrade cost',upgradeCost({kind:'Outer'}),0);
+ ae('Middle upgrade cost',upgradeCost({kind:'Middle'}),0);
+ ae('Unknown tile upgrade cost',upgradeCost({kind:'Inner'}),0);
+ window.__PP025_UPGRADE_COST_TEST__={passed:errs.length===0,errors:errs};
+ if(errs.length)console.error('[PP0.25 Tile Upgrade Cost FAIL]',errs);
+ else console.info('[PP0.25 Tile Upgrade Cost PASS]');
+ window.PP025_WEB_VERSION='2.2.11-project-programming-branch-0.25-web-v0.12-free-tile-upgrade';
+ document.title='元素管道：術式工房 Project × Programming Branch 0.25 v0.12';
+})();
+</script>
+
 </body>
 </html>
