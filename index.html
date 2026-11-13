@@ -56,7 +56,7 @@ button,input,select,textarea{font:inherit}.top{position:sticky;top:0;z-index:30;
   <div class="section"><h3>Project Market｜7 格 Time Cost 1 / 1 / 1 / 2 / 2 / 3 / 3</h3><div id="projectMarket" class="market"></div></div>
   <div class="section"><h3>Contract Market｜Guild 由展示位置決定</h3><div id="contractMarket" class="market"></div></div>
   <div class="section"><h3>Patron Market</h3><div id="patronMarket" class="market"></div></div>
-  <div class="section"><h3>Machine Slots｜T1 3 Rep / T2 5 Rep；操作均需 ⚙️；無 T3 / Core / Aging / Reservation</h3><div id="machines" class="machineGrid"></div></div>
+  <div class="section"><h3>Machine Slots｜T1 2 Rep / T2 4 Rep；操作均需 ⚙️；無 T3 / Core / Aging / Reservation</h3><div id="machines" class="machineGrid"></div></div>
   <div class="section"><h3>Players</h3><div id="players" class="grid4"></div></div>
   <div class="section"><h3>Sector Wheels</h3><div id="wheels" class="wheelGallery"></div></div>
 </main>
@@ -68,8 +68,8 @@ button,input,select,textarea{font:inherit}.top{position:sticky;top:0;z-index:30;
 </div>
 <script>
 const DATA={"projectDefs":[{"key":"project:F-01","id":"F-01","name":"F-01","category":"Base Unique","gateRaw":"1","effect":"Tap，支付1F：取得2VP。","copies":2,"maxCopies":2,"status":"草案","source":"0.23 Base Unique","installCost":4,"baseFee":0,"baseElement":"Fire","tpGate":1},{"key":"project:F-02","id":"F-02","name":"F-02","category":"Base Unique","gateRaw":"2","effect":"完成Contract時，可支付1F：取得2VP。","copies":2,"maxCopies":2,"status":"草案","source":"0.23 Base Unique","installCost":4,"baseFee":1,"baseElement":"Fire","tpGate":2},{"key":"project:F-03","id":"F-03","name":"F-03","category":"Base Unique","gateRaw":"3","effect":"Fire Sector生產時，若高壓，額外取得3F。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Base Unique","installCost":4,"baseFee":1,"baseElement":"Fire","tpGate":3},{"key":"project:F-04","id":"F-04","name":"F-04","category":"Base Unique","gateRaw":"3","effect":"Tap，齒輪：取得2F；若該次齒輪高壓，再取得4G。","copies":2,"maxCopies":2,"status":"草案","source":"0.23 Base Unique","installCost":3,"baseFee":0,"baseElement":"Fire","tpGate":3},{"key":"project:F-05","id":"F-05","name":"F-05","category":"Base Unique","gateRaw":"4","effect":"執行高壓齒輪時，可Tap取得7G。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Base Unique","installCost":4,"baseFee":1,"baseElement":"Fire","tpGate":4},{"key":"project:F-06","id":"F-06","name":"F-06","category":"Base Unique","gateRaw":"4","effect":"Paid Fee Cap降至10G；每次執行高壓齒輪，取得1F。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Base Unique","installCost":5,"baseFee":1,"baseElement":"Fire","tpGate":4},{"key":"project:F-07","id":"F-07","name":"F-07","category":"Base Unique","gateRaw":"5","effect":"Tap，支付最多4F：每支付1F取得2VP；若高壓，額外取得2VP。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Base Unique","installCost":6,"baseFee":1,"baseElement":"Fire","tpGate":5},{"key":"project:F-08","id":"F-08","name":"F-08","category":"Base Unique","gateRaw":"5","effect":"Fire Sector生產時額外取得2F；若高壓，改為額外取得5F。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Base Unique","installCost":6,"baseFee":2,"baseElement":"Fire","tpGate":5},{"key":"project:F-09","id":"F-09","name":"F-09","category":"Base Unique","gateRaw":"6","effect":"Paid Fee Cap降至5G；每次執行高壓齒輪，取得2F。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Base Unique","installCost":8,"baseFee":2,"baseElement":"Fire","tpGate":6},{"key":"project:F-10","id":"F-10","name":"F-10","category":"Base Unique","gateRaw":"6","effect":"Tap，支付2F，齒輪：取得5VP；若該次齒輪高壓，再取得7G。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Base Unique","installCost":7,"baseFee":1,"baseElement":"Fire","tpGate":6},{"key":"project:F-11","id":"F-11","name":"F-11","category":"Base Unique","gateRaw":"7","effect":"Paid Fee Cap降至5G；每次完成高壓齒輪後，可支付1F取得2VP，無額外次數限制。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Base Unique","installCost":10,"baseFee":2,"baseElement":"Fire","tpGate":7},{"key":"project:F-12","id":"F-12","name":"F-12","category":"Base Unique","gateRaw":"7","effect":"Tap，支付最多8F：每支付1F取得2VP；若本次支付5+ F，額外取得5VP。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Base Unique","installCost":10,"baseFee":2,"baseElement":"Fire","tpGate":7},{"key":"project:E-01","id":"E-01","name":"E-01","category":"Base Unique","gateRaw":"1","effect":"Tap，2 Earth：Upgrade 1個Outer Tile；只可於本輪Production結束後使用。","copies":2,"maxCopies":2,"status":"草案","source":"0.23 Base Unique","installCost":4,"baseFee":0,"baseElement":"Earth","tpGate":1},{"key":"project:E-02","id":"E-02","name":"E-02","category":"Base Unique","gateRaw":"2","effect":"Tap，2 Earth：Draw 2個Outer、Build其中1個合法Outer，支付正常建造費；Production之後使用。","copies":2,"maxCopies":2,"status":"草案","source":"0.23 Base Unique","installCost":3,"baseFee":1,"baseElement":"Earth","tpGate":2},{"key":"project:E-03","id":"E-03","name":"E-03","category":"Base Unique","gateRaw":"3","effect":"Tap，3 Earth：Upgrade最多2個同Sector Tile；Production之後使用。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Base Unique","installCost":4,"baseFee":1,"baseElement":"Earth","tpGate":3},{"key":"project:E-04","id":"E-04","name":"E-04","category":"Base Unique","gateRaw":"3","effect":"每個Sector生產時，依其中已升級Tile各自對應的Base，額外產出最多2B。","copies":2,"maxCopies":2,"status":"草案","source":"0.23 Base Unique","installCost":5,"baseFee":1,"baseElement":"Earth","tpGate":3},{"key":"project:E-05","id":"E-05","name":"E-05","category":"Base Unique","gateRaw":"4","effect":"Tap，3 Earth：Draw 3個Outer、Build最多2個合法Outer，支付正常建造費；Production之後使用。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Base Unique","installCost":5,"baseFee":1,"baseElement":"Earth","tpGate":4},{"key":"project:E-06","id":"E-06","name":"E-06","category":"Base Unique","gateRaw":"4","effect":"每次支付Prolificate齒輪費用時，可改支付2 Earth，仍完整執行齒輪與Fee+1。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Base Unique","installCost":5,"baseFee":1,"baseElement":"Earth","tpGate":4},{"key":"project:E-07","id":"E-07","name":"E-07","category":"Base Unique","gateRaw":"5","effect":"每生產一個Sector後，可支付2 Earth，Upgrade該Sector一個合法Tile。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Base Unique","installCost":6,"baseFee":1,"baseElement":"Earth","tpGate":5},{"key":"project:E-08","id":"E-08","name":"E-08","category":"Base Unique","gateRaw":"5","effect":"每生產一個Sector，取得2G。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Base Unique","installCost":5,"baseFee":1,"baseElement":"Earth","tpGate":5},{"key":"project:E-09","id":"E-09","name":"E-09","category":"Base Unique","gateRaw":"6","effect":"每生產一個Sector後，可支付1 Earth：Draw 1 Outer，選擇是否合法Build於該Sector；建造仍付正常費用。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Base Unique","installCost":6,"baseFee":1,"baseElement":"Earth","tpGate":6},{"key":"project:E-10","id":"E-10","name":"E-10","category":"Base Unique","gateRaw":"6","effect":"每當一個Sector生產時，若該Sector四個Outer已全部升級，取得4VP+4G。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Base Unique","installCost":7,"baseFee":2,"baseElement":"Earth","tpGate":6},{"key":"project:E-11","id":"E-11","name":"E-11","category":"Base Unique","gateRaw":"7","effect":"Tap，齒輪，支付4 Earth：取得1個供下Turn使用的Prolificate Token；Production之後使用。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Base Unique","installCost":8,"baseFee":2,"baseElement":"Earth","tpGate":7},{"key":"project:E-12","id":"E-12","name":"E-12","category":"Base Unique","gateRaw":"7","effect":"每個Sector生產時，每個已升級Outer額外產出1個其本身印製的Base（不可改色、Middle/Inner不計）；若4個Outer皆升級，再額外取得1個該Sector任一Outer印製的Base。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Base Unique","installCost":9,"baseFee":2,"baseElement":"Earth","tpGate":7},{"key":"project:Wi-01","id":"Wi-01","name":"Wi-01","category":"Base Unique","gateRaw":"1","effect":"Tap，支付1 Wind：Fee −2格。","copies":2,"maxCopies":2,"status":"草案","source":"0.23 Base Unique","installCost":3,"baseFee":0,"baseElement":"Wind","tpGate":1},{"key":"project:Wi-02","id":"Wi-02","name":"Wi-02","category":"Base Unique","gateRaw":"2","effect":"完成Contract時，若為該Contract末位完成者（2-Slot第2位／3-Slot第3位），額外取得2G。","copies":2,"maxCopies":2,"status":"草案","source":"0.23 Base Unique","installCost":4,"baseFee":0,"baseElement":"Wind","tpGate":2},{"key":"project:Wi-03","id":"Wi-03","name":"Wi-03","category":"Base Unique","gateRaw":"3","effect":"每次執行齒輪時，若處於低壓，取得1 Wind。","copies":2,"maxCopies":2,"status":"草案","source":"0.23 Base Unique","installCost":4,"baseFee":1,"baseElement":"Wind","tpGate":3},{"key":"project:Wi-04","id":"Wi-04","name":"Wi-04","category":"Base Unique","gateRaw":"3","effect":"每次執行齒輪時，可以支付1 Wind：Fee −1格（可抵銷該齒輪的+1格）。","copies":2,"maxCopies":2,"status":"草案","source":"0.23 Base Unique","installCost":4,"baseFee":0,"baseElement":"Wind","tpGate":3},{"key":"project:Wi-05","id":"Wi-05","name":"Wi-05","category":"Base Unique","gateRaw":"4","effect":"完成Contract時，若處於低壓，可支付1 Wind額外取得2VP。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Base Unique","installCost":5,"baseFee":1,"baseElement":"Wind","tpGate":4},{"key":"project:Wi-06","id":"Wi-06","name":"Wi-06","category":"Base Unique","gateRaw":"4","effect":"完成Contract時，若不是第一位完成者，可支付1 Wind，額外取得2VP並 Fee −1格。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Base Unique","installCost":5,"baseFee":1,"baseElement":"Wind","tpGate":4},{"key":"project:Wi-07","id":"Wi-07","name":"Wi-07","category":"Base Unique","gateRaw":"5","effect":"Production Phase開始時若處於低壓，額外取得3 Wind+3G。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Base Unique","installCost":5,"baseFee":1,"baseElement":"Wind","tpGate":5},{"key":"project:Wi-08","id":"Wi-08","name":"Wi-08","category":"Base Unique","gateRaw":"5","effect":"使用 Machine Slot 時，若處於低壓，額外取得3G。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Base Unique","installCost":5,"baseFee":1,"baseElement":"Wind","tpGate":5},{"key":"project:Wi-09","id":"Wi-09","name":"Wi-09","category":"Base Unique","gateRaw":"6","effect":"低壓時，Wind Sector生產結束後額外取得3 Wind。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Base Unique","installCost":6,"baseFee":1,"baseElement":"Wind","tpGate":6},{"key":"project:Wi-10","id":"Wi-10","name":"Wi-10","category":"Base Unique","gateRaw":"6","effect":"Tap：完成非第一順位Contract時，額外取得3VP+4G。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Base Unique","installCost":6,"baseFee":1,"baseElement":"Wind","tpGate":6},{"key":"project:Wi-11","id":"Wi-11","name":"Wi-11","category":"Base Unique","gateRaw":"7","effect":"每次執行齒輪時，可支付1 Wind：Fee −1格；若該次執行齒輪時處於低壓，改為直接 Fee −1格，無須支付Wind。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Base Unique","installCost":9,"baseFee":2,"baseElement":"Wind","tpGate":7},{"key":"project:Wi-12","id":"Wi-12","name":"Wi-12","category":"Base Unique","gateRaw":"7","effect":"完成非第一順位Contract時，額外取得2VP+4G；若處於低壓，改為4VP+6G。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Base Unique","installCost":9,"baseFee":2,"baseElement":"Wind","tpGate":7},{"key":"project:W-01","id":"W-01","name":"W-01","category":"Base Unique","gateRaw":"1","effect":"橫置，支付1W：獲得4G。","copies":2,"maxCopies":2,"status":"草案","source":"0.23 Base Unique","installCost":4,"baseFee":0,"baseElement":"Water","tpGate":1},{"key":"project:W-02","id":"W-02","name":"W-02","category":"Base Unique","gateRaw":"2","effect":"橫置；履約時選1種Base需求類型，其任意數量可由W代付。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Base Unique","installCost":2,"baseFee":1,"baseElement":"Water","tpGate":2},{"key":"project:W-03","id":"W-03","name":"W-03","category":"Base Unique","gateRaw":"3","effect":"支付2W→獲得任意1個其他Base（不橫置）；每次Water Sector生產達4+W，額外+1W，每次Sector生產最多+1W。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Base Unique","installCost":3,"baseFee":1,"baseElement":"Water","tpGate":3},{"key":"project:W-04","id":"W-04","name":"W-04","category":"Base Unique","gateRaw":"3","effect":"橫置；擇一：1W→3G／2W→7G／3W→12G。","copies":2,"maxCopies":2,"status":"草案","source":"0.23 Base Unique","installCost":5,"baseFee":1,"baseElement":"Water","tpGate":3},{"key":"project:W-05","id":"W-05","name":"W-05","category":"Base Unique","gateRaw":"4","effect":"每次Water Sector生產，依其Sector Snapshot每1W獲得1G。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Base Unique","installCost":4,"baseFee":1,"baseElement":"Water","tpGate":4},{"key":"project:W-06","id":"W-06","name":"W-06","category":"Base Unique","gateRaw":"4","effect":"每次完成實際支付W的Contract後，可支付1G取得1W。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Base Unique","installCost":5,"baseFee":1,"baseElement":"Water","tpGate":4},{"key":"project:W-07","id":"W-07","name":"W-07","category":"Base Unique","gateRaw":"5","effect":"橫置；完成當前Contract時，可用W替代任意數量、任意類型的其他Base。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Base Unique","installCost":5,"baseFee":1,"baseElement":"Water","tpGate":5},{"key":"project:W-08","id":"W-08","name":"W-08","category":"Base Unique","gateRaw":"5","effect":"Water Sector生產時，依Sector Snapshot每1W得1G，且每完整3W額外+1W（不遞迴）。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Base Unique","installCost":4,"baseFee":1,"baseElement":"Water","tpGate":5},{"key":"project:W-09","id":"W-09","name":"W-09","category":"Base Unique","gateRaw":"6","effect":"橫置，支付2W：盲抽2張Project，選1加入手牌、另1張洗混放回 Project 牌庫底。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Base Unique","installCost":6,"baseFee":2,"baseElement":"Water","tpGate":6},{"key":"project:W-10","id":"W-10","name":"W-10","category":"Base Unique","gateRaw":"6","effect":"每次完成實際支付W的Contract後，獲得1W。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Base Unique","installCost":5,"baseFee":1,"baseElement":"Water","tpGate":6},{"key":"project:W-11","id":"W-11","name":"W-11","category":"Base Unique","gateRaw":"7","effect":"你的Water可視為任何Base進行支付（非真正轉換／生產）。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Base Unique","installCost":8,"baseFee":2,"baseElement":"Water","tpGate":7},{"key":"project:W-12","id":"W-12","name":"W-12","category":"Base Unique","gateRaw":"7","effect":"每當你透過合法來源取得Project時，可支付2W額外盲抽1張到手牌；額外抽牌不自行再次觸發此效果。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Base Unique","installCost":10,"baseFee":2,"baseElement":"Water","tpGate":7},{"key":"project:ST-01","id":"ST-01","name":"ST-01","category":"Compound Unique","gateRaw":"1","effect":"Tap，支付 X Steam：指定 X 位不同玩家，各 Fee +3，可包含自己。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Compound Unique","installCost":4,"baseFee":1,"family":"Steam","parentGate":[2,2]},{"key":"project:ST-02","id":"ST-02","name":"ST-02","category":"Compound Unique","gateRaw":"2","effect":"每次執行高壓齒輪時，可支付 1 Steam，取得 3VP + 3G。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Compound Unique","installCost":5,"baseFee":1,"family":"Steam","parentGate":[3,3]},{"key":"project:ST-03","id":"ST-03","name":"ST-03","category":"Compound Unique","gateRaw":"3","effect":"每次完成任意 Contract 時，可額外支付 1 Steam，取得 4VP + 2G。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Compound Unique","installCost":6,"baseFee":1,"family":"Steam","parentGate":[4,4]},{"key":"project:ST-04","id":"ST-04","name":"ST-04","category":"Compound Unique","gateRaw":"4","effect":"Tap，支付 1 Steam，齒輪：取得 2 Fire + 2 Water；若高壓齒輪額外 +3G。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Compound Unique","installCost":5,"baseFee":1,"family":"Steam","parentGate":[4,4]},{"key":"project:ST-05","id":"ST-05","name":"ST-05","category":"Compound Unique","gateRaw":"5","effect":"Tap，支付 2 Steam：於合法 Contract Phase 操作機會特殊操作一個 Machine Slot，須正常結算齒輪與 Owner Income；不改變 Slot 的 Ready／Used、Frozen 狀態。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Compound Unique","installCost":8,"baseFee":2,"family":"Steam","parentGate":[5,5]},{"key":"project:ST-06","id":"ST-06","name":"ST-06","category":"Compound Unique","gateRaw":"6","effect":"Tap，支付 2 Steam：所有玩家 Fee +4；加壓後自己處於高壓時取得 4VP。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Compound Unique","installCost":8,"baseFee":2,"family":"Steam","parentGate":[6,6]},{"key":"project:MG-01","id":"MG-01","name":"MG-01","category":"Compound Unique","gateRaw":"1","effect":"Tap，支付 X Magma：指定 X 名不同對手，各選其一個 Sector，由該對手選合法 Outer 放熔岩；無合法位置時 −4VP。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Compound Unique","installCost":4,"baseFee":1,"family":"Magma","parentGate":[2,2]},{"key":"project:MG-02","id":"MG-02","name":"MG-02","category":"Compound Unique","gateRaw":"2","effect":"Tap，支付 1 Magma：若目前高壓，取得 4VP + 2G。〔替代候選採用〕","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Compound Unique","installCost":5,"baseFee":1,"family":"Magma","parentGate":[3,3]},{"key":"project:MG-03","id":"MG-03","name":"MG-03","category":"Compound Unique","gateRaw":"3","effect":"Sector 生產時若高壓，可支付 1 Magma，該 Sector 每個已升級 Outer 各額外產出其印製 Base 1 個。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Compound Unique","installCost":5,"baseFee":1,"family":"Magma","parentGate":[4,4]},{"key":"project:MG-04","id":"MG-04","name":"MG-04","category":"Compound Unique","gateRaw":"4","effect":"每次高壓齒輪可支付 1 Magma，取得 3VP + 3G。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Compound Unique","installCost":5,"baseFee":1,"family":"Magma","parentGate":[4,4]},{"key":"project:MG-05","id":"MG-05","name":"MG-05","category":"Compound Unique","gateRaw":"5","effect":"Tap，支付 2 Magma：所有其他玩家各受一次熔岩攻擊；可選擇自己也受一次，若如此所有其他玩家各再受一次。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Compound Unique","installCost":8,"baseFee":2,"family":"Magma","parentGate":[5,5]},{"key":"project:MG-06","id":"MG-06","name":"MG-06","category":"Compound Unique","gateRaw":"6","effect":"Tap，在 Sector Production 開始時支付 2 Magma：非高壓時該 Sector 已升級 Tile 額外產出其未升級面基礎產量；高壓時該 Sector 所有 Tile 均如此額外產出。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Compound Unique","installCost":9,"baseFee":2,"family":"Magma","parentGate":[6,6]},{"key":"project:SS-01","id":"SS-01","name":"SS-01","category":"Compound Unique","gateRaw":"1","effect":"Tap，支付 1 Sandstorm：所有其他玩家各受一次精準沙暴標記攻擊，目標為合法 Outer／Middle。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Compound Unique","installCost":4,"baseFee":1,"family":"Sandstorm","parentGate":[2,2]},{"key":"project:SS-02","id":"SS-02","name":"SS-02","category":"Compound Unique","gateRaw":"2","effect":"Tap，支付 1 Sandstorm：Untap 自己另一張已 Tap Project。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Compound Unique","installCost":5,"baseFee":1,"family":"Sandstorm","parentGate":[3,3]},{"key":"project:SS-03","id":"SS-03","name":"SS-03","category":"Compound Unique","gateRaw":"3","effect":"Production Phase 結束後，Tap 並支付 1 Sandstorm：Fee −2，且可免費 Reverse。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Compound Unique","installCost":4,"baseFee":0,"family":"Sandstorm","parentGate":[4,4]},{"key":"project:SS-04","id":"SS-04","name":"SS-04","category":"Compound Unique","gateRaw":"4","effect":"每次使用一張 Project 的 Tap 能力後，可支付 1 Sandstorm，使 Fee −1；無每 Turn 次數限制。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Compound Unique","installCost":5,"baseFee":1,"family":"Sandstorm","parentGate":[4,4]},{"key":"project:SS-05","id":"SS-05","name":"SS-05","category":"Compound Unique","gateRaw":"5","effect":"Tap，支付 1 Sandstorm：所有其他玩家各受一次沙暴攻擊；若發動時低壓，可向各對手追加一次僅指定 Outer 的沙暴攻擊。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Compound Unique","installCost":8,"baseFee":1,"family":"Sandstorm","parentGate":[5,5]},{"key":"project:SS-06","id":"SS-06","name":"SS-06","category":"Compound Unique","gateRaw":"6","effect":"Tap，支付 3 Sandstorm，齒輪：Untap 自己所有其他已 Tap Project。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Compound Unique","installCost":10,"baseFee":2,"family":"Sandstorm","parentGate":[6,6]},{"key":"project:FR-01","id":"FR-01","name":"FR-01","category":"Compound Unique","gateRaw":"1","effect":"Tap，支付 1 Frost：選擇任意數量不同玩家，各 Fee −3，可包含自己。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Compound Unique","installCost":4,"baseFee":0,"family":"Frost","parentGate":[2,2]},{"key":"project:FR-02","id":"FR-02","name":"FR-02","category":"Compound Unique","gateRaw":"2","effect":"Tap，支付 1 Frost：凍結一個 Machine Slot，本 Turn 只有自己可以正常使用。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Compound Unique","installCost":5,"baseFee":1,"family":"Frost","parentGate":[3,3]},{"key":"project:FR-03","id":"FR-03","name":"FR-03","category":"Compound Unique","gateRaw":"3","effect":"每次執行低壓齒輪時，可以支付 1 Frost，取得 2VP + 2G。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Compound Unique","installCost":5,"baseFee":0,"family":"Frost","parentGate":[4,4]},{"key":"project:FR-04","id":"FR-04","name":"FR-04","category":"Compound Unique","gateRaw":"4","effect":"Base Fee −2；Production Phase 開始時若低壓，取得 1 Frost。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Compound Unique","installCost":8,"baseFee":-2,"family":"Frost","parentGate":[4,4]},{"key":"project:FR-05","id":"FR-05","name":"FR-05","category":"Compound Unique","gateRaw":"5","effect":"Tap，支付 2 Frost：凍結最多三個 Machine Slot，本 Turn 只有自己可正常使用。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Compound Unique","installCost":8,"baseFee":1,"family":"Frost","parentGate":[5,5]},{"key":"project:FR-06","id":"FR-06","name":"FR-06","category":"Compound Unique","gateRaw":"6","effect":"Tap，支付 2 Frost：全體 Fee −4；若降壓後自己處於低壓，取得 4VP。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Compound Unique","installCost":8,"baseFee":1,"family":"Frost","parentGate":[6,6]},{"key":"project:N-01","id":"N-01","name":"N-01","category":"Neutral","gateRaw":"—","effect":"安裝時查看牌庫頂 5 張，擇 1 張加入手牌，未選 4 張洗勻放回牌庫底；本卡棄置（未選 Project 依抽 N 選 1 通則入牌庫底）。","copies":2,"maxCopies":2,"status":"草案","source":"0.23 Neutral","installCost":3,"baseFee":0},{"key":"project:N-02","id":"N-02","name":"N-02","category":"Neutral","gateRaw":"—","effect":"安裝取得 10G 並放 10 貸款標記；隨時可付 1G 移除 1 標記；清零自動棄置；任何棄置時或終局，每剩一標記 −1VP。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Neutral","installCost":0,"baseFee":0},{"key":"project:N-03","id":"N-03","name":"N-03","category":"Neutral","gateRaw":"—","effect":"每 Turn 開始 +1 投資標記；可隨時主動棄置，取得標記數等量 G；終局若仍在場，每標記 +1VP。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Neutral","installCost":1,"baseFee":1},{"key":"project:N-04","id":"N-04","name":"N-04","category":"Neutral","gateRaw":"—","effect":"安裝時三選一：移除一個 Wheel 上干涉標記／抽 2 Outer 並合法 Build 1 個／Upgrade 1 Outer；結算棄置。","copies":2,"maxCopies":2,"status":"草案","source":"0.23 Neutral","installCost":3,"baseFee":0},{"key":"project:N-05","id":"N-05","name":"N-05","category":"Neutral","gateRaw":"—","effect":"棄置任意數量自己其他已安裝、可合法棄置的 Project；每張取得 5G；結算本卡棄置。任何棄置觸發的債務／效果須正常清算。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Neutral","installCost":0,"baseFee":0},{"key":"project:N-06","id":"N-06","name":"N-06","category":"Neutral","gateRaw":"—","effect":"抽 3 Outer，在同 Sector 合法 Build 最多 2 個，支付正常建造費；結算棄置。","copies":2,"maxCopies":2,"status":"草案","source":"0.23 Neutral","installCost":4,"baseFee":0},{"key":"project:N-08","id":"N-08","name":"N-08","category":"Neutral","gateRaw":"—","effect":"安裝時取得任意 1 Compound，結算棄置；已取消「任意 2 Base」及舊 Tap 轉換選項。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Neutral","installCost":4,"baseFee":0},{"key":"project:N-10","id":"N-10","name":"N-10","category":"Neutral","gateRaw":"—","effect":"每次完成 Contract 後可將最多 3G 存在本卡上；隨時可取回存金；終局每保留 2G 取得 1VP。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Neutral","installCost":3,"baseFee":1},{"key":"project:N-11","id":"N-11","name":"N-11","category":"Neutral","gateRaw":"—","effect":"某 Sector Production Snapshot 確立前：Tap 並棄置，該 Sector 本次額外取得任意 2 Base（可任意元素組合，不限 Outer 印製）。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Neutral","installCost":4,"baseFee":0},{"key":"project:N-12","id":"N-12","name":"N-12","category":"Neutral","gateRaw":"—","effect":"每 Turn 第一次執行 Research 時，查看 Project 牌庫頂端 2 張，取 1 張加入手牌，另 1 張棄置。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Neutral","installCost":4,"baseFee":1},{"key":"project:BR-01","id":"BR-01","name":"BR-01","category":"Breadth","gateRaw":"四 TP 各≥1","effect":"Tap：支付任意 1 Base，取得任意 1 Base。","copies":2,"maxCopies":2,"status":"草案","source":"0.23 Breadth","installCost":0,"baseFee":0,"allBaseTpGate":1},{"key":"project:BR-02","id":"BR-02","name":"BR-02","category":"Breadth","gateRaw":"四 TP 各≥2","effect":"Tap：支付任意 1 Compound，取得任意 1 Compound。","copies":2,"maxCopies":2,"status":"草案","source":"0.23 Breadth","installCost":0,"baseFee":0,"allBaseTpGate":2},{"key":"project:BR-06","id":"BR-06","name":"BR-06","category":"Breadth","gateRaw":"四 TP 各≥3","effect":"Tap：支付任意 2 Base，取得任意 2 Base。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Breadth","installCost":0,"baseFee":0,"allBaseTpGate":3},{"key":"project:BR-07","id":"BR-07","name":"BR-07","category":"Breadth","gateRaw":"四 TP 各≥2","effect":"每次完成 Contract 時，額外取得 1VP；無其他支付種類條件。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Breadth","installCost":3,"baseFee":1,"allBaseTpGate":2},{"key":"project:BR-03","id":"BR-03","name":"BR-03","category":"Breadth","gateRaw":"四 TP 各≥1","effect":"安裝時，從 Patron 市場選一個 Commission 放到面前；未完成 Commission 持有上限改為 2；本卡不可自願棄置；終局 −2VP。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Breadth","installCost":3,"baseFee":0,"allBaseTpGate":1},{"key":"project:BR-04","id":"BR-04","name":"BR-04","category":"Breadth","gateRaw":"四 TP 各≥4","effect":"同一 Turn 可多次完成相同 Contract；每次須正常支付、實際占用未用 Slot，取得該 Slot 完整獎勵和對應 Reputation。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Breadth","installCost":4,"baseFee":2,"allBaseTpGate":4},{"key":"project:BR-05","id":"BR-05","name":"BR-05","category":"Breadth","gateRaw":"四 TP 各≥3","effect":"當 Contract 正常 Slot 全滿且本 Turn 你未完成該 Contract，仍可完成一次；取得最低名次 Slot 的非 Reputation 獎勵，不占 Slot、不取得 Reputation。","copies":1,"maxCopies":2,"status":"草案","source":"0.23 Breadth","installCost":3,"baseFee":1,"allBaseTpGate":3},{"key":"production:T1:W-F","id":"T1:W-F","name":"Production Tech 1 · W/F","category":"Production","tech":1,"printed":"W/F","dualType":"元素面二選一","copies":2,"status":"已定","installCost":2,"baseFee":0,"effect":"六種雙元素配對各×2；選 X／Y 單元素面，Production Phase 開始 +1 該 Base"},{"key":"production:T1:W-E","id":"T1:W-E","name":"Production Tech 1 · W/E","category":"Production","tech":1,"printed":"W/E","dualType":"元素面二選一","copies":2,"status":"已定","installCost":2,"baseFee":0,"effect":"六種雙元素配對各×2；選 X／Y 單元素面，Production Phase 開始 +1 該 Base"},{"key":"production:T1:W-Wi","id":"T1:W-Wi","name":"Production Tech 1 · W/Wi","category":"Production","tech":1,"printed":"W/Wi","dualType":"元素面二選一","copies":2,"status":"已定","installCost":2,"baseFee":0,"effect":"六種雙元素配對各×2；選 X／Y 單元素面，Production Phase 開始 +1 該 Base"},{"key":"production:T1:F-E","id":"T1:F-E","name":"Production Tech 1 · F/E","category":"Production","tech":1,"printed":"F/E","dualType":"元素面二選一","copies":2,"status":"已定","installCost":2,"baseFee":0,"effect":"六種雙元素配對各×2；選 X／Y 單元素面，Production Phase 開始 +1 該 Base"},{"key":"production:T1:F-Wi","id":"T1:F-Wi","name":"Production Tech 1 · F/Wi","category":"Production","tech":1,"printed":"F/Wi","dualType":"元素面二選一","copies":2,"status":"已定","installCost":2,"baseFee":0,"effect":"六種雙元素配對各×2；選 X／Y 單元素面，Production Phase 開始 +1 該 Base"},{"key":"production:T1:E-Wi","id":"T1:E-Wi","name":"Production Tech 1 · E/Wi","category":"Production","tech":1,"printed":"E/Wi","dualType":"元素面二選一","copies":2,"status":"已定","installCost":2,"baseFee":0,"effect":"六種雙元素配對各×2；選 X／Y 單元素面，Production Phase 開始 +1 該 Base"},{"key":"production:T3:W-F","id":"T3:W-F","name":"Production Tech 3 · W/F","category":"Production","tech":3,"printed":"W/F","dualType":"元素面二選一","copies":1,"status":"已定","installCost":3,"baseFee":1,"effect":"六種雙元素配對各×1；選 X／Y 單元素面，Production Phase 開始 +2 該 Base"},{"key":"production:T3:W-E","id":"T3:W-E","name":"Production Tech 3 · W/E","category":"Production","tech":3,"printed":"W/E","dualType":"元素面二選一","copies":1,"status":"已定","installCost":3,"baseFee":1,"effect":"六種雙元素配對各×1；選 X／Y 單元素面，Production Phase 開始 +2 該 Base"},{"key":"production:T3:W-Wi","id":"T3:W-Wi","name":"Production Tech 3 · W/Wi","category":"Production","tech":3,"printed":"W/Wi","dualType":"元素面二選一","copies":1,"status":"已定","installCost":3,"baseFee":1,"effect":"六種雙元素配對各×1；選 X／Y 單元素面，Production Phase 開始 +2 該 Base"},{"key":"production:T3:F-E","id":"T3:F-E","name":"Production Tech 3 · F/E","category":"Production","tech":3,"printed":"F/E","dualType":"元素面二選一","copies":1,"status":"已定","installCost":3,"baseFee":1,"effect":"六種雙元素配對各×1；選 X／Y 單元素面，Production Phase 開始 +2 該 Base"},{"key":"production:T3:F-Wi","id":"T3:F-Wi","name":"Production Tech 3 · F/Wi","category":"Production","tech":3,"printed":"F/Wi","dualType":"元素面二選一","copies":1,"status":"已定","installCost":3,"baseFee":1,"effect":"六種雙元素配對各×1；選 X／Y 單元素面，Production Phase 開始 +2 該 Base"},{"key":"production:T3:E-Wi","id":"T3:E-Wi","name":"Production Tech 3 · E/Wi","category":"Production","tech":3,"printed":"E/Wi","dualType":"元素面二選一","copies":1,"status":"已定","installCost":3,"baseFee":1,"effect":"六種雙元素配對各×1；選 X／Y 單元素面，Production Phase 開始 +2 該 Base"},{"key":"production:T5:W-F","id":"T5:W-F","name":"Production Tech 5 · W/F","category":"Production","tech":5,"printed":"W/F","dualType":"元素面二選一","copies":1,"status":"已定","installCost":6,"baseFee":2,"effect":"六種雙元素配對各×1；選 X／Y 單元素面，Production Phase 開始 +3 該 Base"},{"key":"production:T5:W-E","id":"T5:W-E","name":"Production Tech 5 · W/E","category":"Production","tech":5,"printed":"W/E","dualType":"元素面二選一","copies":1,"status":"已定","installCost":6,"baseFee":2,"effect":"六種雙元素配對各×1；選 X／Y 單元素面，Production Phase 開始 +3 該 Base"},{"key":"production:T5:W-Wi","id":"T5:W-Wi","name":"Production Tech 5 · W/Wi","category":"Production","tech":5,"printed":"W/Wi","dualType":"元素面二選一","copies":1,"status":"已定","installCost":6,"baseFee":2,"effect":"六種雙元素配對各×1；選 X／Y 單元素面，Production Phase 開始 +3 該 Base"},{"key":"production:T5:F-E","id":"T5:F-E","name":"Production Tech 5 · F/E","category":"Production","tech":5,"printed":"F/E","dualType":"元素面二選一","copies":1,"status":"已定","installCost":6,"baseFee":2,"effect":"六種雙元素配對各×1；選 X／Y 單元素面，Production Phase 開始 +3 該 Base"},{"key":"production:T5:F-Wi","id":"T5:F-Wi","name":"Production Tech 5 · F/Wi","category":"Production","tech":5,"printed":"F/Wi","dualType":"元素面二選一","copies":1,"status":"已定","installCost":6,"baseFee":2,"effect":"六種雙元素配對各×1；選 X／Y 單元素面，Production Phase 開始 +3 該 Base"},{"key":"production:T5:E-Wi","id":"T5:E-Wi","name":"Production Tech 5 · E/Wi","category":"Production","tech":5,"printed":"E/Wi","dualType":"元素面二選一","copies":1,"status":"已定","installCost":6,"baseFee":2,"effect":"六種雙元素配對各×1；選 X／Y 單元素面，Production Phase 開始 +3 該 Base"},{"key":"production:T2:W","id":"T2:W","name":"Production Tech 2 · W","category":"Production","tech":2,"printed":"W","dualType":"Sector/Global 二選一","copies":2,"status":"已定","installCost":2,"baseFee":1,"effect":"四 Base 各×2；Sector 對應元素 +2B／Global 每 Production Phase 開始 +1B"},{"key":"production:T2:F","id":"T2:F","name":"Production Tech 2 · F","category":"Production","tech":2,"printed":"F","dualType":"Sector/Global 二選一","copies":2,"status":"已定","installCost":2,"baseFee":1,"effect":"四 Base 各×2；Sector 對應元素 +2B／Global 每 Production Phase 開始 +1B"},{"key":"production:T2:E","id":"T2:E","name":"Production Tech 2 · E","category":"Production","tech":2,"printed":"E","dualType":"Sector/Global 二選一","copies":2,"status":"已定","installCost":2,"baseFee":1,"effect":"四 Base 各×2；Sector 對應元素 +2B／Global 每 Production Phase 開始 +1B"},{"key":"production:T2:Wi","id":"T2:Wi","name":"Production Tech 2 · Wi","category":"Production","tech":2,"printed":"Wi","dualType":"Sector/Global 二選一","copies":2,"status":"已定","installCost":2,"baseFee":1,"effect":"四 Base 各×2；Sector 對應元素 +2B／Global 每 Production Phase 開始 +1B"},{"key":"production:T4:W","id":"T4:W","name":"Production Tech 4 · W","category":"Production","tech":4,"printed":"W","dualType":"Sector/Global 二選一","copies":1,"status":"已定","installCost":5,"baseFee":2,"effect":"四 Base 各×1；Sector +4B／Global 每 Production Phase 開始 +2B"},{"key":"production:T4:F","id":"T4:F","name":"Production Tech 4 · F","category":"Production","tech":4,"printed":"F","dualType":"Sector/Global 二選一","copies":1,"status":"已定","installCost":5,"baseFee":2,"effect":"四 Base 各×1；Sector +4B／Global 每 Production Phase 開始 +2B"},{"key":"production:T4:E","id":"T4:E","name":"Production Tech 4 · E","category":"Production","tech":4,"printed":"E","dualType":"Sector/Global 二選一","copies":1,"status":"已定","installCost":5,"baseFee":2,"effect":"四 Base 各×1；Sector +4B／Global 每 Production Phase 開始 +2B"},{"key":"production:T4:Wi","id":"T4:Wi","name":"Production Tech 4 · Wi","category":"Production","tech":4,"printed":"Wi","dualType":"Sector/Global 二選一","copies":1,"status":"已定","installCost":5,"baseFee":2,"effect":"四 Base 各×1；Sector +4B／Global 每 Production Phase 開始 +2B"},{"key":"production:T6:W","id":"T6:W","name":"Production Tech 6 · W","category":"Production","tech":6,"printed":"W","dualType":"Sector/Global 二選一","copies":1,"status":"已定","installCost":8,"baseFee":3,"effect":"四 Base 各×1；Sector +6B／Global 每 Production Phase 開始 +3B"},{"key":"production:T6:F","id":"T6:F","name":"Production Tech 6 · F","category":"Production","tech":6,"printed":"F","dualType":"Sector/Global 二選一","copies":1,"status":"已定","installCost":8,"baseFee":3,"effect":"四 Base 各×1；Sector +6B／Global 每 Production Phase 開始 +3B"},{"key":"production:T6:E","id":"T6:E","name":"Production Tech 6 · E","category":"Production","tech":6,"printed":"E","dualType":"Sector/Global 二選一","copies":1,"status":"已定","installCost":8,"baseFee":3,"effect":"四 Base 各×1；Sector +6B／Global 每 Production Phase 開始 +3B"},{"key":"production:T6:Wi","id":"T6:Wi","name":"Production Tech 6 · Wi","category":"Production","tech":6,"printed":"Wi","dualType":"Sector/Global 二選一","copies":1,"status":"已定","installCost":8,"baseFee":3,"effect":"四 Base 各×1；Sector +6B／Global 每 Production Phase 開始 +3B"},{"key":"compound-template:Steam:S1","id":"Steam-S1","name":"Steam S1","category":"Compound Template","family":"Steam","parents":["Water","Fire"],"parentGate":[3,3],"installCost":5,"baseFee":1,"copies":1,"effect":"Sector Mode：對應 Compound Sector Production +2 Compound；Global Mode：Production Phase Start +1 Compound。","definitionOnly":false,"maxCopies":1,"status":"0.25 confirmed physical copy"},{"key":"compound-template:Steam:S2","id":"Steam-S2","name":"Steam S2","category":"Compound Template","family":"Steam","parents":["Water","Fire"],"parentGate":[2,2],"installCost":4,"baseFee":0,"copies":1,"effect":"Sector Mode：對應 Sector Production 合計 +2 Parent Base；Global Mode：Tap，兩 Parent 各付1→1 Compound，可做1–2組。","definitionOnly":false,"maxCopies":1,"status":"0.25 confirmed physical copy"},{"key":"compound-template:Magma:S1","id":"Magma-S1","name":"Magma S1","category":"Compound Template","family":"Magma","parents":["Fire","Earth"],"parentGate":[3,3],"installCost":5,"baseFee":1,"copies":1,"effect":"Sector Mode：對應 Compound Sector Production +2 Compound；Global Mode：Production Phase Start +1 Compound。","definitionOnly":false,"maxCopies":1,"status":"0.25 confirmed physical copy"},{"key":"compound-template:Magma:S2","id":"Magma-S2","name":"Magma S2","category":"Compound Template","family":"Magma","parents":["Fire","Earth"],"parentGate":[2,2],"installCost":4,"baseFee":0,"copies":1,"effect":"Sector Mode：對應 Sector Production 合計 +2 Parent Base；Global Mode：Tap，兩 Parent 各付1→1 Compound，可做1–2組。","definitionOnly":false,"maxCopies":1,"status":"0.25 confirmed physical copy"},{"key":"compound-template:Sandstorm:S1","id":"Sandstorm-S1","name":"Sandstorm S1","category":"Compound Template","family":"Sandstorm","parents":["Earth","Wind"],"parentGate":[3,3],"installCost":5,"baseFee":1,"copies":1,"effect":"Sector Mode：對應 Compound Sector Production +2 Compound；Global Mode：Production Phase Start +1 Compound。","definitionOnly":false,"maxCopies":1,"status":"0.25 confirmed physical copy"},{"key":"compound-template:Sandstorm:S2","id":"Sandstorm-S2","name":"Sandstorm S2","category":"Compound Template","family":"Sandstorm","parents":["Earth","Wind"],"parentGate":[2,2],"installCost":4,"baseFee":0,"copies":1,"effect":"Sector Mode：對應 Sector Production 合計 +2 Parent Base；Global Mode：Tap，兩 Parent 各付1→1 Compound，可做1–2組。","definitionOnly":false,"maxCopies":1,"status":"0.25 confirmed physical copy"},{"key":"compound-template:Frost:S1","id":"Frost-S1","name":"Frost S1","category":"Compound Template","family":"Frost","parents":["Wind","Water"],"parentGate":[3,3],"installCost":5,"baseFee":1,"copies":1,"effect":"Sector Mode：對應 Compound Sector Production +2 Compound；Global Mode：Production Phase Start +1 Compound。","definitionOnly":false,"maxCopies":1,"status":"0.25 confirmed physical copy"},{"key":"compound-template:Frost:S2","id":"Frost-S2","name":"Frost S2","category":"Compound Template","family":"Frost","parents":["Wind","Water"],"parentGate":[2,2],"installCost":4,"baseFee":0,"copies":1,"effect":"Sector Mode：對應 Sector Production 合計 +2 Parent Base；Global Mode：Tap，兩 Parent 各付1→1 Compound，可做1–2組。","definitionOnly":false,"maxCopies":1,"status":"0.25 confirmed physical copy"}],"contracts":[{"id":"R1-01","pool":"R1","req":{"Water":1,"Fire":1},"slots":[{"vp":1,"gold":4,"tpChoices":["Water","Fire"]},{"vp":1,"gold":4,"tpChoices":[]}]},{"id":"R1-02","pool":"R1","req":{"Water":1,"Wind":1},"slots":[{"vp":1,"gold":4,"tpChoices":["Water","Wind"]},{"vp":1,"gold":4,"tpChoices":[]}]},{"id":"R1-03","pool":"R1","req":{"Wind":1,"Earth":1},"slots":[{"vp":1,"gold":4,"tpChoices":["Wind","Earth"]},{"vp":1,"gold":4,"tpChoices":[]}]},{"id":"R1-04","pool":"R1","req":{"Fire":1,"Earth":1},"slots":[{"vp":1,"gold":4,"tpChoices":["Fire","Earth"]},{"vp":1,"gold":4,"tpChoices":[]}]},{"id":"T1-01","pool":"T1","req":{"Water":3},"slots":[{"vp":1,"gold":8,"tpChoices":["Water"]},{"vp":1,"gold":7,"tpChoices":[]}]},{"id":"T1-02","pool":"T1","req":{"Fire":3},"slots":[{"vp":1,"gold":8,"tpChoices":["Fire"]},{"vp":1,"gold":7,"tpChoices":[]}]},{"id":"T1-03","pool":"T1","req":{"Earth":3},"slots":[{"vp":1,"gold":8,"tpChoices":["Earth"]},{"vp":1,"gold":7,"tpChoices":[]}]},{"id":"T1-04","pool":"T1","req":{"Wind":3},"slots":[{"vp":1,"gold":8,"tpChoices":["Wind"]},{"vp":1,"gold":7,"tpChoices":[]}]},{"id":"T1-05","pool":"T1","req":{"Water":2,"Fire":1},"slots":[{"vp":1,"gold":10,"tpChoices":[]},{"vp":1,"gold":8,"tpChoices":[]},{"vp":1,"gold":7,"tpChoices":[]}]},{"id":"T1-06","pool":"T1","req":{"Fire":2,"Earth":1},"slots":[{"vp":1,"gold":10,"tpChoices":[]},{"vp":1,"gold":8,"tpChoices":[]},{"vp":1,"gold":7,"tpChoices":[]}]},{"id":"T1-07","pool":"T1","req":{"Earth":2,"Wind":1},"slots":[{"vp":1,"gold":10,"tpChoices":[]},{"vp":1,"gold":8,"tpChoices":[]},{"vp":1,"gold":7,"tpChoices":[]}]},{"id":"T1-08","pool":"T1","req":{"Wind":2,"Water":1},"slots":[{"vp":1,"gold":10,"tpChoices":[]},{"vp":1,"gold":8,"tpChoices":[]},{"vp":1,"gold":7,"tpChoices":[]}]},{"id":"T1-09","pool":"T1","req":{"Steam":1,"Water":1,"Fire":1},"slots":[{"vp":2,"gold":10,"tpChoices":["Water","Fire"]},{"vp":1,"gold":10,"tpChoices":[]}]},{"id":"T1-10","pool":"T1","req":{"Magma":1,"Fire":1,"Earth":1},"slots":[{"vp":2,"gold":10,"tpChoices":["Fire","Earth"]},{"vp":1,"gold":10,"tpChoices":[]}]},{"id":"T1-11","pool":"T1","req":{"Sandstorm":1,"Earth":1,"Wind":1},"slots":[{"vp":2,"gold":10,"tpChoices":["Earth","Wind"]},{"vp":1,"gold":10,"tpChoices":[]}]},{"id":"T1-12","pool":"T1","req":{"Frost":1,"Wind":1,"Water":1},"slots":[{"vp":2,"gold":10,"tpChoices":["Wind","Water"]},{"vp":1,"gold":10,"tpChoices":[]}]},{"id":"T1-13","pool":"T1","req":{"Steam":1,"Water":2},"slots":[{"vp":2,"gold":12,"tpChoices":[]},{"vp":2,"gold":10,"tpChoices":[]},{"vp":2,"gold":8,"tpChoices":[]}]},{"id":"T1-14","pool":"T1","req":{"Magma":1,"Fire":2},"slots":[{"vp":2,"gold":12,"tpChoices":[]},{"vp":2,"gold":10,"tpChoices":[]},{"vp":2,"gold":8,"tpChoices":[]}]},{"id":"T1-15","pool":"T1","req":{"Sandstorm":1,"Earth":2},"slots":[{"vp":2,"gold":12,"tpChoices":[]},{"vp":2,"gold":10,"tpChoices":[]},{"vp":2,"gold":8,"tpChoices":[]}]},{"id":"T1-16","pool":"T1","req":{"Frost":1,"Wind":2},"slots":[{"vp":2,"gold":12,"tpChoices":[]},{"vp":2,"gold":10,"tpChoices":[]},{"vp":2,"gold":8,"tpChoices":[]}]},{"id":"T1-17","pool":"T1","req":{"Steam":1,"Water":2,"Fire":1},"slots":[{"vp":2,"gold":14,"tpChoices":["Water","Fire"]},{"vp":2,"gold":11,"tpChoices":[]}]},{"id":"T1-18","pool":"T1","req":{"Magma":1,"Fire":2,"Earth":1},"slots":[{"vp":2,"gold":14,"tpChoices":["Fire","Earth"]},{"vp":2,"gold":11,"tpChoices":[]}]},{"id":"T1-19","pool":"T1","req":{"Sandstorm":1,"Earth":2,"Wind":1},"slots":[{"vp":2,"gold":14,"tpChoices":["Earth","Wind"]},{"vp":2,"gold":11,"tpChoices":[]}]},{"id":"T1-20","pool":"T1","req":{"Frost":1,"Wind":2,"Water":1},"slots":[{"vp":2,"gold":14,"tpChoices":["Wind","Water"]},{"vp":2,"gold":11,"tpChoices":[]}]},{"id":"T2-01","pool":"T2","req":{"Water":3,"Fire":2},"slots":[{"vp":5,"gold":10,"tpChoices":[]},{"vp":4,"gold":7,"tpChoices":[]}]},{"id":"T2-02","pool":"T2","req":{"Fire":3,"Earth":2},"slots":[{"vp":5,"gold":10,"tpChoices":[]},{"vp":4,"gold":7,"tpChoices":[]}]},{"id":"T2-03","pool":"T2","req":{"Earth":3,"Wind":2},"slots":[{"vp":5,"gold":10,"tpChoices":[]},{"vp":4,"gold":7,"tpChoices":[]}]},{"id":"T2-04","pool":"T2","req":{"Wind":3,"Water":2},"slots":[{"vp":5,"gold":10,"tpChoices":[]},{"vp":4,"gold":7,"tpChoices":[]}]},{"id":"T2-05","pool":"T2","req":{"Water":2,"Fire":2,"Earth":2},"slots":[{"vp":6,"gold":12,"tpChoices":[]},{"vp":5,"gold":11,"tpChoices":[]},{"vp":5,"gold":8,"tpChoices":[]}]},{"id":"T2-06","pool":"T2","req":{"Fire":2,"Earth":2,"Wind":2},"slots":[{"vp":6,"gold":12,"tpChoices":[]},{"vp":5,"gold":11,"tpChoices":[]},{"vp":5,"gold":8,"tpChoices":[]}]},{"id":"T2-07","pool":"T2","req":{"Earth":2,"Wind":2,"Water":2},"slots":[{"vp":6,"gold":12,"tpChoices":[]},{"vp":5,"gold":11,"tpChoices":[]},{"vp":5,"gold":8,"tpChoices":[]}]},{"id":"T2-08","pool":"T2","req":{"Wind":2,"Water":2,"Fire":2},"slots":[{"vp":6,"gold":12,"tpChoices":[]},{"vp":5,"gold":11,"tpChoices":[]},{"vp":5,"gold":8,"tpChoices":[]}]},{"id":"T2-09","pool":"T2","req":{"Steam":1,"Water":3,"Fire":2},"slots":[{"vp":7,"gold":12,"tpChoices":["Water","Fire"]},{"vp":5,"gold":11,"tpChoices":[]}]},{"id":"T2-10","pool":"T2","req":{"Magma":1,"Fire":3,"Earth":2},"slots":[{"vp":7,"gold":12,"tpChoices":["Fire","Earth"]},{"vp":5,"gold":11,"tpChoices":[]}]},{"id":"T2-11","pool":"T2","req":{"Sandstorm":1,"Earth":3,"Wind":2},"slots":[{"vp":7,"gold":12,"tpChoices":["Earth","Wind"]},{"vp":5,"gold":11,"tpChoices":[]}]},{"id":"T2-12","pool":"T2","req":{"Frost":1,"Wind":3,"Water":2},"slots":[{"vp":7,"gold":12,"tpChoices":["Wind","Water"]},{"vp":5,"gold":11,"tpChoices":[]}]},{"id":"T2-13","pool":"T2","req":{"Steam":2,"Water":2,"Fire":2},"slots":[{"vp":8,"gold":16,"tpChoices":[]},{"vp":7,"gold":14,"tpChoices":[]},{"vp":6,"gold":12,"tpChoices":[]}]},{"id":"T2-14","pool":"T2","req":{"Magma":2,"Fire":2,"Earth":2},"slots":[{"vp":8,"gold":16,"tpChoices":[]},{"vp":7,"gold":14,"tpChoices":[]},{"vp":6,"gold":12,"tpChoices":[]}]},{"id":"T2-15","pool":"T2","req":{"Sandstorm":2,"Earth":2,"Wind":2},"slots":[{"vp":8,"gold":16,"tpChoices":[]},{"vp":7,"gold":14,"tpChoices":[]},{"vp":6,"gold":12,"tpChoices":[]}]},{"id":"T2-16","pool":"T2","req":{"Frost":2,"Wind":2,"Water":2},"slots":[{"vp":8,"gold":16,"tpChoices":[]},{"vp":7,"gold":14,"tpChoices":[]},{"vp":6,"gold":12,"tpChoices":[]}]},{"id":"T2-17","pool":"T2","req":{"Steam":3,"Water":2,"Fire":1},"slots":[{"vp":9,"gold":16,"tpChoices":["Water","Fire"]},{"vp":7,"gold":13,"tpChoices":[]}]},{"id":"T2-18","pool":"T2","req":{"Magma":3,"Fire":2,"Earth":1},"slots":[{"vp":9,"gold":16,"tpChoices":["Fire","Earth"]},{"vp":7,"gold":13,"tpChoices":[]}]},{"id":"T2-19","pool":"T2","req":{"Sandstorm":3,"Earth":2,"Wind":1},"slots":[{"vp":9,"gold":16,"tpChoices":["Earth","Wind"]},{"vp":7,"gold":13,"tpChoices":[]}]},{"id":"T2-20","pool":"T2","req":{"Frost":3,"Wind":2,"Water":1},"slots":[{"vp":9,"gold":16,"tpChoices":["Wind","Water"]},{"vp":7,"gold":13,"tpChoices":[]}]},{"id":"T3-01","pool":"T3","req":{"Water":5,"Fire":3},"slots":[{"vp":12,"gold":8,"tpChoices":[]},{"vp":9,"gold":6,"tpChoices":[]}]},{"id":"T3-02","pool":"T3","req":{"Fire":5,"Earth":3},"slots":[{"vp":12,"gold":8,"tpChoices":[]},{"vp":9,"gold":6,"tpChoices":[]}]},{"id":"T3-03","pool":"T3","req":{"Earth":5,"Wind":3},"slots":[{"vp":12,"gold":8,"tpChoices":[]},{"vp":9,"gold":6,"tpChoices":[]}]},{"id":"T3-04","pool":"T3","req":{"Wind":5,"Water":3},"slots":[{"vp":12,"gold":8,"tpChoices":[]},{"vp":9,"gold":6,"tpChoices":[]}]},{"id":"T3-05","pool":"T3","req":{"Water":3,"Fire":3,"Earth":3},"slots":[{"vp":13,"gold":10,"tpChoices":[]},{"vp":12,"gold":8,"tpChoices":[]},{"vp":10,"gold":7,"tpChoices":[]}]},{"id":"T3-06","pool":"T3","req":{"Fire":3,"Earth":3,"Wind":3},"slots":[{"vp":13,"gold":10,"tpChoices":[]},{"vp":12,"gold":8,"tpChoices":[]},{"vp":10,"gold":7,"tpChoices":[]}]},{"id":"T3-07","pool":"T3","req":{"Earth":3,"Wind":3,"Water":3},"slots":[{"vp":13,"gold":10,"tpChoices":[]},{"vp":12,"gold":8,"tpChoices":[]},{"vp":10,"gold":7,"tpChoices":[]}]},{"id":"T3-08","pool":"T3","req":{"Wind":3,"Water":3,"Fire":3},"slots":[{"vp":13,"gold":10,"tpChoices":[]},{"vp":12,"gold":8,"tpChoices":[]},{"vp":10,"gold":7,"tpChoices":[]}]},{"id":"T3-09","pool":"T3","req":{"Steam":2,"Water":3,"Fire":3},"slots":[{"vp":15,"gold":10,"tpChoices":[]},{"vp":11,"gold":8,"tpChoices":[]}]},{"id":"T3-10","pool":"T3","req":{"Magma":2,"Fire":3,"Earth":3},"slots":[{"vp":15,"gold":10,"tpChoices":[]},{"vp":11,"gold":8,"tpChoices":[]}]},{"id":"T3-11","pool":"T3","req":{"Sandstorm":2,"Earth":3,"Wind":3},"slots":[{"vp":15,"gold":10,"tpChoices":[]},{"vp":11,"gold":8,"tpChoices":[]}]},{"id":"T3-12","pool":"T3","req":{"Frost":2,"Wind":3,"Water":3},"slots":[{"vp":15,"gold":10,"tpChoices":[]},{"vp":11,"gold":8,"tpChoices":[]}]},{"id":"T3-13","pool":"T3","req":{"Steam":3,"Water":3,"Fire":3},"slots":[{"vp":18,"gold":12,"tpChoices":[]},{"vp":16,"gold":10,"tpChoices":[]},{"vp":14,"gold":8,"tpChoices":[]}]},{"id":"T3-14","pool":"T3","req":{"Magma":3,"Fire":3,"Earth":3},"slots":[{"vp":18,"gold":12,"tpChoices":[]},{"vp":16,"gold":10,"tpChoices":[]},{"vp":14,"gold":8,"tpChoices":[]}]},{"id":"T3-15","pool":"T3","req":{"Sandstorm":3,"Earth":3,"Wind":3},"slots":[{"vp":18,"gold":12,"tpChoices":[]},{"vp":16,"gold":10,"tpChoices":[]},{"vp":14,"gold":8,"tpChoices":[]}]},{"id":"T3-16","pool":"T3","req":{"Frost":3,"Wind":3,"Water":3},"slots":[{"vp":18,"gold":12,"tpChoices":[]},{"vp":16,"gold":10,"tpChoices":[]},{"vp":14,"gold":8,"tpChoices":[]}]},{"id":"T3-17","pool":"T3","req":{"Steam":4,"Water":3,"Fire":2},"slots":[{"vp":19,"gold":14,"tpChoices":[]},{"vp":15,"gold":9,"tpChoices":[]}]},{"id":"T3-18","pool":"T3","req":{"Magma":4,"Fire":3,"Earth":2},"slots":[{"vp":19,"gold":14,"tpChoices":[]},{"vp":15,"gold":9,"tpChoices":[]}]},{"id":"T3-19","pool":"T3","req":{"Sandstorm":4,"Earth":3,"Wind":2},"slots":[{"vp":19,"gold":14,"tpChoices":[]},{"vp":15,"gold":9,"tpChoices":[]}]},{"id":"T3-20","pool":"T3","req":{"Frost":4,"Wind":3,"Water":2},"slots":[{"vp":19,"gold":14,"tpChoices":[]},{"vp":15,"gold":9,"tpChoices":[]}]}],"guildAbilities":{"Production:R1":"每完成一次自己的 Sector Production，取得 1G。","Production:R2":"每完成一次自己的 Sector Production，選擇 Fee −1 或取得 2G。與 R1 可同時生效。","Production:R3":"每次開始額外 Sector Production 時，可選擇支付正常齒輪，或改付固定 2G；選擇 2G 即不執行齒輪、不移動 Gear 導致的 Fee，也不觸發 Gear 相關能力。仍需正常消耗 Prolificate Token 並遵守 Sector 次數與相鄰限制。","Production:R4":"每個 Turn Start，取得 1 枚 Prolificate Token。其使用、持有與消耗仍遵守正常 Token 規則。","Build:R1":"選擇 Build Phase 時，依該次順位取得 3／2／1G。","Build:R2":"選擇 Build Phase 時，依該次順位取得 3／2／1G；每建造一張 Tile 時建造費 −1G（最低 0G）。與 R1 可累積。","Build:R3":"執行 Build Phase 時，Build Draw +1；該 Build Phase 可在正常容量外額外建造 1 張 Outer。僅增加可建造張數，不增加 Wheel Slot；額外建造仍須合法且正常付款。","Build:R4":"擁有者在 Build Phase 可以建造 Guild 專屬特殊 Inner，建造費 6G（可受合法建造費修正），消耗正常一次 Build 容量並占用正常 Inner Slot，其他一切建造規則與普通 Inner 相同。於該 Sector Production 時產出 2 個該 Sector 可生產的元素（可含 Compound，元素可任意組合）；不具其他 Inner 的特殊功能。僅本 Ability 擁有者可建造。","Upgrade:R1":"選擇 Upgrade Phase 時，依該次順位取得 3／2／1G。","Upgrade:R2":"選擇 Upgrade Phase 時，依該次順位取得 3／2／1G；每次升級 Tile，取得 1 個該 Tile 在升級後當下可產出的元素，遵守本 Turn 資源使用與結算規則。與 R1 可累積。","Upgrade:R3":"執行 Upgrade Phase 時，可額外升級 1 張合法 Tile；其他原有限制仍適用。","Upgrade:R4":"執行 Upgrade Phase 時，可再額外升級 1 張合法 Tile（與 R3 可累積）；本 Phase 多張 Tile 不必位於同一 Sector。若此次 Upgrade 為第一順位，則對本次有 Tile 被升級的每個「不同 Sector」各取得一次該 Sector 對應 TP；同一 Sector 升級多張不重複。","Research:R1":"選擇 Research Phase 時，依該次順位取得 3／2／1G。","Research:R2":"選擇 Research Phase 時，依該次順位取得 3／2／1G；每安裝一張 Project，該次安裝費 −2G（最低 0G），不變更 TP Gate 或 Base Fee。與 R1 可累積。","Research:R3":"執行 Research Phase 時，額外取得 1 張 Project；該張仍須支付一般 Time Cost，且本次 Research 排序順位給予的 Time Cost 減免可再次適用。","Research:R4":"執行 Research Phase 時，可選擇執行一次完整 Project Market Reset（棄最舊、左移、補滿）；無論是否 Reset，均可再額外取得 1 張 Project，照常支付 Time Cost 並再次適用本次 Research 排序順位減免。與 R3 可累積為額外 2 張。"},"patronTemplate":[{"rank":1,"step":"C1","costRaw":"B1 + B2","rewardRaw":"1VP + 1G + 1 親 Base TP"},{"rank":1,"step":"C2","costRaw":"A + B1","rewardRaw":"1VP + 3G + 1 親 Base TP"},{"rank":2,"step":"C1","costRaw":"B1 + B2","rewardRaw":"1VP + 1G + 1 親 Base TP"},{"rank":2,"step":"C2","costRaw":"A + B1","rewardRaw":"1VP + 4G + 1 親 Base TP"},{"rank":2,"step":"C3","costRaw":"A + B2","rewardRaw":"2VP + 3G"},{"rank":3,"step":"C1","costRaw":"B1 + B2","rewardRaw":"1VP + 1G + 1 親 Base TP"},{"rank":3,"step":"C2","costRaw":"A + B1","rewardRaw":"2VP + 4G"},{"rank":3,"step":"C3","costRaw":"A + B2","rewardRaw":"1VP + 3G + 1 親 Base TP"},{"rank":3,"step":"C4","costRaw":"A + B1 + B2","rewardRaw":"3VP + 4G"},{"rank":4,"step":"C1","costRaw":"B1 + B2","rewardRaw":"1VP + 1G + 1 親 Base TP"},{"rank":4,"step":"C2","costRaw":"A + B1","rewardRaw":"2VP + 4G"},{"rank":4,"step":"C3","costRaw":"A + B1 + 2 B2","rewardRaw":"3VP + 4G + 1 親 Base TP"},{"rank":4,"step":"C4","costRaw":"2 A + 2 B1 + 2 B2","rewardRaw":"7VP + 6G"}],"families":{"Steam":["Water","Fire"],"Magma":["Fire","Earth"],"Sandstorm":["Earth","Wind"],"Frost":["Wind","Water"]},"manifestStatus":"provisional","deckCounts":{"Base Unique":60,"Compound Unique":24,"Neutral":13,"Breadth":9,"Production":40,"total":154,"Compound S1/S2":8}};
-const VERSION='PP-0.25-web-prototype-v0.1';
-const SCHEMA='2.2.11-project-programming-0.25-web-0.2';
+const VERSION='PP-0.25-web-prototype-v0.16';
+const SCHEMA='2.2.11-project-programming-0.25-web-0.16';
 const BASES=['Water','Fire','Earth','Wind'];
 const COMPOUNDS=['Steam','Magma','Sandstorm','Frost'];
 const ALL=[...BASES,...COMPOUNDS];
@@ -81,10 +81,27 @@ const SECTOR_ABBR={Water:'W',Fire:'F',Earth:'E',Wind:'Wi'};
 const FAM=DATA.families;
 const PROJECT_DEF=Object.fromEntries(DATA.projectDefs.map(x=>[x.key,x]));
 const CONTRACT_DEF=Object.fromEntries(DATA.contracts.map(x=>[x.id,x]));
+const RULE_CONFIG={
+ machineClaimRep:{t1:2,t2:4},
+ handDiscardToTP:{
+   enabled:true,
+   ruleStatus:'PROVISIONAL_WINDOW',
+   timingMode:'research_phase_once',
+   maxUsesPerEligiblePhase:1,
+   extraGoldCost:0,
+   usesResearchDrawQuota:false,
+   usesProgrammedAction:false,
+   usesContractPhaseOpportunity:false,
+   requiredSourceZone:'hand',
+   maxTPGainPerDiscard:1,
+   destinationZone:'projectDiscard'
+ }
+};
 const RULE_GAPS=[
  {level:'RESOLVED',text:'0.25 後續訂正：Compound 共通 S1/S2 各 Family 各 1 張，共 8 張；Prototype Project Deck 由 146 修正為 154 張。'},
  {level:'INTERPRETATION',text:'Research Time Cost 在 0.25 被要求逐張支付且無總預算，但未定義獨立 Time 資源；本 Prototype 逐張記錄 adjusted Time Cost telemetry，不創建新資源或拒絕取牌。'},
  {level:'PATCHED',text:'Outer/Middle/Inner 正常 Build Gold cost 仍沿用既有基準；Tile Upgrade Gold cost 已正式修正為一律 0G。'},
+ {level:'PROVISIONAL',text:'0.25.3 P-02 測試窗口：正常 Programmed Research Phase 每次最多一次，可從手牌棄置 1 張 Project；依該卡實際 TP Gate 選一種 Base TP +1。0G、不吃 Research 取牌額度；此窗口尚非正式 Canonical。'},
  {level:'PARTIAL',text:'127 種 Project 定義與 154 張實體牌庫全部載入；高互動 Tap/攻擊 Project 的 runtime 先實作核心子集，其餘仍顯示卡面並在使用時標記 RULE_ASSERTION_FAILURE，而不偷偷改成別的效果。'}
 ];
 
@@ -98,6 +115,13 @@ function rand(){const r=S._rng();S.rngCalls++;return r}
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(rand()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 function sum(o){return Object.values(o||{}).reduce((a,b)=>a+(+b||0),0)}
 function eraOfTurn(t){return t<=4?1:t<=7?2:3}
+function vpSnapshot(){return Object.fromEntries((S?.players||[]).map(p=>[p.id,p.vp]))}
+function recordVpDelta(category,before,meta={}){
+ for(const p of S.players){
+   const delta=p.vp-(before[p.id]||0);
+   if(delta!==0)log(`${p.id} VP ${delta>=0?'+':''}${delta} [${category}]`,{eventType:'VP_DELTA',playerId:p.id,category,delta,turn:S.turn,...meta});
+ }
+}
 function elemLine(obj){return ALL.filter(e=>(obj?.[e]||0)>0).map(e=>`${ICON[e]}${obj[e]}`).join(' ')||'—'}
 function uiText(s){
  let t=String(s??'');
@@ -207,9 +231,110 @@ function projectTpGateText(d){
  }
  return '無 TP 需求';
 }
+
+function projectPrintedTpGateOptions(d){
+ if(!d)return [];
+ const out=[];
+ const push=(element,gate,face=null)=>{
+   if(BASES.includes(element)&&Number.isFinite(Number(gate))&&Number(gate)>=0&&!out.some(x=>x.element===element&&x.face===face))
+     out.push({element,gate:Number(gate),face});
+ };
+ if(d.category==='Base Unique'){
+   push(d.baseElement,d.tpGate,d.baseElement);
+ }else if(d.category==='Breadth'){
+   for(const e of BASES)push(e,d.allBaseTpGate,'Breadth');
+ }else if(d.category==='Compound Unique'){
+   const ps=FAM[d.family]||[],g=d.parentGate||[];
+   ps.forEach((e,i)=>push(e,g[i],d.family));
+ }else if(d.category==='Compound Template'){
+   const ps=d.parents||FAM[d.family]||[],g=d.parentGate||[];
+   ps.forEach((e,i)=>push(e,g[i],d.family));
+ }else if(d.category==='Production'){
+   const map={W:'Water',F:'Fire',E:'Earth',Wi:'Wind'};
+   const es=String(d.printed||'').split('/').map(x=>map[x]||x).filter(e=>BASES.includes(e));
+   if(Number(d.tech)%2===1)es.forEach(e=>push(e,d.tech,e));
+   else if(es[0])push(es[0],d.tech,es[0]);
+ }
+ return out;
+}
+function handDiscardToTpGateText(d){
+ const gates=projectPrintedTpGateOptions(d);
+ if(!gates.length)return '無實際 TP Gate → 棄置後 +0 TP';
+ return gates.map(x=>`${ICON[x.element]||x.element} TP Gate ${x.gate}`).join(' / ')+' → 擇一 +1 TP';
+}
+function handDiscardToTpAiScore(p,inst){
+ const d=projectDefFromInstance(inst),gates=projectPrintedTpGateOptions(d);
+ if(!gates.length)return -4-projectScore(p,d)*.2;
+ let best=-99;
+ for(const g of gates){
+   const beforeLegal=p.projectHand.filter(x=>x.instanceId!==inst.instanceId&&projectGateLegal(p,projectDefFromInstance(x))).length;
+   p.tp[g.element]++;
+   const afterLegal=p.projectHand.filter(x=>x.instanceId!==inst.instanceId&&projectGateLegal(p,projectDefFromInstance(x))).length;
+   p.tp[g.element]--;
+   const unlock=(afterLegal-beforeLegal)*2.4;
+   const need=Math.max(0,elementNeedScore(p,g.element))*.18;
+   const opportunity=projectScore(p,d)*.32;
+   best=Math.max(best,unlock+need+0.4-opportunity);
+ }
+ return best;
+}
+function canUseHandDiscardToTP(p){
+ const cfg=RULE_CONFIG.handDiscardToTP;
+ return cfg.enabled&&p._researchDiscardTpActive===true&&(p._researchDiscardTpUses||0)<cfg.maxUsesPerEligiblePhase&&p.projectHand.length>0;
+}
+async function executeHandDiscardToTP(p,inst,selectedElement=null,windowLabel='Research'){
+ const cfg=RULE_CONFIG.handDiscardToTP;
+ if(!canUseHandDiscardToTP(p))return false;
+ const idx=p.projectHand.findIndex(x=>x.instanceId===inst?.instanceId);
+ if(idx<0)return false;
+ const d=projectDefFromInstance(inst),gates=projectPrintedTpGateOptions(d);
+ let chosen=null;
+ if(gates.length){
+   if(selectedElement)chosen=gates.find(x=>x.element===selectedElement)||null;
+   if(!chosen&&gates.length===1)chosen=gates[0];
+   if(!chosen&&gates.length>1){
+     const c=await choose(p,`${p.id}｜棄置 ${d.id}：選擇取得哪一種 Base TP`,gates.map(g=>({label:`${ICON[g.element]} ${g.element} +1 TP（卡面 Gate ${g.gate}）`,g})),o=>elementNeedScore(p,o.g.element),{allowFree:false});
+     chosen=c?.g||null;
+     if(!chosen)return false;
+   }
+ }
+ const before=chosen?p.tp[chosen.element]:null;
+ p.projectHand.splice(idx,1);
+ S.projectDiscard.push(inst);
+ p._researchDiscardTpUses=(p._researchDiscardTpUses||0)+1;
+ if(chosen)p.tp[chosen.element]=before+1;
+ const history=S.handDiscardTpHistory||(S.handDiscardTpHistory={});
+ history[inst.instanceId]=(history[inst.instanceId]||0)+1;
+ log(`${p.id} discards hand Project ${d.id} → ${chosen?`${chosen.element} TP +1`:'0 TP (no printed gate)'}`,{
+   eventType:'HAND_PROJECT_DISCARD_TO_TP',playerId:p.id,turn:S.turn,phase:S.phase,
+   instanceId:inst.instanceId,definitionKey:inst.definitionKey,selectedFace:chosen?.face??null,
+   gateOptions:gates.map(g=>({element:g.element,gate:g.gate,face:g.face})),
+   selectedElement:chosen?.element??null,tpBefore:before,tpAfter:chosen?p.tp[chosen.element]:null,tpGain:chosen?1:0,
+   researchPhaseUse:p._researchDiscardTpUses,windowLabel,fromZone:'hand',toZone:'projectDiscard',
+   conversionCountForInstance:history[inst.instanceId],ruleStatus:cfg.ruleStatus
+ });
+ return true;
+}
+async function offerHandDiscardToTP(p,windowLabel='Research'){
+ if(!canUseHandDiscardToTP(p))return false;
+ const opts=[
+   {label:'暫不棄置 Project',skip:true},
+   ...p.projectHand.map(inst=>({label:`棄置 ${projectDefFromInstance(inst).id}｜${handDiscardToTpGateText(projectDefFromInstance(inst))}`,inst}))
+ ];
+ let c;
+ if(p.type==='AI'){
+   c=await choose(p,`${p.id}｜P-02 手牌棄置換 TP [${windowLabel}]`,opts,o=>o.skip?0:handDiscardToTpAiScore(p,o.inst),{allowFree:true});
+   if(!c||c.skip||handDiscardToTpAiScore(p,c.inst)<=0)return false;
+ }else{
+   c=await choose(p,`${p.id}｜P-02 PROVISIONAL：本 Research Phase 最多一次手牌棄置換 TP [${windowLabel}]`,opts,o=>o.skip?0:1,{allowFree:true});
+   if(!c||c.skip)return false;
+ }
+ return executeHandDiscardToTP(p,c.inst,null,windowLabel);
+}
+
 function actionRankEffect(action,rank){
  const idx=Math.max(1,Math.min(3,rank));
- if(action==='Research')return `基本取得 1 張 Project；每次取牌 Time Cost −${idx===1?2:idx===2?1:0}；本 Phase 可合法安裝任意張 Project。`;
+ if(action==='Research')return `基本取得 1 張 Project；每次取牌 Time Cost −${idx===1?2:idx===2?1:0}；本 Phase 可合法安裝任意張 Project；P-02 PROVISIONAL：本人的正常 Research Phase 最多一次手牌 Project 棄置換卡面 Gate 對應 Base TP +1。`;
  if(action==='Build')return idx===1?'最多建造 3 張；Build Draw +1。':idx===2?'最多建造 2 張；Build Draw +1。':'最多建造 2 張。';
  if(action==='Funding')return `Gain ${idx===1?9:idx===2?6:3}G。`;
  if(action==='Upgrade')return idx===1?'同一 Sector 最多 Upgrade 2 Tiles；完成後額外取得該 Sector +1 TP。':idx===2?'同一 Sector 最多 Upgrade 2 Tiles。':'Upgrade 1 Tile。';
@@ -327,7 +452,7 @@ function createState(seed='250109',allAI=false){
     initiative:['P1','P2','P3','P4'],players:[0,1,2,3].map(i=>makePlayer(i,allAI?'AI':i===0?'HUMAN':'AI')),
     projectDeck:[],projectDiscard:[],projectMarket:Array(7).fill(null),outerBag:{Water:16,Fire:16,Earth:16,Wind:16},
     patronDeck:[],patronMarket:[],familyGuild:{},contracts:{schedule:null,current:[]},machines:machineDefs(),eraGoals:[],
-    logs:[],diagnostics:[],testStatus:'RUNNING',gameOver:false,winner:null,passSequence:[],rulesGap:clone(RULE_GAPS),autoMode:allAI};
+    logs:[],diagnostics:[],testStatus:'RUNNING',gameOver:false,winner:null,passSequence:[],rulesGap:clone(RULE_GAPS),handDiscardTpHistory:{},autoMode:allAI};
  S._rng=rng;
  S.projectDeck=shuffle(projectInstances());
  S.patronDeck=shuffle(makePatronCards());
@@ -582,13 +707,23 @@ async function runGame(){
    log(`Pre-Programming public state ready: Project Market ${S.projectMarket.filter(Boolean).length}/7; Current Contracts ${S.contracts.current.length}; Next Preview ${(S.contracts.preview||[]).length}`,{eventType:'PRE_PROGRAM_PUBLIC_STATE',turn:S.turn,projectMarketCount:S.projectMarket.filter(Boolean).length,currentContractCount:S.contracts.current.length,previewTurn:S.contracts.previewTurn,previewContractCount:(S.contracts.preview||[]).length});
    render(); // show refreshed Project Market + Current/Next Contract before the first human programs actions
    await programActions();
+   let vp0=vpSnapshot();
    for(let rank=1;rank<=3;rank++){S.phase=`PROGRAM_${rank}`;for(const pid of S.initiative){const p=player(pid);const action=p.program[rank-1];await executeProgrammedAction(p,action,rank)}}
+   recordVpDelta('Programmed Actions',vp0);
    S.phase='FEE_RESET';for(const p of S.players)feeReset(p);
+   vp0=vpSnapshot();
    S.phase='PRODUCTION';for(const pid of S.initiative)await productionPhase(player(pid));
+   recordVpDelta('Production',vp0);
+   vp0=vpSnapshot();
    S.phase='POST_PRODUCTION';S.timing='POST_PRODUCTION';for(const pid of S.initiative)await postProductionWindow(player(pid));
+   recordVpDelta('Post Production',vp0);
+   vp0=vpSnapshot();
    S.phase='CONTRACT';S.timing='CONTRACT';await contractPhase();
+   recordVpDelta('Contract Phase',vp0);
+   vp0=vpSnapshot();
    S.phase='TURN_END';S.timing='ATOMIC_LIQUIDATION';await turnEnd();
-   if(S.turn===10){await gameEnd();break}
+   recordVpDelta('Turn End',vp0);
+   if(S.turn===10){vp0=vpSnapshot();await gameEnd();recordVpDelta('Game End Scoring',vp0);break}
    S.turn++;S.era=eraOfTurn(S.turn);S.phase='TURN_START';S.timing='TURN_FREE';render();
  }
  render();
@@ -656,38 +791,70 @@ async function executeProgrammedAction(p,action,rank){
  render();
 }
 async function researchPhase(p,rank){
- if(ability(p,'Research',4)){
-   const yn=p.type==='AI'?{yes:S.projectMarket.filter(Boolean).length<5}:await choose(p,'Research R4：是否先完整 Reset Project Market？',[{label:'不 Reset',yes:false},{label:'Reset',yes:true}],o=>o.yes?1:0,{allowFree:true});
-   if(yn.yes)refreshProjectMarket();
- }
- const count=1+(ability(p,'Research',3)?1:0)+(ability(p,'Research',4)?1:0);
- for(let k=0;k<count;k++){
-   const opts=S.projectMarket.map((x,i)=>x?{label:`[${i+1}] TC${Math.max(0,TIME_COST[i]-(rank===1?2:rank===2?1:0))} · ${projectDefFromInstance(x).id}`,i,inst:x}:null).filter(Boolean);
-   if(!opts.length)break;
-   const c=await choose(p,`${p.id} Research 取牌 ${k+1}/${count}`,opts,o=>projectScore(p,projectDefFromInstance(o.inst)),{allowFree:true});if(!c)break;takeProjectMarket(c.i,p,rank);
- }
- // install any number
- while(true){
-   const candidates=p.projectHand.filter(x=>{const d=projectDefFromInstance(x);return projectGateLegal(p,d)&&installUniqueLegal(p,d)&&p.gold>=installCost(p,d)});
-   if(!candidates.length)break;
-   let c;
-   if(p.type==='AI'){
-     const best=candidates.map(x=>({x,s:projectScore(p,projectDefFromInstance(x))-installCost(p,projectDefFromInstance(x))*.18})).sort((a,b)=>b.s-a.s)[0];
-     if(best.s<1.1)break;c={inst:best.x};
-   }else{
-     c=await choose(p,'Research：可繼續安裝 Project，或結束',[{label:'結束 Research 安裝',done:true},...candidates.map(x=>({label:`安裝 ${projectDefFromInstance(x).id} (${installCost(p,projectDefFromInstance(x))}G)`,inst:x}))],o=>o.done?0:2,{allowFree:true});
-     if(c.done)break;
+ p._researchDiscardTpActive=true;
+ p._researchDiscardTpUses=0;
+ try{
+   // Human may use the provisional conversion before acquiring; AI waits until it sees
+   // the full post-draw hand unless an immediate pre-draw conversion is strongly useful.
+   if(p.type==='HUMAN')await offerHandDiscardToTP(p,'before Research acquire');
+   if(ability(p,'Research',4)){
+     const yn=p.type==='AI'?{yes:S.projectMarket.filter(Boolean).length<5}:await choose(p,'Research R4：是否先完整 Reset Project Market？',[{label:'不 Reset',yes:false},{label:'Reset',yes:true}],o=>o.yes?1:0,{allowFree:true});
+     if(yn.yes)refreshProjectMarket();
    }
-   if(!(await installProject(p,c.inst)))break;
+   const count=1+(ability(p,'Research',3)?1:0)+(ability(p,'Research',4)?1:0);
+   for(let k=0;k<count;k++){
+     const opts=S.projectMarket.map((x,i)=>x?{label:`[${i+1}] TC${Math.max(0,TIME_COST[i]-(rank===1?2:rank===2?1:0))} · ${projectDefFromInstance(x).id}`,i,inst:x}:null).filter(Boolean);
+     if(!opts.length)break;
+     const c=await choose(p,`${p.id} Research 取牌 ${k+1}/${count}`,opts,o=>projectScore(p,projectDefFromInstance(o.inst)),{allowFree:true});if(!c)break;takeProjectMarket(c.i,p,rank);
+   }
+   await offerHandDiscardToTP(p,'after Research acquire / before install');
+   // install any number
+   while(true){
+     const candidates=p.projectHand.filter(x=>{const d=projectDefFromInstance(x);return projectGateLegal(p,d)&&installUniqueLegal(p,d)&&p.gold>=installCost(p,d)});
+     if(!candidates.length){
+       // If no install is currently legal, this is the last chance to convert a hand card
+       // and immediately unlock another hand Project in the same Research Phase.
+       const used=await offerHandDiscardToTP(p,'before Research end');
+       if(used)continue;
+       break;
+     }
+     let c;
+     if(p.type==='AI'){
+       const best=candidates.map(x=>({x,s:projectScore(p,projectDefFromInstance(x))-installCost(p,projectDefFromInstance(x))*.18})).sort((a,b)=>b.s-a.s)[0];
+       if(best.s<1.1){
+         const used=await offerHandDiscardToTP(p,'before AI Research end');
+         if(used)continue;
+         break;
+       }
+       c={inst:best.x};
+     }else{
+       c=await choose(p,'Research：可繼續安裝 Project，或結束',[{label:'結束 Research 安裝',done:true},...candidates.map(x=>({label:`安裝 ${projectDefFromInstance(x).id} (${installCost(p,projectDefFromInstance(x))}G)`,inst:x}))],o=>o.done?0:2,{allowFree:true});
+       if(c.done){
+         const used=await offerHandDiscardToTP(p,'after installs / before Research end');
+         if(used)continue;
+         break;
+       }
+     }
+     if(!(await installProject(p,c.inst)))break;
+     await offerHandDiscardToTP(p,'after Project install');
+   }
+ }finally{
+   p._researchDiscardTpActive=false;
  }
 }
 function projectScore(p,d){
  let s=1+(7-(d.installCost||0))*.08;
- if(d.category==='Production')s+=2.6;
+ if(d.category==='Production'){
+   s+=2.2;
+   const map={W:'Water',F:'Fire',E:'Earth',Wi:'Wind'};
+   const es=String(d.printed||'').split('/').map(x=>map[x]||x).filter(Boolean);
+   if(es.length)s+=Math.max(...es.map(e=>Math.max(0,elementNeedScore(p,e))))*.35;
+ }
+ if(d.category==='Compound Template'&&d.family)s+=Math.max(0,elementNeedScore(p,d.family))*.4;
  if(d.category==='Breadth')s+=1.5;
  if(d.id==='N-02'&&p.gold<5)s+=3;
  if(d.id==='BR-03')s+=1.6;
- if(d.category==='Base Unique'&&p.tp[d.baseElement]>=d.tpGate)s+=1.0;
+ if(d.category==='Base Unique'&&p.tp[d.baseElement]>=d.tpGate)s+=1.0+Math.max(0,elementNeedScore(p,d.baseElement))*.15;
  if(d.effect?.includes('VP'))s+=.6;if(d.effect?.includes('Gold')||d.effect?.includes('G'))s+=.35;
  return s;
 }
@@ -816,13 +983,14 @@ async function buildPhase(p,rank){
  while(built<maxBuild+extraOuter){
    const actions=[{label:'結束 Build',done:true}];
    if(drawn.some((e,i)=>!usedDraw.includes(i)) && (built<maxBuild||extraOuterUsed<extraOuter)){
-     for(const slot of outerSlots(p))for(let i=0;i<drawn.length;i++)if(!usedDraw.includes(i))actions.push({label:`Outer ${drawn[i]} → ${slot.label} (${tileCost('Outer',p)}G)`,kind:'Outer',slot,drawIndex:i});
+     for(const slot of outerSlots(p))for(let i=0;i<drawn.length;i++)if(!usedDraw.includes(i))actions.push({label:`Outer ${drawn[i]} → ${slot.label} (${tileCost('Outer',p)}G)`,kind:'Outer',slot,drawIndex:i,element:drawn[i]});
    }
    if(built<maxBuild)for(const o of legalMiddleOptions(p))actions.push({label:`${o.label} (${tileCost('Middle',p)}G)`,kind:'Middle',o});
    if(built<maxBuild)for(const o of legalInnerOptions(p))actions.push({label:`${o.label} (6G)`,kind:'Inner',o});
    const legal=actions.filter(a=>a.done||p.gold>=(a.kind==='Outer'?tileCost('Outer',p):a.kind==='Middle'?tileCost('Middle',p):6-buildDiscount(p)));
    if(legal.length===1)break;
    const c=await choose(p,`${p.id} Build｜draw [${drawn.join(', ')}]｜${built}/${maxBuild}${extraOuter?' +1 Outer':''}`,legal,o=>o.done?0:buildOptionScore(p,o),{allowFree:true});
+   if(p.type==='AI')log(`${p.id} Build targeting chose ${c?.label||'none'}`,{eventType:'AI_BUILD_TARGET',playerId:p.id,chosen:c?.label||null,currentNeeds:Object.fromEntries(ALL.map(e=>[e,elementNeedScore(p,e)]))});
    if(c.done)break;
    if(c.kind==='Outer'){
      const extra=built>=maxBuild;if(extra&&extraOuterUsed>=extraOuter)continue;
@@ -836,9 +1004,20 @@ async function buildPhase(p,rank){
  returnOuters(drawn.filter((e,i)=>!usedDraw.includes(i)));render();
 }
 function buildOptionScore(p,o){
- if(o.kind==='Outer')return 2+elementNeedScore(p,o.label.includes('Water')?'Water':o.label.includes('Fire')?'Fire':o.label.includes('Earth')?'Earth':'Wind');
- if(o.kind==='Middle')return o.o.mode==='AProduction'?4:o.o.mode==='Breadth'?3.2:2.8;
- if(o.kind==='Inner')return o.o.type==='BuildGuildR4'?4:o.o.type==='WildcardInner'?3.7:3;return 0
+ if(o.kind==='Outer'){
+   const e=o.element;
+   return 2+Math.max(0,elementNeedScore(p,e))*.65+sectorImmediateBonus(p,o.slot.si);
+ }
+ if(o.kind==='Middle'){
+   const x=o.o;let need=0;
+   if(x.mode==='AProduction')need=Math.max(0,elementNeedScore(p,x.family));
+   else if(x.mode==='BEnhance')need=Math.max(0,elementNeedScore(p,x.a));
+   else if(x.mode==='Standard')need=Math.max(Math.max(0,elementNeedScore(p,x.a)),Math.max(0,elementNeedScore(p,x.b)));
+   else if(x.mode==='Breadth')need=.8;
+   return 2.6+need*.55+sectorImmediateBonus(p,x.si)+(x.mode==='AProduction'?.7:0);
+ }
+ if(o.kind==='Inner')return o.o.type==='BuildGuildR4'?4:o.o.type==='WildcardInner'?3.7:3;
+ return 0
 }
 async function specialOuterBuild(p,drawN,maxBuild,source,canMulti){
  const drawn=drawOuterN(drawN,source),used=[];let n=0;
@@ -904,7 +1083,12 @@ async function upgradePhase(p,rank){
    upgradedSectors.forEach(si=>giveSectorTP(p,si,1,'Upgrade rank1'));
  }
 }
-function upgradeScore(p,x){return x.kind==='Middle'?(x.t.mode==='AProduction'?4:x.t.mode==='Breadth'?3:2.8):2.5}
+function upgradeScore(p,x){
+ const need=tileNeedValue(p,x.si,x.t);
+ const immediate=sectorImmediateBonus(p,x.si);
+ const base=x.kind==='Middle'?(x.t.mode==='AProduction'?3.4:x.t.mode==='Breadth'?2.8:2.7):2.4;
+ return base+Math.max(0,need)*.45+immediate;
+}
 async function giveSectorTP(p,si,n,why){
  const ids=p.wheel.sectors[si].identities;await giveTP(p,ids,n);log(`${p.id} sector TP (${why})`,{eventType:'SECTOR_TP',sector:si,choices:ids})
 }
@@ -922,7 +1106,9 @@ function tileProducedElements(p,si,t){
 
 async function productionPhase(p){
  S.timing='PRODUCTION_REVERSE';
- const rev=p.type==='AI'?{yes:false}:await choose(p,`${p.id} Production Phase｜Reverse?`,[{label:'不 Reverse',yes:false},{label:`Reverse（Gear ${feePaidGold(p)}G）`,yes:true}],o=>o.yes?productionRouteValue(p,true)-productionRouteValue(p,false):0,{allowFree:true});
+ const rev=p.type==='AI'
+   ? {yes:p.prolif>0 && p.gold>=feePaidGold(p) && productionRouteValue(p,true)-feePaidGold(p)*.25>productionRouteValue(p,false)+.4}
+   : await choose(p,`${p.id} Production Phase｜Reverse?`,[{label:'不 Reverse',yes:false},{label:`Reverse（Gear ${feePaidGold(p)}G）`,yes:true}],o=>o.yes?productionRouteValue(p,true)-productionRouteValue(p,false):0,{allowFree:true});
  if(rev.yes&&await gear(p,'Reverse'))p.wheel.direction*=-1;
  S.timing='PRODUCTION_START';await productionPhaseStart(p);
  const tokenCount=p.prolif;p.prolif=0;const maxS=Math.min(4,1+tokenCount);
@@ -950,7 +1136,17 @@ async function productionPhase(p){
 function productionRouteValue(p,reverse){
  const dir=reverse?-p.wheel.direction:p.wheel.direction;let v=0;for(let k=0;k<Math.min(4,1+p.prolif);k++){const si=(p.wheel.pointer+(dir===1?k:-k)+40)%4;v+=sectorValue(p,si)}return v
 }
-function sectorValue(p,si){const s=p.wheel.sectors[si];let v=0;for(const t of s.outers)if(t&&!t.marker)v+=t.upgraded?2:1;for(const t of s.middles)if(t&&!t.marker)v+=t.mode==='Breadth'?(t.upgraded?3.5:2.5):t.upgraded?3:2;return v}
+function sectorValue(p,si){
+ const s=p.wheel.sectors[si];let v=0;
+ for(const t of s.outers)if(t&&!t.marker){
+   const n=t.upgraded?2:1;v+=n*(1+Math.max(0,elementNeedScore(p,t.element))*.2);
+ }
+ for(const t of s.middles)if(t&&!t.marker){
+   const base=t.mode==='Breadth'?(t.upgraded?3.5:2.5):t.upgraded?3:2;
+   v+=base+Math.max(0,tileNeedValue(p,si,t))*.35;
+ }
+ return v
+}
 async function productionPhaseStart(p){
  log(`${p.id} Production Phase Start`,{eventType:'PRODUCTION_PHASE_START',playerId:p.id});
  for(const inst of p.installed){
@@ -1103,7 +1299,10 @@ async function contractPhase(){
    let progressed=false;
    for(const pid of S.initiative){
      if(!active.has(pid))continue;const p=player(pid);
-     const acts=[...availableContractActions(p),...availableMachineActions(p),{type:'PASS',label:'Pass Out'}];
+     const contractActs=availableContractActions(p),machineActs=availableMachineActions(p);
+     const acts=[...contractActs,...machineActs,{type:'PASS',label:'Pass Out'}];
+     const scoredActs=acts.map(o=>({type:o.type,label:o.label,score:contractActionScore(p,o)}));
+     log(`${p.id} Contract opportunity: ${contractActs.length} contract / ${machineActs.length} machine`,{eventType:'CONTRACT_OPPORTUNITY',playerId:p.id,contractLegal:contractActs.length,machineLegal:machineActs.length,candidates:scoredActs});
      let c=await choose(p,`${p.id} Contract Phase opportunity`,acts,o=>contractActionScore(p,o),{allowFree:true});
      if(!c||c.type==='PASS'){active.delete(pid);p.passOrder=S.passSequence.length+1;S.passSequence.push(pid);log(`${p.id} Pass Out #${p.passOrder}`,{eventType:'PASS_OUT',playerId:p.id,order:p.passOrder});continue}
      progressed=true;if(c.type==='CONTRACT'||c.type==='BR05')await completeContract(p,c);else if(c.type==='MACHINE')await operateMachine(p,c.m,false);
@@ -1143,7 +1342,7 @@ async function triggerContractProjects(p,a,reward){
 }
 function claimMachines(p,guild){
  for(const tier of [1,2]){
-   const th=tier===1?3:5;if(p.rep[guild]<th)continue;
+   const th=tier===1?RULE_CONFIG.machineClaimRep.t1:RULE_CONFIG.machineClaimRep.t2;if(p.rep[guild]<th)continue;
    const slots=S.machines.filter(m=>m.guild===guild&&m.tier===tier);if(slots.some(m=>m.ownerId))continue;
    for(const m of slots)m.ownerId=p.id;
    log(`${p.id} CLAIMS ${guild} Machine T${tier}`,{eventType:'MACHINE_CLAIM',playerId:p.id,guild,tier,rep:p.rep[guild]});
@@ -1282,7 +1481,17 @@ async function triggerGearProjects(p,ctx){
  if(ctx.high&&hasInstalled(p,'project:MG-04')&&p.hand.Magma>0&&p.type==='AI'){p.hand.Magma--;p.vp+=3;p.gold+=3}
 }
 function elementNeedScore(p,e){
- let n=0;for(const c of S.contracts.current||[])n+=(CONTRACT_DEF[c.id].req[e]||0);return n-(p.hand[e]||0)*.2
+ let current=0,next=0;
+ for(const c of S.contracts.current||[])current+=(CONTRACT_DEF[c.id].req[e]||0);
+ for(const c of S.contracts.preview||[])next+=(CONTRACT_DEF[c.id].req[e]||0);
+ // Current contracts matter most; next-turn preview is public planning information.
+ return current+next*.45-(p.hand[e]||0)*.25;
+}
+function sectorImmediateBonus(p,si){return si===p.wheel.pointer?1.5:0}
+function tileNeedValue(p,si,t){
+ const es=tileProducedElements(p,si,t);
+ if(!es.length)return 0;
+ return es.reduce((n,e)=>n+Math.max(0,elementNeedScore(p,e)),0)/es.length;
 }
 
 async function useProject(p,inst){
@@ -1351,7 +1560,7 @@ function renderDecision(){
 // ---------- Rendering ----------
 function render(force=false){
  if(!S)return;if(S.autoMode&&!S.gameOver&&!force)return;document.getElementById('turnPill').textContent=`Turn ${S.turn}/10`;document.getElementById('eraPill').textContent=`Era ${eraOfTurn(S.turn)}`;document.getElementById('phasePill').textContent=S.phase;
- document.getElementById('status').innerHTML=`<div class="row"><b>Seed ${S.seed}</b><span class="chip">Initiative ${S.initiative.join('→')}</span><span class="chip">Outer Bag ${sum(S.outerBag)}/64</span><span class="chip">Project Deck ${S.projectDeck.length}</span><span class="chip">Discard ${S.projectDiscard.length}</span><span class="chip">${S.testStatus}</span></div><div class="mini">Family↔Guild：${Object.entries(S.familyGuild).map(([f,g])=>`${f}→${g}`).join('｜')}　Era1 ${goalName(S.eraGoals[0])}｜Era2 ${goalName(S.eraGoals[1])}</div>`;
+ document.getElementById('status').innerHTML=`<div class="row"><b>Seed ${S.seed}</b><span class="chip">Initiative ${S.initiative.join('→')}</span><span class="chip">Outer Bag ${sum(S.outerBag)}/64</span><span class="chip">Project Deck ${S.projectDeck.length}</span><span class="chip">Discard ${S.projectDiscard.length}</span><span class="chip">${S.testStatus}</span><span class="chip">0.25.3 P-02 PROVISIONAL</span></div><div class="mini">Family↔Guild：${Object.entries(S.familyGuild).map(([f,g])=>`${f}→${g}`).join('｜')}　Era1 ${goalName(S.eraGoals[0])}｜Era2 ${goalName(S.eraGoals[1])}</div>`;
  renderProjectMarket();renderContracts();renderPatrons();renderMachines();renderPlayers();renderWheels();renderLog();if(!DECISION&&!WHEEL_UI_ACTIVE)renderDecision()
 }
 function renderProjectMarket(){
@@ -1422,13 +1631,41 @@ function runAcceptance(){
    p.wheel=makeWheel();p.wheel.sectors[0].outers=[{kind:'Outer',element:'Water'},{kind:'Outer',element:'Water'},{kind:'Outer',element:'Fire'},{kind:'Outer',element:'Fire'}];ok('AT-14',legalInnerOptions(p).some(x=>x.type==='CompoundInner'&&x.family==='Steam'),'compound 2+2 legal');
    const c={id:'X',guild:'Build',used:[null,null,null]},def={slots:[{}, {}, {}]};ok('AT-15',[0,1,2].map(i=>i<2?1:0).join(',')==='1,1,0','only first two rep');
    ok('AT-16',true,'BR04/BR05 branches encoded separately');
-   p.rep.Build=5;S.machines=machineDefs();claimMachines(p,'Build');ok('AT-17',S.machines.filter(m=>m.guild==='Build'&&m.ownerId===p.id).length===2,'early T1/T2 claim at 5');
+   p.rep.Build=1;S.machines=machineDefs();claimMachines(p,'Build');
+   ok('AT-17A',S.machines.filter(m=>m.guild==='Build'&&m.ownerId===p.id).length===0,'no Machine claim below 2 Rep');
+   p.rep.Build=2;claimMachines(p,'Build');
+   ok('AT-17B',S.machines.filter(m=>m.guild==='Build'&&m.ownerId===p.id&&m.tier===1).length===1,'T1 claim at 2 Rep');
+   ok('AT-17C',S.machines.filter(m=>m.guild==='Build'&&m.ownerId===p.id&&m.tier===2).length===0,'T2 not claimed at 2 Rep');
+   p.rep.Build=4;claimMachines(p,'Build');
+   ok('AT-17D',S.machines.filter(m=>m.guild==='Build'&&m.ownerId===p.id&&m.tier===2).length===1,'T2 claim at 4 Rep');
    ok('AT-18',S.machines.length===9&&S.machines.every(m=>m.tier<=2),'9 physical slots no T3');
    ok('AT-19',PROJECT_DEF['project:ST-05'].effect.includes('Ready')&&PROJECT_DEF['project:ST-05'].effect.includes('Frozen'),'ST-05 data');
    ok('AT-20',true,'Machine execute functions bypass programmed phase bonuses');
    const beforeTp=p.tp.Water; p.tp.Water++;ok('AT-21',p.tp.Water===beforeTp+1,'TP immediate trail');
    ok('AT-22',true,'Upgrade R2 checks Breadth Middle for zero element reward');
    p.prolif=2;resetTurnMachines(true);ok('AT-23',p.prolif===2,'TurnEnd token persists');
+
+   // PP 0.25.3 P-02 pure gate normalization / source-zone acceptance.
+   const fire6=PROJECT_DEF['project:F-10'];
+   const fireG=projectPrintedTpGateOptions(fire6);
+   ok('AT-253-04',fireG.length===1&&fireG[0].element==='Fire'&&fireG[0].gate===6,'Fire Gate 6 normalizes to Fire only; current TP not required for conversion');
+   const neutral=DATA.projectDefs.find(d=>d.category==='Neutral');
+   ok('AT-253-05',neutral&&projectPrintedTpGateOptions(neutral).length===0,'Neutral/no printed TP Gate does not invent Gate from effect or level');
+   const steam=DATA.projectDefs.find(d=>d.category==='Compound Unique'&&d.family==='Steam');
+   const steamG=projectPrintedTpGateOptions(steam).map(x=>x.element).sort().join(',');
+   ok('AT-253-06',steamG==='Fire,Water','Steam printed parent gates normalize to Fire/Water only');
+   const breadth=DATA.projectDefs.find(d=>d.category==='Breadth');
+   ok('AT-253-07',breadth&&projectPrintedTpGateOptions(breadth).map(x=>x.element).sort().join(',')==='Earth,Fire,Water,Wind','Breadth Gate normalizes to four Base choices');
+   const oddProd=DATA.projectDefs.find(d=>d.category==='Production'&&d.tech%2===1&&String(d.printed).includes('/'));
+   ok('AT-253-08',oddProd&&projectPrintedTpGateOptions(oddProd).length===2,'dual printed Production faces stay separate selectable gates');
+   createState('AT25309',true);const hp=S.players[0],hi=projectInstances().find(x=>x.definitionKey==='project:F-10');
+   hp.projectHand=[hi];hp._researchDiscardTpActive=true;hp._researchDiscardTpUses=0;
+   const beforeFire=hp.tp.Fire;
+   // sync path is safe because a single gate needs no choose.
+   const pr=executeHandDiscardToTP(hp,hi,'Fire','AT');
+   ok('AT-253-09A',hp.projectHand.length===0&&S.projectDiscard.some(x=>x.instanceId===hi.instanceId),'conversion source must move hand instance to projectDiscard');
+   ok('AT-253-09B',hp.tp.Fire===beforeFire+1,'hand Fire Gate discard grants exactly +1 Fire TP');
+
    createState('AT24',true);S.projectDeck=[];S.projectDiscard=projectInstances().slice(0,2);drawProject('AT24',1);ok('AT-24',S.diagnostics.some(x=>x.type==='DECK_RESHUFFLE_WARNING'),'reshuffle warning');
    createState('AT25',true);S.projectDeck=[];S.projectDiscard=[];drawProject('AT25',1);ok('AT-25',S.gameOver&&S.testStatus==='ABORTED_CRITICAL','critical exhaustion abort');
    createState('AT26',true);ok('AT-26',sum(S.outerBag)===64&&BASES.every(e=>S.outerBag[e]===16),'outer bag 16x4');
@@ -1457,14 +1694,83 @@ renderGaps();runAcceptance();
 <script>
 (function(){
 'use strict';
-const PP025_AUTORUN_VERSION='0.3';
+const PP025_AUTORUN_VERSION='0.16';
 let AUTO_STOP=false, AUTO_RUNNING=false, AUTO_RESULTS=[];
 function escCsv(v){const x=String(v??'');return /[",\n]/.test(x)?'"'+x.replace(/"/g,'""')+'"':x}
 function downloadText(name,text,type='text/plain;charset=utf-8'){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500)}
 function countEvents(type,playerId=null){return (S?.logs||[]).filter(x=>x.eventType===type&&(!playerId||x.playerId===playerId||x.actorId===playerId||x.actor===playerId)).length}
-function programCounts(pid){const out={Research:0,Build:0,Upgrade:0,Funding:0};for(const e of S?.logs||[]){if(e.eventType==='PROGRAM_ACTION'&&(e.playerId===pid||e.actorId===pid||e.actor===pid)){const a=e.action||e.programAction||e.actionName;if(out[a]!=null)out[a]++}if(e.eventType==='PROGRAM_ACTIONS'&&(e.playerId===pid||e.actorId===pid||e.actor===pid)){for(const a of (e.actions||[]))if(out[a]!=null)out[a]++}}return out}
-function summarizeCurrent(seed,elapsedMs){const players=(S.players||[]).map(p=>{const pc=programCounts(p.id);return{id:p.id,vp:p.vp,gold:p.gold,finalScore:p.finalScore??p.vp,rep:{...p.rep},projectsInstalled:(p.installed||[]).length,contracts:countEvents('CONTRACT_COMPLETE',p.id),machineOps:countEvents('MACHINE_OPERATE',p.id),sectorProductions:countEvents('SECTOR_PRODUCTION',p.id),programmed:pc}}).sort((a,b)=>b.finalScore-a.finalScore||b.gold-a.gold);return{version:S.version,schemaVersion:S.schemaVersion,webPanelVersion:PP025_AUTORUN_VERSION,seed:String(seed),testStatus:S.testStatus,gameOver:S.gameOver,gameOverTurn:S.turn,winner:S.winner||players[0]?.id||null,diagnostics:(S.diagnostics||[]).length,diagnosticTypes:(S.diagnostics||[]).reduce((m,x)=>(m[x.type]=(m[x.type]||0)+1,m),{}),eventCount:(S.logs||[]).length,elapsedMs,players}}
-function renderAutoResults(){const box=document.getElementById('autoRunSummary');if(!AUTO_RESULTS.length){box.innerHTML='';return}const last=AUTO_RESULTS[AUTO_RESULTS.length-1];const wins={P1:0,P2:0,P3:0,P4:0};AUTO_RESULTS.forEach(r=>{if(wins[r.winner]!=null)wins[r.winner]++});const complete=AUTO_RESULTS.filter(r=>r.gameOver&&r.testStatus==='COMPLETE').length;const diag=AUTO_RESULTS.reduce((n,r)=>n+r.diagnostics,0);box.innerHTML=`<div class="row"><span class="chip">Games ${AUTO_RESULTS.length}</span><span class="chip">Complete ${complete}/${AUTO_RESULTS.length}</span><span class="chip">Diagnostics ${diag}</span><span class="chip">Wins ${Object.entries(wins).map(([p,n])=>p+':'+n).join(' · ')}</span></div><div class="scrollTable"><table class="table"><tr><th>#</th><th>Seed</th><th>Winner</th><th>Final VP</th><th>Gold</th><th>Contracts</th><th>Machine Ops</th><th>Sector Prod.</th><th>Projects</th><th>Status</th><th>Diag</th></tr>${AUTO_RESULTS.map((r,i)=>{const w=r.players.find(p=>p.id===r.winner)||r.players[0];return `<tr><td>${i+1}</td><td>${r.seed}</td><td class="winner">${r.winner||'—'}</td><td>${w?.finalScore??'—'}</td><td>${w?.gold??'—'}</td><td>${r.players.reduce((n,p)=>n+p.contracts,0)}</td><td>${r.players.reduce((n,p)=>n+p.machineOps,0)}</td><td>${r.players.reduce((n,p)=>n+p.sectorProductions,0)}</td><td>${r.players.reduce((n,p)=>n+p.projectsInstalled,0)}</td><td>${r.testStatus}</td><td>${r.diagnostics}</td></tr>`}).join('')}</table></div><div class="mini" style="margin-top:6px">最後一局 seed ${last.seed} 的完整 state / log 仍保留在頁面，可直接使用上方 Export State / Export Log。</div>`}
+function programCounts(pid){
+ const out={Research:0,Build:0,Upgrade:0,Funding:0};
+ for(const e of S?.logs||[]){
+   if(e.eventType==='PROGRAM_ACTIONS'&&(e.playerId===pid||e.actorId===pid||e.actor===pid)){
+     for(const a of (e.actions||[]))if(out[a]!=null)out[a]++;
+   }
+ }
+ return out
+}
+function eventCountForPlayer(type,pid){return (S?.logs||[]).filter(e=>e.eventType===type&&(e.playerId===pid||e.actorId===pid||e.actor===pid)).length}
+function sumEventFieldForPlayer(type,pid,field){return (S?.logs||[]).filter(e=>e.eventType===type&&(e.playerId===pid||e.actorId===pid||e.actor===pid)).reduce((n,e)=>n+(Number(e[field])||0),0)}
+function vpBreakdown(pid){
+ const out={};
+ for(const e of S?.logs||[])if(e.eventType==='VP_DELTA'&&e.playerId===pid)out[e.category]=(out[e.category]||0)+(Number(e.delta)||0);
+ return out
+}
+function handDiscardTpStats(pid){
+ const ev=(S?.logs||[]).filter(e=>e.eventType==='HAND_PROJECT_DISCARD_TO_TP'&&e.playerId===pid);
+ const byInstance={};for(const e of ev)byInstance[e.instanceId]=(byInstance[e.instanceId]||0)+1;
+ return{
+   uses:ev.length,
+   tpGained:ev.reduce((n,e)=>n+(Number(e.tpGain)||0),0),
+   noGateDiscards:ev.filter(e=>(Number(e.tpGain)||0)===0).length,
+   repeatedInstanceConversions:Object.values(byInstance).filter(n=>n>1).reduce((a,n)=>a+n-1,0)
+ };
+}
+function summarizeCurrent(seed,elapsedMs){
+ const players=(S.players||[]).map(p=>{
+   const pc=programCounts(p.id),programTotal=Object.values(pc).reduce((a,b)=>a+b,0);
+   const opportunities=(S.logs||[]).filter(e=>e.eventType==='CONTRACT_OPPORTUNITY'&&e.playerId===p.id);
+   return{
+     id:p.id,vp:p.vp,gold:p.gold,finalScore:p.finalScore??p.vp,rep:{...p.rep},
+     projectsInstalled:(p.installed||[]).length,
+     contracts:eventCountForPlayer('CONTRACT_COMPLETE',p.id),
+     machineOps:eventCountForPlayer('MACHINE_OPERATE',p.id),
+     machineClaims:eventCountForPlayer('MACHINE_CLAIM',p.id),
+     passOuts:eventCountForPlayer('PASS_OUT',p.id),
+     contractOpportunities:opportunities.length,
+     legalContractActionsOffered:opportunities.reduce((n,e)=>n+(e.contractLegal||0),0),
+     legalMachineActionsOffered:opportunities.reduce((n,e)=>n+(e.machineLegal||0),0),
+     sectorProductions:eventCountForPlayer('SECTOR_PRODUCTION',p.id),
+     handDiscardToTP:handDiscardTpStats(p.id),
+     programmed:pc,programmedTotal:programTotal,
+     vpBreakdown:vpBreakdown(p.id)
+   }
+ }).sort((a,b)=>b.finalScore-a.finalScore||b.gold-a.gold);
+ const sanity=[];
+ for(const p of players){
+   if(S.gameOverTurn===10||S.turn===10){
+     if(p.programmedTotal!==30)sanity.push(`${p.id}: programmedTotal=${p.programmedTotal}, expected 30`);
+   }
+   const vpSum=Object.values(p.vpBreakdown).reduce((a,b)=>a+b,0);
+   if(vpSum!==p.finalScore)sanity.push(`${p.id}: VP breakdown sums ${vpSum}, finalScore ${p.finalScore}`);
+ }
+ const machineClaims=players.reduce((n,p)=>n+p.machineClaims,0),machineOps=players.reduce((n,p)=>n+p.machineOps,0);
+ const machineLegal=players.reduce((n,p)=>n+p.legalMachineActionsOffered,0);
+ const contracts=players.reduce((n,p)=>n+p.contracts,0);
+ const observations=[];
+ if(machineOps===0)observations.push(machineClaims===0?'No Machine operations because no Machine was claimed.':machineLegal===0?'Machines were claimed but no legal Machine action was ever offered.':'Legal Machine actions existed but none were selected.');
+ if(contracts<=4)observations.push(`Low Contract throughput: ${contracts} completions in 10 turns; inspect legalContractActionsOffered / Pass Out counts before balance changes.`);
+ return{
+   version:S.version,schemaVersion:S.schemaVersion,webPanelVersion:PP025_AUTORUN_VERSION,
+   seed:String(seed),testStatus:S.testStatus,gameOver:S.gameOver,gameOverTurn:S.turn,
+   winner:S.winner||players[0]?.id||null,
+   diagnostics:(S.diagnostics||[]).length,
+   diagnosticTypes:(S.diagnostics||[]).reduce((m,x)=>(m[x.type]=(m[x.type]||0)+1,m),{}),
+   eventCount:(S.logs||[]).length,elapsedMs,
+   telemetrySanity:{passed:sanity.length===0,issues:sanity},
+   observations,players
+ }
+}
+function renderAutoResults(){const box=document.getElementById('autoRunSummary');if(!AUTO_RESULTS.length){box.innerHTML='';return}const last=AUTO_RESULTS[AUTO_RESULTS.length-1];const wins={P1:0,P2:0,P3:0,P4:0};AUTO_RESULTS.forEach(r=>{if(wins[r.winner]!=null)wins[r.winner]++});const complete=AUTO_RESULTS.filter(r=>r.gameOver&&r.testStatus==='COMPLETE').length;const diag=AUTO_RESULTS.reduce((n,r)=>n+r.diagnostics,0);box.innerHTML=`<div class="row"><span class="chip">Games ${AUTO_RESULTS.length}</span><span class="chip">Complete ${complete}/${AUTO_RESULTS.length}</span><span class="chip">Diagnostics ${diag}</span><span class="chip">Wins ${Object.entries(wins).map(([p,n])=>p+':'+n).join(' · ')}</span></div><div class="scrollTable"><table class="table"><tr><th>#</th><th>Seed</th><th>Winner</th><th>Final VP</th><th>Gold</th><th>Contracts</th><th>Machine Claims</th><th>Machine Ops</th><th>Legal Machine Offers</th><th>Sector Prod.</th><th>Projects</th><th>Status</th><th>Diag</th><th>Telemetry</th></tr>${AUTO_RESULTS.map((r,i)=>{const w=r.players.find(p=>p.id===r.winner)||r.players[0];return `<tr><td>${i+1}</td><td>${r.seed}</td><td class="winner">${r.winner||'—'}</td><td>${w?.finalScore??'—'}</td><td>${w?.gold??'—'}</td><td>${r.players.reduce((n,p)=>n+p.contracts,0)}</td><td>${r.players.reduce((n,p)=>n+p.machineClaims,0)}</td><td>${r.players.reduce((n,p)=>n+p.machineOps,0)}</td><td>${r.players.reduce((n,p)=>n+p.legalMachineActionsOffered,0)}</td><td>${r.players.reduce((n,p)=>n+p.sectorProductions,0)}</td><td>${r.players.reduce((n,p)=>n+p.projectsInstalled,0)}</td><td>${r.testStatus}</td><td>${r.diagnostics}</td><td>${r.telemetrySanity?.passed?'PASS':'FAIL'}</td></tr>`}).join('')}</table></div><div class="mini" style="margin-top:6px">最後一局 seed ${last.seed} 的完整 state / log 仍保留在頁面，可直接使用上方 Export State / Export Log。</div>`}
 function setAutoStatus(text,pct=null,isBad=false){const el=document.getElementById('autoRunStatus');el.className=isBad?'notice badtext':'notice';el.innerHTML=`${text}${pct==null?'':`<div class="progressTrack"><div class="progressBar" style="width:${Math.max(0,Math.min(100,pct))}%"></div></div>`}`}
 function setRunButtons(running){AUTO_RUNNING=running;['runOneAI','runBatchAI'].forEach(id=>document.getElementById(id).disabled=running);document.getElementById('stopBatchAI').disabled=!running;document.getElementById('newBtn').disabled=running;document.getElementById('autoBtn').disabled=running}
 async function runOneInternal(seed,fast=false){const start=performance.now();const oldRender=window.render;if(fast)window.render=function(){};try{createState(String(seed),true);renderGaps();if(!fast)render();await setupGame();await runGame();return summarizeCurrent(seed,Math.round(performance.now()-start))}catch(e){console.error(e);try{diagnostic('RULE_ASSERTION_FAILURE',String(e?.stack||e))}catch(_){}if(S)S.testStatus='ERROR';return summarizeCurrent(seed,Math.round(performance.now()-start))}finally{window.render=oldRender;if(!fast&&typeof render==='function')render()}}
@@ -1472,12 +1778,17 @@ async function runSingle(){if(AUTO_RUNNING||FLOW)return;AUTO_STOP=false;setRunBu
 async function runBatch(){if(AUTO_RUNNING||FLOW)return;AUTO_STOP=false;setRunButtons(true);AUTO_RESULTS=[];renderAutoResults();const baseRaw=document.getElementById('autoSeed').value.trim()||'424242';const base=Number.parseInt(baseRaw,10);const n=Number(document.getElementById('batchCount').value)||10;try{for(let i=0;i<n;i++){if(AUTO_STOP)break;const seed=Number.isFinite(base)?String(base+i):`${baseRaw}-${i+1}`;setAutoStatus(`批次執行中：${i+1}/${n}｜Seed <b>${seed}</b>`,Math.round(i/n*100));const r=await runOneInternal(seed,true);AUTO_RESULTS.push(r);renderAutoResults();await new Promise(res=>setTimeout(res,0))}if(typeof render==='function')render();const done=AUTO_RESULTS.length;setAutoStatus(`${AUTO_STOP?'已停止':'批次完成'}：${done}/${n} 局。最後一局 state/log 已保留。`,Math.round(done/n*100),AUTO_RESULTS.some(r=>r.testStatus!=='COMPLETE'))}finally{setRunButtons(false);updateExports()}}
 function updateExports(){const ok=AUTO_RESULTS.length>0;document.getElementById('exportBatchJson').disabled=!ok;document.getElementById('exportBatchCsv').disabled=!ok}
 function exportJson(){downloadJson(`pp025_4AI_summary_${AUTO_RESULTS.length}games.json`,{branch:'Project × Programming 0.25',prototypeDeck:154,panelVersion:PP025_AUTORUN_VERSION,generatedAt:new Date().toISOString(),results:AUTO_RESULTS})}
-function exportCsv(){const rows=[['game','seed','winner','status','diagnostics','player','finalVP','gold','repProduction','repBuild','repUpgrade','repResearch','projectsInstalled','contracts','machineOps','sectorProductions','programResearch','programBuild','programUpgrade','programFunding']];AUTO_RESULTS.forEach((r,i)=>r.players.forEach(p=>rows.push([i+1,r.seed,r.winner,r.testStatus,r.diagnostics,p.id,p.finalScore,p.gold,p.rep?.Production??0,p.rep?.Build??0,p.rep?.Upgrade??0,p.rep?.Research??0,p.projectsInstalled,p.contracts,p.machineOps,p.sectorProductions,p.programmed.Research,p.programmed.Build,p.programmed.Upgrade,p.programmed.Funding])));downloadText(`pp025_4AI_summary_${AUTO_RESULTS.length}games.csv`,rows.map(r=>r.map(escCsv).join(',')).join('\n'),'text/csv;charset=utf-8')}
+function exportCsv(){const rows=[['game','seed','winner','status','diagnostics','telemetrySanity','player','finalVP','gold','repProduction','repBuild','repUpgrade','repResearch','projectsInstalled','contracts','machineClaims','machineOps','contractOpportunities','legalContractActionsOffered','legalMachineActionsOffered','passOuts','sectorProductions','handDiscardToTPUses','handDiscardTPGained','handDiscardNoGate','handDiscardRepeatInstance','programmedTotal','programResearch','programBuild','programUpgrade','programFunding','vpProgrammed','vpProduction','vpPostProduction','vpContract','vpTurnEnd','vpGameEnd']];AUTO_RESULTS.forEach((r,i)=>r.players.forEach(p=>rows.push([i+1,r.seed,r.winner,r.testStatus,r.diagnostics,r.telemetrySanity?.passed?'PASS':'FAIL',p.id,p.finalScore,p.gold,p.rep?.Production??0,p.rep?.Build??0,p.rep?.Upgrade??0,p.rep?.Research??0,p.projectsInstalled,p.contracts,p.machineClaims,p.machineOps,p.contractOpportunities,p.legalContractActionsOffered,p.legalMachineActionsOffered,p.passOuts,p.sectorProductions,p.handDiscardToTP?.uses??0,p.handDiscardToTP?.tpGained??0,p.handDiscardToTP?.noGateDiscards??0,p.handDiscardToTP?.repeatedInstanceConversions??0,p.programmedTotal,p.programmed.Research,p.programmed.Build,p.programmed.Upgrade,p.programmed.Funding,p.vpBreakdown?.['Programmed Actions']??0,p.vpBreakdown?.Production??0,p.vpBreakdown?.['Post Production']??0,p.vpBreakdown?.['Contract Phase']??0,p.vpBreakdown?.['Turn End']??0,p.vpBreakdown?.['Game End Scoring']??0])));downloadText(`pp025_4AI_summary_${AUTO_RESULTS.length}games.csv`,rows.map(r=>r.map(escCsv).join(',')).join('\n'),'text/csv;charset=utf-8')}
 document.getElementById('runOneAI').onclick=runSingle;
 document.getElementById('runBatchAI').onclick=runBatch;
 document.getElementById('stopBatchAI').onclick=()=>{AUTO_STOP=true;setAutoStatus('收到 Stop：會在目前這局完成後停止批次。',null,false)};
 document.getElementById('exportBatchJson').onclick=exportJson;
 document.getElementById('exportBatchCsv').onclick=exportCsv;
+
+window.pp025AuditSummary=function(){
+ if(!S)return null;
+ return summarizeCurrent(S.seed,0);
+};
 document.getElementById('autoBtn').onclick=()=>{document.getElementById('autoSeed').value=document.getElementById('seedInput').value||'424242';runSingle()};
 })();
 
@@ -1683,6 +1994,39 @@ document.title='元素管道：術式工房 Project × Programming Branch 0.25 v
  else console.info('[PP0.25 Tile Upgrade Cost PASS]');
  window.PP025_WEB_VERSION='2.2.11-project-programming-branch-0.25-web-v0.12-free-tile-upgrade';
  document.title='元素管道：術式工房 Project × Programming Branch 0.25 v0.12';
+})();
+</script>
+
+
+<script>
+(function(){
+ window.PP025_WEB_VERSION='2.2.11-project-programming-branch-0.25-web-v0.13-4ai-telemetry-audit-fix';
+ document.title='元素管道：術式工房 Project × Programming Branch 0.25 v0.13';
+})();
+</script>
+
+
+<script>
+(function(){
+ window.PP025_WEB_VERSION='2.2.11-project-programming-branch-0.25-web-v0.14-ai-contract-targeting-fix';
+ document.title='元素管道：術式工房 Project × Programming Branch 0.25 v0.14';
+})();
+</script>
+
+
+<script>
+(function(){
+ window.PP025_WEB_VERSION='2.2.11-project-programming-branch-0.25-web-v0.15-machine-rep-2-4';
+ document.title='元素管道：術式工房 Project × Programming Branch 0.25 v0.15';
+})();
+</script>
+
+
+<script>
+(function(){
+ window.PP025_WEB_VERSION='2.2.11-project-programming-branch-0.25-web-v0.16-pp0253-hand-discard-tp';
+ window.PP025_RULE_PATCH='0.25.3-v0.1';
+ document.title='元素管道：術式工房 Project × Programming Branch 0.25.3 v0.16';
 })();
 </script>
 
